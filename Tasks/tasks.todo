@@ -1,0 +1,62 @@
+### TODO
+
+General:
+    ✔ Recherche Bibliographique @done (10/6/2025, 11:07:14 PM)
+    ✔ Realiser une modelisation mathematique @done (10/6/2025, 11:04:22 PM)
+    ✔ Realiser une simulation numerique @done (10/6/2025, 11:04:25 PM)
+    ☐ Realiser une analyse experimentale (2/9) @high 
+    ☐ Rediger un rapport (0/9) @low 
+    ☐ Preparer une presentation orale (0/5) @high
+
+Recherche Bibliographique:
+    ✔ Identifier les différents types de micros @done (10/6/2025, 10:59:50 PM)
+    ✔ Identifier le modele vibratoire d'une corde de guitare @done (10/6/2025, 10:59:54 PM)
+    ✔ Identifier les differents modele de micros @done (10/6/2025, 11:00:01 PM)
+    ✔ Identifier un sujet de recherche precis et pertinent  @done (10/6/2025, 11:06:59 PM)
+
+Modelisation Mathematique:
+    ✔ Modeliser la vibration d'une corde de guitare @done (10/6/2025, 11:00:04 PM)
+    ✔ Modeliser le fonctionnement d'un micro single coil @done (10/6/2025, 11:00:09 PM)
+    ✔ Modeliser le fonctionnement d'un micro humbucker @done (10/6/2025, 11:00:10 PM)
+    ✔ Modeliser la reponse freuquentielle d'un micro @done (10/6/2025, 11:00:15 PM)
+    ✔ Modeliser la reponse a un champ magnetique parasite @done (10/6/2025, 11:00:17 PM)
+    ✔ Modeliser la reponse a une excitation de la corde @done (10/6/2025, 11:00:18 PM)
+
+Simulation Numerique:
+    ✔ Ecire un code de simulation de la vibration d'une corde de guitare @done (10/6/2025, 11:04:31 PM)
+    ✔ Ecire un code de simulation du micro single coil @done (10/6/2025, 11:00:23 PM)
+    ✔ Ecire un code de simulation du micro humbucker @done (10/6/2025, 11:00:26 PM)
+    ✔ Simuler la reponse freuquentielle d'un micro @done (10/6/2025, 11:00:27 PM)
+    ✔ Simuler la reponse a un champ magnetique parasite @done (10/6/2025, 11:00:30 PM)
+    ✔ Simuler la reponse a une excitation de la corde @done (10/6/2025, 11:00:29 PM)
+    ✔ Tracer le spectre des reponses simulees @done (10/6/2025, 11:00:55 PM)
+    ✔ Comparer les resultats des differentes simulations @done (10/6/2025, 11:00:57 PM)
+
+Analyse Experimentale: 
+    ✔ Concevoir un protocole experimental @done (10/6/2025, 11:01:05 PM)
+    ✔ Faire une liste du materiel necessaire @done (10/6/2025, 11:01:03 PM)
+    ☐ Preparer le banc d'essai et le materiel @high 
+    ☐ Mesurer la vibration d'une corde de guitare
+    ☐ Mesurer la reponse freuquentielle d'un micro
+    ☐ Mesurer la reponse a un champ magnetique parasite
+    ☐ Mesurer la reponse a une excitation de la corde
+    ☐ Comparer les resultats experimentaux avec les simulations
+    ☐ Analyser les differences entre les resultats experimentaux et les simulations
+
+Redaction du Rapport:
+    ☐ Structurer le rapport
+    ☐ Rediger l'introduction
+    ☐ Rediger la section de recherche bibliographique
+    ☐ Rediger la section de modelisation mathematique
+    ☐ Rediger la section de simulation numerique
+    ☐ Rediger la section d'analyse experimentale
+    ☐ Rediger la conclusion
+    ☐ Relire et corriger le rapport
+    ☐ Mettre en forme le rapport
+
+Preparation de la Presentation Orale:
+    ☐ Structurer la presentation
+    ☐ Creer des diapositives
+    ☐ Mettre en forme les diapositives
+    ☐  Preparer le discours
+    ☐ Preparar les reponses aux questions potentielles
