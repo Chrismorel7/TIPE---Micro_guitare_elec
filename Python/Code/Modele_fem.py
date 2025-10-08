@@ -44,7 +44,15 @@ print("Constantes physiques et Electromagnetiques initialisees.")
                                             #!      Fonction        !#
                                             #!#####################aé#!#
 
-def entrée(n, x, t):
+def entrée(n: int, x: float, t: np.ndarray) -> np.ndarray:
+    """Calcule la déformation de la corde en fonction du temps et de la position.
+    Args:
+        n (int): Nombre de modes de vibration à considérer.
+        x (float): Position le long de la corde.
+        t (np.ndarray): Tableau de temps.
+    Returns:
+        np.ndarray: La déformation de la corde en fonction du temps et de la position.
+    """
     s = 0
     v = np.sqrt(T/mu)
     
@@ -54,18 +62,40 @@ def entrée(n, x, t):
     
     return s
 
-def fem_singlecoil(n, N, xm, t):
+def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
+    """Calcule la tension induite dans un micro simple.
+
+    Args:
+        n (int): Nombre de modes de vibration à considérer.
+        N (int): Nombre de spires du micro.
+        xm (float): Position du micro par rapport à la corde.
+        t (np.ndarray): Tableau de temps.
+
+    Returns:
+        np.ndarray: La tension induite dans le micro simple en fonction du temps.
+    """
     s = 0
-    
+
     for i in range(1, n+1):
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s -= Bn*np.sin(np.pi*i*xm/L)*np.sin(i*np.pi*np.sqrt(T)*t/(L*np.sqrt(mu)))*i*np.pi*np.sqrt(T)/(L*np.sqrt(mu))
-    
-    e = -N*S*dBdy*s
-    
-    return e
 
-def fem_humbucker(n, N, x1, x2, t):
+    return -N*S*dBdy*s
+
+
+def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.ndarray:
+    """Calcule la tension induite dans un micro humbucker.
+
+    Args:
+        n (int): Nombre de modes de vibration à considérer.
+        N (int): Nombre de spires du micro.
+        x1 (float): Position du micro par rapport à la corde (côté gauche).
+        x2 (float): Position du micro par rapport à la corde (côté droit).
+        t (np.ndarray): Tableau de temps.
+
+    Returns:
+        np.ndarray: La tension induite dans le micro humbucker en fonction du temps.
+    """
     s = 0
     
     for i in range(1, n+1):
@@ -77,9 +107,29 @@ def fem_humbucker(n, N, x1, x2, t):
     return e
 
 def B(x, f,t):
+    """Calcule le champ magnétique parasite en fonction de la position, de la fréquence et du temps.
+
+    Args:
+        x (float): Position le long de la corde.
+        f (float): Fréquence du champ parasite.
+        t (np.ndarray): Tableau de temps.
+
+    Returns:
+        np.ndarray: Champ magnétique parasite en fonction de la position, de la fréquence et du temps.
+    """
     return B0*np.sin(2*np.pi*f*t)*(1+alpha*x)
 
-def dBdt(x,f,t):
+def dBdt(x: float, f: float, t: np.ndarray) -> np.ndarray:
+    """Calcule la dérivée du champ magnétique parasite par rapport au temps.
+
+    Args:
+        x (float): Position le long de la corde.
+        f (float): Fréquence du champ parasite.
+        t (np.ndarray): Tableau de temps.
+
+    Returns:
+        np.ndarray: Dérivée du champ magnétique parasite par rapport au temps.
+    """
     return B0*2*np.pi*f*(1+alpha*x)*np.cos(2*np.pi*f*t)
 
 ...
