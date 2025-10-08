@@ -1,37 +1,68 @@
-# TIPE---Micro_guitare_elec
+# TIPE — Micro guitare électrique
 
-Travail d'Innitiative Personnelle Encadrée
+Projet TIPE (Travail d'Initiative Personnelle Encadrée) — étude comparée des micros guitare : simple bobinage vs humbucker.
 
 ## Objectif
 
-Etant étudiant en CPGE filière PT, je dois réaliser un projet d'étude appelé TIPE.
-Ce projet d'étude dois valider plusieurs critères :
-_ Savoir modéliser un phénomène physique au programme
-_ Savoir realiser une experience permettant de valider un modèle théorique \* Savoir présenter un rapport de projet de manière claire et concise
+Étant étudiant en CPGE, filière PT, ce TIPE a pour objectifs :
 
-# Présentation du Projet
+- Modéliser un phénomène physique lié aux micros de guitare.
+- Réaliser une expérience ou une simulation permettant de valider un modèle théorique.
+- Présenter un rapport clair et concis.
 
-## Aspect general
+## Contexte et principe de fonctionnement (résumé)
 
-Il existe plusieurs technologie de micro de guitare electrique. Mais certaine technologie
-sont préférable à d'autres dans certaine situation. L'idée de mon TIPE est de comprendre
-la différence entre un micro simple bobinage et un micro double bobinage, et pourquoi le
-micro double bobinage (humbucker) est favorisé dans certaine situation
+Un micro de guitare se compose principalement d'aimants permanents et d'un bobinage. La corde métallique, magnétisée par l'aimant, modifie le flux magnétique lorsque'elle vibre au‑dessus du bobinage. Cette variation de flux induit une force électromotrice (FEM) dans la bobine, qui est ensuite amplifiée et convertie en signal sonore.
 
-## Principe de fonctionnement
+Le humbucker (double bobinage) combine deux spires avec polarité et sens d'enroulement opposés pour :
 
-Un micro est composé de deux elements : des aimants permanents et un bobinage.
+- Réduire les parasites électromagnétiques par annulation de phase.
+- Augmenter le signal utile dans certaines configurations (effet de somme des contributions de corde selon l'architecture).
 
-L'aimant permanent vient magnetiser la corde métallique pour lui fournir un champ magnétique
+## Structure du dépôt
 
-Lorsque la corde de guitare vibre qu dessus du bobinage, le flux magnétique traversant le
-micro varie. Ainsi une tension electrique appelé FEM est générée dans la bobine. C'est cette
-tension qui, après avoir parcouru le micro, va être introduite dans un ampli puis convertit
-en signale sonore.
+- Scripts de simulation :
+  - Python/Code/Modele_fem.py — modèle temporel de la corde et calcul des FEM induites.
+  - Python/Code/Modele_elec.py — calcul et affichage de la réponse en fréquence (diagramme de Bode) à partir des données.
+  - Python/data/Bode.txt — données (fréquence, gain, phase).
+  - Python/Exports/ — exports graphiques.
+- Documents de présentation : Views/ (PDF/PPTX).
+- Plan de travail : Tasks/tasks.todo
 
-L'atout du micro humbucker vient de son architecture : aimant à polarité inversé et bobinage
-inversé. Ainsi, la vibration de la corde au dessus du micro va etre amplifier (x2), mais les
-champs parasite exterieur vont eux etre detruit par opposition de phase.
+## Utilisation rapide
 
-C'est pourquoi le micro de type Humbucker est très utilisé sur scène, comparé au micro
-simple bobinage.
+Prérequis : Python 3.x, numpy, scipy, matplotlib (installer via pip si nécessaire).
+
+Exemples :
+
+- Lancer la simulation temporelle :
+  python Python/Code/Modele_fem.py
+- Générer la réponse en fréquence :
+  python Python/Code/Modele_elec.py Python/data/Bode.txt
+
+(Consulter les entêtes des scripts pour les options et paramètres.)
+
+## Méthodologie
+
+- Modélisation analytique / numérique du mouvement de la corde.
+- Calcul des FEM induites par variation de flux magnétique (loi de Faraday).
+- Simulation de la chaîne électrique micro → ampli et analyse en fréquence.
+- Comparaison des réponses et discussion des avantages du humbucker.
+
+## Résultats
+
+Rédaction et synthèse des résultats de simulation et expérimentaux en cours. Les graphiques exportés sont dans Python/Exports/.
+
+## Conclusion
+
+À rédiger (synthèse des observations, validation du modèle, limites et perspectives expérimentales).
+
+## Contributions et contact
+
+Contributions bienvenues via pull request. Pour toute question : voir l'entête du dépôt ou contact auteur dans le rapport.
+
+## Licence
+
+Ajouter une licence si nécessaire.
+
+<!-- Fin du README -->
