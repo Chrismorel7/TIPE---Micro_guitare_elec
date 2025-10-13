@@ -36,7 +36,7 @@ Rabotage de la planche pour préparer l'encastrement du micro simple
 
 - Position (x_min) : 790
 
-## Percage 2
+## Usinage 3
 
 Percage pour encastrement du micro single coil
 
