@@ -1,12 +1,12 @@
 
-#   Présentation générale   #
+#   Présentation générale
 
 L'idée est de créer une maquette de guitare éléctrique afin d'oberver la tension en sortie des micros
 en réponse à une exitation d'une corde de guitare
 
-#   Présenation détaillée   #
+#   Présenation détaillée
 
-##  Materiel    ##
+##  Materiel
 
 -> Planche (dim : 1000*100*15)
 -> Micro Single Coil
@@ -18,7 +18,7 @@ en réponse à une exitation d'une corde de guitare
 -> Osciloscope
 -> Plaque d'essai
 
-##  Montage ##
+##  Montage
 
 1 - Sur la planche, encsatrer les micros simple et humbucker à une position x1 et x2
 2 - Sur la planche, encastrer les mécaniques de manière à pouvoir aligner la corde au micro
@@ -29,15 +29,17 @@ en réponse à une exitation d'une corde de guitare
 
 7 - Inserer le montage dans un solénoide
 
-##  Experimentation ##
+##  Experimentation
 
 1 - Exiter la corde à une position x0
 2 - Relever les courbes observer sur l'Oscilloscope
 3 - Tracer la FFT du signal
 
-##  Resultat    ##
+#   Resultats et interprétation
+
+##  Resultat
 
 A completer
 
-##  Conclusion  ##
+##  Conclusion
 A completer
