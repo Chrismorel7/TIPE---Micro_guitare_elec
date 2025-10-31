@@ -140,10 +140,10 @@ def dBdt(x: float, f: float, t: np.ndarray) -> np.ndarray:
 
 print("\nCalcul des tensions induites...")
 print("Echantillonnage...")
-Te = 0.06
-Ne = 1000
+Te = 1
+Ne = 100000
 fs = Ne/Te
-Na = 10
+Na = 20
 print(f"Frequence d'echantillonnage : fs = {fs} Hz")
 
 print("Calcul des tensions en reponse a la vibration de la corde...")
@@ -170,7 +170,7 @@ Color_c = "#505050"
 Color_h = "#3344CB"
 Color_s = "#CAA307"
 
-"""
+
 print("\nCalcul des FFT...")
 fft_s = np.fft.fft(fem_s_tot)
 fft_s_amp = 2 * np.abs(fft_s) / Ne
@@ -194,7 +194,7 @@ print("FFT calculees.")
 
 print("Affichage des FFT...")
 Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
-plt.figure(figsize=(8,4))
+plt.figure(figsize=(6,5))
 plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker")
 plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Simple")
 plt.title(Title)
@@ -298,5 +298,5 @@ plt.savefig("Python/Exports/Total.png")
 plt.close()
 print("Courbes sauvegardees sous Python/Exports/Total.png.")
 
-
+"""
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
