@@ -18,14 +18,16 @@ print("Bibliotheques importees.")
 print("\nInitialisation des constantes physiques et Electromagnetiques...")
 A = 1*10**(-3)          #? Amplitude initiale de vibration de la corde [m]
 mu = 9*10**(-3)         #? Masse linéique de la corde [kg.m-1]
-T = 1784                #? Tension de la corde [N]
-xm = 0.2                #? Distance entre la source la corde et le micro [m]
-x1 = xm - 0.01          #? Distance entre la source la corde et le micro [m]
-x2 = xm + 0.01          #? Distance entre la source la corde et le micro [m]
-L = 0.70                #? Longueur de la corde [m]
-x0 = L/4                #? Origine de la perturbation
+xm = 0.105              #? Distance entre la source la corde et le micro [m]
+x1 = 0.140              #? Distance entre la source la corde et le micro [m]
+x2 = 0.160              #? Distance entre la source la corde et le micro [m]
+L = 0.84                #? Longueur de la corde [m]
+x0 = 0.105              #? Origine de la perturbation
 
-print(f"frequence de la note : f = {np.sqrt(T/mu)/(2*L)}")
+F = 72                   #? Frequence de la note [Hz]
+print(f"Tension de la corde : T = {4*mu*(L*F)**2} N")
+print(f"Frequence de la note : f = {F} Hz")
+T = 4*mu*(L*F)**2      #? Tension de la corde [N]
 
 
                                             #!######################!#
@@ -78,7 +80,7 @@ def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
 
     for i in range(1, n+1):
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
-        s -= Bn*np.sin(np.pi*i*xm/L)*np.sin(i*np.pi*np.sqrt(T)*t/(L*np.sqrt(mu)))*i*np.pi*np.sqrt(T)/(L*np.sqrt(mu))
+        s -= Bn*np.sin(np.pi*i*xm/L)*np.sin(2*i*np.pi*F*t)*2*i*np.pi*F
 
     return -N*S*dBdy*s
 
@@ -100,10 +102,9 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.nda
     
     for i in range(1, n+1):
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
-        s -= Bn*(np.sin(np.pi*i*x1/L)+np.sin(np.pi*i*x2/L))*np.sin(i*np.pi*np.sqrt(T)*t/(L*np.sqrt(mu)))*i*np.pi*np.sqrt(T)/(L*np.sqrt(mu))
+        s -= Bn*(np.sin(np.pi*i*x1/L)+np.sin(np.pi*i*x2/L))*np.sin(2*i*np.pi*F*t)*2*i*np.pi*F
     
     e = -N*S*dBdy*s
-    
     return e
 
 def B(x, f,t):
@@ -139,8 +140,8 @@ def dBdt(x: float, f: float, t: np.ndarray) -> np.ndarray:
 
 print("\nCalcul des tensions induites...")
 print("Echantillonnage...")
-Te = 1
-Ne = 100000
+Te = 0.06
+Ne = 1000
 fs = Ne/Te
 Na = 10
 print(f"Frequence d'echantillonnage : fs = {fs} Hz")
@@ -163,10 +164,13 @@ fem_h_tot = fem_h + fem_h_par
                                             #!######################!#
                                             #!          FFT         !#
                                             #!######################!#
+
+
 Color_c = "#505050"
 Color_h = "#3344CB"
 Color_s = "#CAA307"
 
+"""
 print("\nCalcul des FFT...")
 fft_s = np.fft.fft(fem_s_tot)
 fft_s_amp = 2 * np.abs(fft_s) / Ne
@@ -189,10 +193,11 @@ fft_h_amp = fft_h_amp[mask2]
 print("FFT calculees.")
 
 print("Affichage des FFT...")
+Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
 plt.figure(figsize=(8,4))
 plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker")
 plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Simple")
-plt.title("Spectre de la tension en sortie des micros")
+plt.title(Title)
 plt.legend()
 plt.xlabel("Fréquence (Hz)")
 plt.ylabel("Tension [V]")
@@ -292,7 +297,6 @@ plt.grid()
 plt.savefig("Python/Exports/Total.png")
 plt.close()
 print("Courbes sauvegardees sous Python/Exports/Total.png.")
-"""
 
 
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
