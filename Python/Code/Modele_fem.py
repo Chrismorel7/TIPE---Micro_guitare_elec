@@ -38,26 +38,17 @@ N = 7000                #? Nombre de spire du micro [.]
 S = 1*10**(-4)          #? Surface de la bobine du micro [m²]
 dBdy = 5                #? Gradient (supposé constant) [.]
 B0 = 9*10**(-3)         #? Amplitude du champ parasite [T]
-f = 50                  #? Frequence du champ parasite [s-1]
+fB = 50                  #? Frequence du champ parasite [s-1]
 alpha = 0.02            #? ???
 print("Constantes physiques et Electromagnetiques initialisees.")
 
                                             #!######################!#
                                             #!      Fonction        !#
-                                            #!#####################aé#!#
+                                            #!######################!#
 
 def entrée(n: int, x: float, t: np.ndarray) -> np.ndarray:
-    """Calcule la déformation de la corde en fonction du temps et de la position.
-    Args:
-        n (int): Nombre de modes de vibration à considérer.
-        x (float): Position le long de la corde.
-        t (np.ndarray): Tableau de temps.
-    Returns:
-        np.ndarray: La déformation de la corde en fonction du temps et de la position.
-    """
     s = 0
     v = np.sqrt(T/mu)
-    
     for i in range(1, n+1):
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += Bn*np.sin(i*np.pi*x/L)*np.cos(i*np.pi*v*t/L)
@@ -65,83 +56,43 @@ def entrée(n: int, x: float, t: np.ndarray) -> np.ndarray:
     return s
 
 def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
-    """Calcule la tension induite dans un micro simple.
-
-    Args:
-        n (int): Nombre de modes de vibration à considérer.
-        N (int): Nombre de spires du micro.
-        xm (float): Position du micro par rapport à la corde.
-        t (np.ndarray): Tableau de temps.
-
-    Returns:
-        np.ndarray: La tension induite dans le micro simple en fonction du temps.
-    """
     s = 0
-
     for i in range(1, n+1):
+        fn = (i/(2*L))*np.sqrt(T/mu)
+        An = 2*np.pi*fn*np.sin(i*np.pi*xm/L)
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
-        s -= Bn*np.sin(np.pi*i*xm/L)*np.sin(2*i*np.pi*F*t)*2*i*np.pi*F
+        s += An*Bn*np.sin(2*np.pi*fn*t)
 
-    return -N*S*dBdy*s
-
+    return N*S*dBdy*s
 
 def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.ndarray:
-    """Calcule la tension induite dans un micro humbucker.
-
-    Args:
-        n (int): Nombre de modes de vibration à considérer.
-        N (int): Nombre de spires du micro.
-        x1 (float): Position du micro par rapport à la corde (côté gauche).
-        x2 (float): Position du micro par rapport à la corde (côté droit).
-        t (np.ndarray): Tableau de temps.
-
-    Returns:
-        np.ndarray: La tension induite dans le micro humbucker en fonction du temps.
-    """
     s = 0
-    
     for i in range(1, n+1):
+        fn = (i/(2*L))*np.sqrt(T/mu)
+        An = 2*np.pi*fn*(np.sin(i*np.pi*x1/L)+np.sin(i*np.pi*x2/L))
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
-        s -= Bn*(np.sin(np.pi*i*x1/L)+np.sin(np.pi*i*x2/L))*np.sin(2*i*np.pi*F*t)*2*i*np.pi*F
-    
-    e = -N*S*dBdy*s
-    return e
+        s += An*Bn*np.sin(2*np.pi*fn*t)
 
-def B(x, f,t):
-    """Calcule le champ magnétique parasite en fonction de la position, de la fréquence et du temps.
+    return N*S*dBdy*s
 
-    Args:
-        x (float): Position le long de la corde.
-        f (float): Fréquence du champ parasite.
-        t (np.ndarray): Tableau de temps.
-
-    Returns:
-        np.ndarray: Champ magnétique parasite en fonction de la position, de la fréquence et du temps.
-    """
+def B(x: float, f: float, t: np.ndarray) -> np.ndarray:
     return B0*np.sin(2*np.pi*f*t)*(1+alpha*x)
 
-def dBdt(x: float, f: float, t: np.ndarray) -> np.ndarray:
-    """Calcule la dérivée du champ magnétique parasite par rapport au temps.
+def fem_par_s(N:int, xm: float, f:float, t: np.ndarray) -> np.ndarray:
+    return -N*S*B0*(1+alpha*xm)*2*np.pi*f*np.cos(2*np.pi*f*t)
 
-    Args:
-        x (float): Position le long de la corde.
-        f (float): Fréquence du champ parasite.
-        t (np.ndarray): Tableau de temps.
+def fem_par_h(N:int, x1: float, x2: float, f:float, t: np.ndarray) -> np.ndarray:
+    return -N*S*B0*np.pi*f*np.cos(2*np.pi*f*t)*alpha*np.abs(x2 - x1)
 
-    Returns:
-        np.ndarray: Dérivée du champ magnétique parasite par rapport au temps.
-    """
-    return B0*2*np.pi*f*(1+alpha*x)*np.cos(2*np.pi*f*t)
 
-...
                                             #!######################!#
                                             #!         Appel        !#
                                             #!######################!#
 
 print("\nCalcul des tensions induites...")
 print("Echantillonnage...")
-Te = 1
-Ne = 100000
+Te = 0.05
+Ne = 1000
 fs = Ne/Te
 Na = 20
 print(f"Frequence d'echantillonnage : fs = {fs} Hz")
@@ -153,9 +104,9 @@ fem_s = fem_singlecoil(Na, N, xm, temps)
 fem_h = fem_humbucker(Na, N, x1, x2, temps)
 
 print("Calcul des tensions en reponse au champ parasite...")
-champ_par = B(xm, f, temps)
-fem_s_par = -N*S*dBdt(xm, f, temps)
-fem_h_par = -N*S*dBdt(x1, f, temps) + N*S*dBdt(x2, f, temps)
+champ_par = B(xm, fB, temps)
+fem_s_par = fem_par_s(N, xm, fB, temps)
+fem_h_par = fem_par_h(N, x1, x2, fB, temps)
 
 print("Calcul des tensions totales...")
 fem_s_tot = fem_s + fem_s_par
@@ -210,7 +161,7 @@ print("FFT sauvegardees sous Python/Exports/FFT.png.")
                                             #!   Affichage Courbes  !#
                                             #!######################!#
 
-"""
+
 print("\nAffichage des courbes...")
 
 #* --- Comparaison des micros (corde seule) ---*#
@@ -298,5 +249,5 @@ plt.savefig("Python/Exports/Total.png")
 plt.close()
 print("Courbes sauvegardees sous Python/Exports/Total.png.")
 
-"""
+
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
