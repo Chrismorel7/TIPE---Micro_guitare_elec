@@ -17,17 +17,17 @@ print("Bibliotheques importees.")
 
 print("\nInitialisation des constantes physiques et Electromagnetiques...")
 A = 1*10**(-3)          #? Amplitude initiale de vibration de la corde [m]
-mu = 9*10**(-3)         #? Masse linéique de la corde [kg.m-1]
+x0 = 0.105              #? Origine de la perturbation
 xm = 0.105              #? Distance entre la source la corde et le micro [m]
 x1 = 0.140              #? Distance entre la source la corde et le micro [m]
 x2 = 0.160              #? Distance entre la source la corde et le micro [m]
 L = 0.84                #? Longueur de la corde [m]
-x0 = 0.105              #? Origine de la perturbation
+mu = 9*10**(-3)         #? Masse linéique de la corde [kg.m-1]
 
-F = 72                   #? Frequence de la note [Hz]
+F = 72                  #? Frequence de la note [Hz]
 print(f"Tension de la corde : T = {4*mu*(L*F)**2} N")
 print(f"Frequence de la note : f = {F} Hz")
-T = 4*mu*(L*F)**2      #? Tension de la corde [N]
+T = 4*mu*(L*F)**2       #? Tension de la corde [N]
 
 
                                             #!######################!#
@@ -37,9 +37,15 @@ T = 4*mu*(L*F)**2      #? Tension de la corde [N]
 N = 7000                #? Nombre de spire du micro [.]
 S = 1*10**(-4)          #? Surface de la bobine du micro [m²]
 dBdy = 5                #? Gradient (supposé constant) [.]
-B0 = 9*10**(-3)         #? Amplitude du champ parasite [T]
-fB = 50                  #? Frequence du champ parasite [s-1]
-alpha = 0.02            #? ???
+mu0 = 4*np.pi*10**(-7)  #? Perméabilité du vide [H.m-1]
+U0 = 12                 #? Tension d'alimentation du Solenoide [V]
+Ls = 0.1                #? Inductance du Solenoide [H]
+n = 20000               #? Nombre de spires par metre du Solenoide [m-1]
+fB = 50                 #? Frequence du champ parasite [s-1]
+alpha = 0.02            #? Gradient du champ magnétique parasite [.m-1]
+
+B0 = (mu0*n*U0)/(2*np.pi*Ls*fB)  #? Amplitude du champ magnétique parasite [T]
+print(f"Amplitude du champ magnetique parasite : B0 = {B0} T")
 print("Constantes physiques et Electromagnetiques initialisees.")
 
                                             #!######################!#
@@ -121,7 +127,7 @@ Color_c = "#505050"
 Color_h = "#3344CB"
 Color_s = "#CAA307"
 
-
+"""
 print("\nCalcul des FFT...")
 fft_s = np.fft.fft(fem_s_tot)
 fft_s_amp = 2 * np.abs(fft_s) / Ne
@@ -156,7 +162,7 @@ plt.grid(True)
 plt.savefig("Python/Exports/FFT.png")
 plt.close()
 print("FFT sauvegardees sous Python/Exports/FFT.png.")
-
+"""
                                             #!######################!#
                                             #!   Affichage Courbes  !#
                                             #!######################!#
