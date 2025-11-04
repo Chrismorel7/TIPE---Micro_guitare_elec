@@ -1,23 +1,45 @@
 # TIPE — Micro guitare électrique
 
-Projet TIPE (Travail d'Initiative Personnelle Encadrée) — étude comparée des micros guitare : simple bobinage vs humbucker.
+Projet TIPE (Travail d'Initiative Personnelle Encadrée) — Influence du type de micro de guitare électrique sur le son perçu
 
-## Objectif
+## Bibliographie Commentée
 
-Étant étudiant en CPGE, filière PT, ce TIPE a pour objectifs :
+Contrairement à une guitare dite acoustique, une guitare électrique ne possède pas de caisse de résonnance. Pour produire du son, cette dernière amplifie la vibration de la corde via des micros pour transformer le signal mécanique en signal électrique, qui est ensuite reconvertit en signal acoustique et amplifié par l’amplificateur.
 
-- Modéliser un phénomène physique lié aux micros de guitare.
-- Réaliser une expérience ou une simulation permettant de valider un modèle théorique.
-- Présenter un rapport clair et concis.
+Ces micros de guitare électrique sont en vérité une technologie relativement récente.  En effet, malgré une première invention en 1890 par George Breed [1], la première  guitare  électrique  connaissant  un  succès  commercial  fut  inventée  en  1932  par  l’entreprise Rickenbacker [2]. Le fonctionnement à l’époque est assez rudimentaire et basé sur un principe connu de la Physique : La loi d’induction de Faraday [3]. 
 
-## Contexte et principe de fonctionnement (résumé)
+Principalement composé d’une bobine de cuivre et d’aimant permanent, le micro vient fournir à la corde un champ magnétique. Lorsque celle-ci va vibrer, elle va engendrer une variation de flux dans la bobine qui va générer une tension électrique. Tension qui sera transmise à l’amplificateur. 
 
-Un micro de guitare se compose principalement d'aimants permanents et d'un bobinage. La corde métallique, magnétisée par l'aimant, modifie le flux magnétique lorsque'elle vibre au‑dessus du bobinage. Cette variation de flux induit une force électromotrice (FEM) dans la bobine, qui est ensuite amplifiée et convertie en signal sonore.
+En revanche, ces micros (appelé SingleCoil) connaissent vite une limite puisqu’ils détectent  également  les  champs  magnétiques  ambiant,  parasite  donc,  qui  vont détériorer la qualité sonore. C’est pourquoi en 1955 fut inventé un nouveau type de Micro par l’ingénieur Seth Lover : Le Humbucker [3]. 
 
-Le humbucker (double bobinage) combine deux spires avec polarité et sens d'enroulement opposés pour :
+En effet, sur scène, le guitariste joue en présence de nombreux appareil électronique destiné à l’éclairage, la sonorisation, les accessoires ou encore à l’alimentation de toute l’installation. Ces divers composants génèrent malgré eux un champ magnétique ambiant (souvent à 50Hz) qui peut s’avérer parasite et produire un son non souhaité par le guitariste. [4] 
 
-- Réduire les parasites électromagnétiques par annulation de phase.
-- Augmenter le signal utile dans certaines configurations (effet de somme des contributions de corde selon l'architecture).
+Composé cette fois ci de deux bobines enroulées dans des sens opposé, le micro Humbucker permet de réduire voire même supprimer ces bruits parasites et ainsi de reproduire le son produit par la corde dans de meilleures conditions. [3] 
+
+Mais quels phénomènes physiques interviennent précisément dans l’annulation de bruit parasite ? N’y a-t-il que des avantages à utiliser un micro Humbucker ? Quels sont les limites de cette technologie ?
+
+## Problématique
+
+Comment le type de micro influence la qualité et le timbre du son produit par une guitare électrique ?
+
+## Objectifs du TIPE
+- Déterminer la tension induite en entrée du micro en fonction des différents paramètres électro-magnétiques du micro et physique de la guitare sous forme d’équation 
+- Modéliser l’action du micro sous forme d’un filtre RLC équivalent 
+- Comparer numériquement les spectres des signaux électriques en sortie des micros SingleCoil Humbucker avec et sans présence d’un champ parasite 
+- Concevoir et réaliser une maquette de guitare électrique 
+- Réaliser des mesures en réponse à une excitation standard de la corde en présence ou non d’un champ parasite 
+- Comparer les écarts entre le modèle théorique et les résultats expérimentaux pour conclure
+
+
+## Reférence Bibliographique
+
+[1] Matthew Hill. “The hidden history of the electric guitar.” Benoît Navarret, Marc Battier, Philippe Bruguière, Philippe Gonin. ‘’Quand la guitare [s’]électrise!’’, Sorbonne Université Presses, pp.33-61, 2022. 
+[2] Rickenbacker, “Rickenbacker Legacy”, Rickenbacker,  [En ligne]. Disponible sur : https://www.rickenbacker.com/legacy/  
+[3] S. W. Duncan, "Interview With Seth Lover," Seymour Duncan,  [En ligne]. Disponible sur : https://www.seymourduncan.com/blog/latest-updates/seymour-w-duncans-interview-with-seth-lover 
+[4] Larry, ‘’How to prevent humming and noise in a guitar amp’’, Thomann,  [En ligne]. Disponible sur : https://www.thomann.de/blog/en/learn/how-to-prevent-humming-and-noise-in-a-guitar-amp/ 
+[5] Dan Carson. ‘’ Investigation of the Electromagnetic Properties of Electric Guitar Pickups”. University of Illinois at Urbana-Champaign. USA. 2009 
+[6] P. Perov, W. Johnson, and N. Perova-Mello, "The physics of guitar string vibrations," American Journal of Physics, vol. 84, no. 1, pp. 38–43, Jan. 2016. 
+
 
 ## Structure du dépôt
 
@@ -29,40 +51,8 @@ Le humbucker (double bobinage) combine deux spires avec polarité et sens d'enro
 - Documents de présentation : Views/ (PDF/PPTX).
 - Plan de travail : Tasks/tasks.todo
 
-## Utilisation rapide
-
-Prérequis : Python 3.x, numpy, scipy, matplotlib (installer via pip si nécessaire).
-
-Exemples :
-
-- Lancer la simulation temporelle :
-  python Python/Code/Modele_fem.py
-- Générer la réponse en fréquence :
-  python Python/Code/Modele_elec.py Python/data/Bode.txt
-
-(Consulter les entêtes des scripts pour les options et paramètres.)
-
-## Méthodologie
-
-- Modélisation analytique / numérique du mouvement de la corde.
-- Calcul des FEM induites par variation de flux magnétique (loi de Faraday).
-- Simulation de la chaîne électrique micro → ampli et analyse en fréquence.
-- Comparaison des réponses et discussion des avantages du humbucker.
-
-## Résultats
-
-Rédaction et synthèse des résultats de simulation et expérimentaux en cours. Les graphiques exportés sont dans Python/Exports/.
-
-## Conclusion
-
-À rédiger (synthèse des observations, validation du modèle, limites et perspectives expérimentales).
-
-## Contributions et contact
-
-Contributions bienvenues via pull request. Pour toute question : voir l'entête du dépôt ou contact auteur dans le rapport.
-
 ## Licence
 
-Ajouter une licence si nécessaire.
+Christophe Morel - Lycée F. Buisson, dit "La Nat"
 
 <!-- Fin du README -->
