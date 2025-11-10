@@ -16,15 +16,15 @@ print("Bibliotheques importees.")
                                             #!####################!#
 
 print("\nInitialisation des constantes physiques et Electromagnetiques...")
-A = 1*10**(-3)          #? Amplitude initiale de vibration de la corde [m]
-x0 = 0.105              #? Origine de la perturbation
+A = 1*10**(-4)          #? Amplitude initiale de vibration de la corde [m]
+x0 = 0.41              #? Origine de la perturbation
 xm = 0.105              #? Distance entre la source la corde et le micro [m]
 x1 = 0.140              #? Distance entre la source la corde et le micro [m]
 x2 = 0.160              #? Distance entre la source la corde et le micro [m]
-L = 0.84                #? Longueur de la corde [m]
+L = 0.845                #? Longueur de la corde [m]
 mu = 9*10**(-3)         #? Masse linéique de la corde [kg.m-1]
 
-F = 72                  #? Frequence de la note [Hz]
+F = 82.4                  #? Frequence de la note [Hz]
 print(f"Tension de la corde : T = {4*mu*(L*F)**2} N")
 print(f"Frequence de la note : f = {F} Hz")
 T = 4*mu*(L*F)**2       #? Tension de la corde [N]
@@ -34,11 +34,11 @@ T = 4*mu*(L*F)**2       #? Tension de la corde [N]
                                             #!  Constante Elec-Mag  !#
                                             #!######################!#
 
-N = 7000                #? Nombre de spire du micro [.]
-S = 1*10**(-4)          #? Surface de la bobine du micro [m²]
-dBdy = 5                #? Gradient (supposé constant) [.]
+N = 9000                #? Nombre de spire du micro [.]
+S = 7*10**(-4)          #? Surface de la bobine du micro [m²]
+dBdy = 1                #? Gradient (supposé constant) [.]
 mu0 = 4*np.pi*10**(-7)  #? Perméabilité du vide [H.m-1]
-U0 = 12                 #? Tension d'alimentation du Solenoide [V]
+U0 = 20                 #? Tension d'alimentation du Solenoide [V]
 Ls = 0.1                #? Inductance du Solenoide [H]
 n = 20000               #? Nombre de spires par metre du Solenoide [m-1]
 fB = 50                 #? Frequence du champ parasite [s-1]
@@ -52,16 +52,18 @@ print("Constantes physiques et Electromagnetiques initialisees.")
                                             #!      Fonction        !#
                                             #!######################!#
 
-def entrée(n: int, x: float, t: np.ndarray) -> np.ndarray:
+def entrée(n: int, x: float, t: np.ndarray, Tau: float) -> np.ndarray:
     s = 0
     v = np.sqrt(T/mu)
     for i in range(1, n+1):
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += Bn*np.sin(i*np.pi*x/L)*np.cos(i*np.pi*v*t/L)
     
+    s = np.exp(-t/Tau)*s
+    
     return s
 
-def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
+def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray, Tau: float) -> np.ndarray:
     s = 0
     for i in range(1, n+1):
         fn = (i/(2*L))*np.sqrt(T/mu)
@@ -69,9 +71,9 @@ def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += An*Bn*np.sin(2*np.pi*fn*t)
 
-    return N*S*dBdy*s
+    return N*S*dBdy*s*np.exp(-t/Tau)
 
-def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.ndarray:
+def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, Tau: float) -> np.ndarray:
     s = 0
     for i in range(1, n+1):
         fn = (i/(2*L))*np.sqrt(T/mu)
@@ -79,7 +81,7 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.nda
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += An*Bn*np.sin(2*np.pi*fn*t)
 
-    return N*S*dBdy*s
+    return N*S*dBdy*s*np.exp(-t/Tau)
 
 def B(x: float, f: float, t: np.ndarray) -> np.ndarray:
     return B0*np.sin(2*np.pi*f*t)*(1+alpha*x)
@@ -97,17 +99,18 @@ def fem_par_h(N:int, x1: float, x2: float, f:float, t: np.ndarray) -> np.ndarray
 
 print("\nCalcul des tensions induites...")
 print("Echantillonnage...")
-Te = 0.05
+Te = 0.03
 Ne = 1000
 fs = Ne/Te
 Na = 20
+Tau = 0.5
 print(f"Frequence d'echantillonnage : fs = {fs} Hz")
 
 print("Calcul des tensions en reponse a la vibration de la corde...")
 temps = np.linspace(0, Te, Ne, endpoint=False)
-corde = entrée(Na, xm, temps)
-fem_s = fem_singlecoil(Na, N, xm, temps)
-fem_h = fem_humbucker(Na, N, x1, x2, temps)
+corde = entrée(Na, xm, temps, Tau)
+fem_s = fem_singlecoil(Na, N, xm, temps, Tau)
+fem_h = fem_humbucker(Na, N, x1, x2, temps, Tau)
 
 print("Calcul des tensions en reponse au champ parasite...")
 champ_par = B(xm, fB, temps)
