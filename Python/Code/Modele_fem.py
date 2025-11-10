@@ -9,6 +9,7 @@ print("\n\n---\nModele_fem.py\n---\n")
 print("\nImportation des bibliotheques...")
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 print("Bibliotheques importees.")
 
                                             #!####################!#
@@ -16,15 +17,16 @@ print("Bibliotheques importees.")
                                             #!####################!#
 
 print("\nInitialisation des constantes physiques et Electromagnetiques...")
-A = 1*10**(-4)          #? Amplitude initiale de vibration de la corde [m]
-x0 = 0.41              #? Origine de la perturbation
+#* Paramètre maquette
 xm = 0.105              #? Distance entre la source la corde et le micro [m]
 x1 = 0.140              #? Distance entre la source la corde et le micro [m]
 x2 = 0.160              #? Distance entre la source la corde et le micro [m]
-L = 0.845                #? Longueur de la corde [m]
+L = 0.845               #? Longueur de la corde [m]
 mu = 9*10**(-3)         #? Masse linéique de la corde [kg.m-1]
-
-F = 82.4                  #? Frequence de la note [Hz]
+#* Paramètre variable
+A = 8*10**(-4)          #? Amplitude initiale de vibration de la corde [m]
+x0 = 0.41               #? Origine de la perturbation [m]
+F = 72.4                  #? Frequence de la note [Hz]
 print(f"Tension de la corde : T = {4*mu*(L*F)**2} N")
 print(f"Frequence de la note : f = {F} Hz")
 T = 4*mu*(L*F)**2       #? Tension de la corde [N]
@@ -33,18 +35,20 @@ T = 4*mu*(L*F)**2       #? Tension de la corde [N]
                                             #!######################!#
                                             #!  Constante Elec-Mag  !#
                                             #!######################!#
-
+#* Paramètre micro & Corde
 N = 9000                #? Nombre de spire du micro [.]
 S = 7*10**(-4)          #? Surface de la bobine du micro [m²]
-dBdy = 1                #? Gradient (supposé constant) [.]
-mu0 = 4*np.pi*10**(-7)  #? Perméabilité du vide [H.m-1]
-U0 = 20                 #? Tension d'alimentation du Solenoide [V]
-Ls = 0.1                #? Inductance du Solenoide [H]
-n = 20000               #? Nombre de spires par metre du Solenoide [m-1]
+dBdy = 0.03             #? Gradient de la corde (supposé constant) [T.m-1]
+#* Paramètre champ parasite
+mu0 = 4e-7 * np.pi      #? Perméabilité magnétique du vide [H.m-1]
+Nbob = 150              #? Nombre de Spire de la bobine de Helmholtz
+R = 0.05                #? Rayon des bobines de Helmholtz [m]
+Lbob = 1.5e-3           #? Inductance des bobines de Helmholtz [H]
+Rbob = 10               #? Résistance des bobines de Helmholtz [Ω]
 fB = 50                 #? Frequence du champ parasite [s-1]
-alpha = 0.02            #? Gradient du champ magnétique parasite [.m-1]
+U0 = 0.1                  #? Tension dans les bobines de Helmholtz [V]
 
-B0 = (mu0*n*U0)/(2*np.pi*Ls*fB)  #? Amplitude du champ magnétique parasite [T]
+B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))  #? Amplitude du champ magnetique parasite [T]
 print(f"Amplitude du champ magnetique parasite : B0 = {B0} T")
 print("Constantes physiques et Electromagnetiques initialisees.")
 
@@ -52,18 +56,16 @@ print("Constantes physiques et Electromagnetiques initialisees.")
                                             #!      Fonction        !#
                                             #!######################!#
 
-def entrée(n: int, x: float, t: np.ndarray, Tau: float) -> np.ndarray:
+def entrée(n: int, x: float, t: np.ndarray) -> np.ndarray:
     s = 0
     v = np.sqrt(T/mu)
     for i in range(1, n+1):
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += Bn*np.sin(i*np.pi*x/L)*np.cos(i*np.pi*v*t/L)
     
-    s = np.exp(-t/Tau)*s
-    
     return s
 
-def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray, Tau: float) -> np.ndarray:
+def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
     s = 0
     for i in range(1, n+1):
         fn = (i/(2*L))*np.sqrt(T/mu)
@@ -71,9 +73,9 @@ def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray, Tau: float) -> np.n
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += An*Bn*np.sin(2*np.pi*fn*t)
 
-    return N*S*dBdy*s*np.exp(-t/Tau)
+    return N*S*dBdy*s
 
-def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, Tau: float) -> np.ndarray:
+def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.ndarray:
     s = 0
     for i in range(1, n+1):
         fn = (i/(2*L))*np.sqrt(T/mu)
@@ -81,16 +83,19 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, Tau: floa
         Bn = (2*A*np.sin((i*np.pi*x0)/(L)))/((x0)/(L)*(1-(x0)/(L))*np.pi**2*i**2)
         s += An*Bn*np.sin(2*np.pi*fn*t)
 
-    return N*S*dBdy*s*np.exp(-t/Tau)
+    return N*S*dBdy*s
 
-def B(x: float, f: float, t: np.ndarray) -> np.ndarray:
-    return B0*np.sin(2*np.pi*f*t)*(1+alpha*x)
+def B(r:float, f: float, t: np.ndarray) -> np.ndarray:
+    return B0*np.sin(2*np.pi*f*t)
+
+def dBdt(r:float, f: float, t: np.ndarray) -> np.ndarray:
+    return B0*2*np.pi*f*np.cos(2*np.pi*f*t)
 
 def fem_par_s(N:int, xm: float, f:float, t: np.ndarray) -> np.ndarray:
-    return -N*S*B0*(1+alpha*xm)*2*np.pi*f*np.cos(2*np.pi*f*t)
+    return -N*S*dBdt(0, f, t)
 
 def fem_par_h(N:int, x1: float, x2: float, f:float, t: np.ndarray) -> np.ndarray:
-    return -N*S*B0*np.pi*f*np.cos(2*np.pi*f*t)*alpha*np.abs(x2 - x1)
+    return -N*S*(dBdt(x1, f, t) - dBdt(x2, f, t))
 
 
                                             #!######################!#
@@ -103,17 +108,16 @@ Te = 0.03
 Ne = 1000
 fs = Ne/Te
 Na = 20
-Tau = 0.5
 print(f"Frequence d'echantillonnage : fs = {fs} Hz")
 
 print("Calcul des tensions en reponse a la vibration de la corde...")
 temps = np.linspace(0, Te, Ne, endpoint=False)
-corde = entrée(Na, xm, temps, Tau)
-fem_s = fem_singlecoil(Na, N, xm, temps, Tau)
-fem_h = fem_humbucker(Na, N, x1, x2, temps, Tau)
+corde = entrée(Na, xm, temps)
+fem_s = fem_singlecoil(Na, N, xm, temps)
+fem_h = fem_humbucker(Na, N, x1, x2, temps)
 
 print("Calcul des tensions en reponse au champ parasite...")
-champ_par = B(xm, fB, temps)
+champ_par = B(0, fB, temps)
 fem_s_par = fem_par_s(N, xm, fB, temps)
 fem_h_par = fem_par_h(N, x1, x2, fB, temps)
 
@@ -162,39 +166,28 @@ plt.legend()
 plt.xlabel("Fréquence (Hz)")
 plt.ylabel("Tension [V]")
 plt.grid(True)
+plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
 plt.savefig("Python/Exports/FFT.png")
 plt.close()
 print("FFT sauvegardees sous Python/Exports/FFT.png.")
-"""
+
                                             #!######################!#
                                             #!   Affichage Courbes  !#
                                             #!######################!#
-
+"""
 
 print("\nAffichage des courbes...")
 
 #* --- Comparaison des micros (corde seule) ---*#
 print("Comparaison des micros (corde seule)...")
 fig, ax1 = plt.subplots()
-
-# Axe 1
-ax1.set_xlabel("Temps [s]")
-ax1.set_ylabel("Deplacement de la corde [m]", color=Color_c)
-l1, = ax1.plot(temps, corde, color=Color_c, label="Deplacement de la corde [m]")
-ax1.tick_params(axis='y', labelcolor=Color_c)
-
-# Axe 2
-ax2 = ax1.twinx()  # Deuxième axe y
-ax2.set_ylabel("Tension induite [V]", color="#000000")
-l3, = ax2.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
-l2, = ax2.plot(temps, fem_s, color=Color_s, label="Micro Simple [V]")
-ax2.tick_params(axis='y', labelcolor="#000000")
-
-# Légende unique
-fig.legend(handles=[l1, l3, l2], loc='lower left')
-
-# Mise en forme
-plt.title("Tension induite en sortie du micro (Vibration de la corde uniquement)")
+ax1.set_ylabel("Tension induite [V]", color="#000000")
+l3, = ax1.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
+l2, = ax1.plot(temps, fem_s, color=Color_s, label="Micro Simple [V]")
+ax1.tick_params(axis='y', labelcolor="#000000")
+ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+fig.legend(handles=[l3, l2], loc='lower left')
+plt.title("Tension induite en sortie du micro (Corde seule)")
 fig.tight_layout()
 plt.grid()
 plt.savefig("Python/Exports/Comparaison_sh.png")
@@ -210,6 +203,7 @@ ax1.set_xlabel("Temps [s]")
 ax1.set_ylabel("Champ Parasite [T]", color=Color_c)
 l1, = ax1.plot(temps, champ_par, color=Color_c, label="Champ Parasite [T]")
 ax1.tick_params(axis='y', labelcolor=Color_c)
+ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
 
 # Axe 2
 ax2 = ax1.twinx()  # Deuxième axe y
@@ -217,6 +211,7 @@ ax2.set_ylabel("Tension induite [V]", color="#000000")
 l3, = ax2.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker [V]")
 l2, = ax2.plot(temps, fem_s_par, color=Color_s, label="Micro Simple [V]")
 ax2.tick_params(axis='y', labelcolor="#000000")
+ax2.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
 
 # Légende unique
 fig.legend(handles=[l1, l3, l2], loc='lower left')
@@ -233,30 +228,31 @@ print("Courbes sauvegardees sous Python/Exports/Parasite.png.")
 print("Comparaison des micros (total)...")
 
 fig, ax1 = plt.subplots()
-
-# Axe 1
-ax1.set_xlabel("Temps [s]")
-ax1.set_ylabel("Deplacement de la corde [m]", color=Color_c)
-l1, = ax1.plot(temps, corde, color=Color_c, label="Deplacement de la corde [m]")
-ax1.tick_params(axis='y', labelcolor=Color_c)
-
-# Axe 2
-ax2 = ax1.twinx()  # Deuxième axe y
-ax2.set_ylabel("Tension induite [V]", color="#000000")
-l3, = ax2.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker [V]")
-l2, = ax2.plot(temps, fem_s_tot, color=Color_s, label="Micro Simple [V]")
-ax2.tick_params(axis='y', labelcolor="#000000")
-
-# Légende unique
-fig.legend(handles=[l1, l3, l2], loc='lower left')
-
-# Mise en forme
+ax1.set_ylabel("Tension induite [V]", color="#000000")
+l3, = ax1.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker [V]")
+l2, = ax1.plot(temps, fem_s_tot, color=Color_s, label="Micro Simple [V]")
+ax1.tick_params(axis='y', labelcolor="#000000")
+ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+fig.legend(handles=[l3, l2], loc='lower left')
 plt.title("Tension induite en sortie du micro (Corde + Champ parasite)")
 fig.tight_layout()
 plt.grid()
 plt.savefig("Python/Exports/Total.png")
 plt.close()
 print("Courbes sauvegardees sous Python/Exports/Total.png.")
+
+#* --- Micro Humbucker (corde) ---*#
+plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
+plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+plt.title("Tension induite en sortie du micro Humbucker (Corde seule)")
+plt.xlabel("Temps [s]")
+plt.ylabel("Tension [V]")
+plt.gca().xaxis.set_major_locator(MultipleLocator(4e-3))
+plt.gca().yaxis.set_major_locator(MultipleLocator(50e-3))
+plt.grid(which='major', color='black', linestyle='-', linewidth=0.5)
+plt.legend()
+plt.savefig("Python/Exports/Humbucker_corde.png")
+plt.close()
 
 
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")

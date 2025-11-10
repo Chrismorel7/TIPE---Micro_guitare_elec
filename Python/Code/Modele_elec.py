@@ -35,7 +35,7 @@ print("Variables initialisees.")
 
 print("\nLecture du fichier Bode.txt...")
 
-file = open("Python/Ressource Model/Bode.txt")
+file = open("Python/data/Bode.txt", 'r')
 L_lignes = file.readlines()
 
 for i in range(1, len(L_lignes)):
