@@ -24,9 +24,9 @@ x2 = 0.160              #? Distance entre la source la corde et le micro [m]
 L = 0.845               #? Longueur de la corde [m]
 mu = 9*10**(-3)         #? Masse linéique de la corde [kg.m-1]
 #* Paramètre variable
-A = 8*10**(-4)          #? Amplitude initiale de vibration de la corde [m]
-x0 = 0.41               #? Origine de la perturbation [m]
-F = 72.4                  #? Frequence de la note [Hz]
+A = 8*10**(-4)          #? Amplitude initiale de vibration de la corde [m]      A verifier ???
+x0 = 0.41               #? Origine de la perturbation [m]                       A verifier ???
+F = 72.4                #? Frequence de la note [Hz]                            A verifier ???
 print(f"Tension de la corde : T = {4*mu*(L*F)**2} N")
 print(f"Frequence de la note : f = {F} Hz")
 T = 4*mu*(L*F)**2       #? Tension de la corde [N]
@@ -36,17 +36,17 @@ T = 4*mu*(L*F)**2       #? Tension de la corde [N]
                                             #!  Constante Elec-Mag  !#
                                             #!######################!#
 #* Paramètre micro & Corde
-N = 9000                #? Nombre de spire du micro [.]
+N = 9000                #? Nombre de spire du micro [.]                         A verifier ???
 S = 7*10**(-4)          #? Surface de la bobine du micro [m²]
-dBdy = 0.03             #? Gradient de la corde (supposé constant) [T.m-1]
+dBdy = 0.03             #? Gradient de la corde (supposé constant) [T.m-1]      A verifier ???
 #* Paramètre champ parasite
 mu0 = 4e-7 * np.pi      #? Perméabilité magnétique du vide [H.m-1]
-Nbob = 150              #? Nombre de Spire de la bobine de Helmholtz
-R = 0.05                #? Rayon des bobines de Helmholtz [m]
-Lbob = 1.5e-3           #? Inductance des bobines de Helmholtz [H]
-Rbob = 10               #? Résistance des bobines de Helmholtz [Ω]
+Nbob = 150              #? Nombre de Spire de la bobine de Helmholtz            A verifier ???
+R = 0.05                #? Rayon des bobines de Helmholtz [m]                   A verifier ???
+Lbob = 1.5e-3           #? Inductance des bobines de Helmholtz [H]              A verifier ???
+Rbob = 10               #? Résistance des bobines de Helmholtz [Ω]              A verifier ???
 fB = 50                 #? Frequence du champ parasite [s-1]
-U0 = 0.1                  #? Tension dans les bobines de Helmholtz [V]
+U0 = 0.1                #? Tension dans les bobines de Helmholtz [V]            A verifier ???
 
 B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))  #? Amplitude du champ magnetique parasite [T]
 print(f"Amplitude du champ magnetique parasite : B0 = {B0} T")
@@ -203,7 +203,7 @@ ax1.set_xlabel("Temps [s]")
 ax1.set_ylabel("Champ Parasite [T]", color=Color_c)
 l1, = ax1.plot(temps, champ_par, color=Color_c, label="Champ Parasite [T]")
 ax1.tick_params(axis='y', labelcolor=Color_c)
-ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+ax1.ticklabel_format(axis='y', style='sci', scilimits=(-6, -6))
 
 # Axe 2
 ax2 = ax1.twinx()  # Deuxième axe y
