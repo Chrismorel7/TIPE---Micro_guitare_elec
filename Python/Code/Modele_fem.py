@@ -10,7 +10,11 @@ print("\nImportation des bibliotheques...")
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+import os
+import logging
 print("Bibliotheques importees.")
+# Configure logging for optional diagnostic output
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
                                             #!###########!#
                                             #! Constante !#
@@ -35,9 +39,9 @@ RCC_s = 8.92*10**3      #A verifier ???
 lmoy_s = 0.147          #A verifier ???
 N_s = int(RCC_s*np.pi*d**2 / (4*rho*lmoy_s))
 #* Parametre Micro Humbucker
-RCC_h = ...             #A verifier ???
-lmoy_h = ...            #A verifier ???
-N_h = ...               #A verifier ???
+RCC_h = None             #A verifier ???
+lmoy_h = None            #A verifier ???
+N_h = None               #A verifier ???
 #* Parametre Champ parasite
 Nbob = 150              #A verifier ???
 R = 0.05                #A verifier ???
@@ -88,6 +92,11 @@ params = [
 # En-tête du tableau
 print(f"{'Var':<8} {'Valeur':>18} {'Unite':<10} {'Description':<45}")
 print("-" * 85)
+
+# Avertissement si les paramètres humbucker ne sont pas renseignés
+if RCC_h is None or lmoy_h is None or N_h is None:
+    logging.warning("Parametres humbucker (RCC_h, lmoy_h, N_h) non defini(s). Certaines simulations pourront utiliser N_s en substitution.")
+
 
 # Affichage des parametres
 compteur = 1
@@ -156,166 +165,187 @@ def fem_par_h(N:int, x1: float, x2: float, f:float, t: np.ndarray) -> np.ndarray
                                             #!######################!#
                                             #!         Appel        !#
                                             #!######################!#
-print("-" * 100)
-print("\nCalcul des tensions induites...")
-print("\nEchantillonnage...")
-Te = 0.03
-Ne = 1000
-fs = Ne/Te
-Na = 20
-# Affichage des parametres d'echantillonnage
-print("\nParametres d'echantillonnage (avec unites) :")
-print(f"Te = {Te} s")
-print(f"Ne = {Ne} echantillons")
-print(f"fs = {fs:.6g} Hz")
-print(f"Na = {Na}")
+if __name__ == "__main__":
+    # Ensure export directory exists
+    os.makedirs("Python/Exports", exist_ok=True)
 
-print("\nCalcul des tensions en reponse a la vibration de la corde...")
-temps = np.linspace(0, Te, Ne, endpoint=False)
-corde = entree(Na, xm, temps)
-fem_s = fem_singlecoil(Na, N_s, xm, temps)
-fem_h = fem_humbucker(Na, N_s, x1, x2, temps)
+    print("-" * 100)
+    print("\nCalcul des tensions induites...")
+    print("\nEchantillonnage...")
+    Te = 0.03
+    Ne = 1_000
+    fs = Ne/Te
+    Na = 20
+    
+    Te_fft = 1
+    Ne_fft = 100_000
+    fs_fft = Ne_fft/Te_fft
+    
+    # Affichage des parametres d'echantillonnage
+    print("\nParametres d'echantillonnage (avec unites) :")
+    print(f"Te = {Te} s")
+    print(f"Ne = {Ne} echantillons")
+    print(f"fs = {fs:.6g} Hz")
+    print(f"Na = {Na}")
 
-print("\nCalcul des tensions en reponse au champ parasite...")
-champ_par = B(0, fB, temps)
-fem_s_par = fem_par_s(N_s, xm, fB, temps)
-fem_h_par = fem_par_h(N_s, x1, x2, fB, temps)
+    print("\nCalcul des tensions en reponse a la vibration de la corde...")
+    temps = np.linspace(0, Te, Ne, endpoint=False)
+    corde = entree(Na, xm, temps)
+    fem_s = fem_singlecoil(Na, N_s, xm, temps)
+    fem_h = fem_humbucker(Na, N_s, x1, x2, temps)
 
-print("\nCalcul des tensions totales...")
-fem_s_tot = fem_s + fem_s_par
-fem_h_tot = fem_h + fem_h_par
+    print("\nCalcul des tensions en reponse au champ parasite...")
+    champ_par = B(0, fB, temps)
+    fem_s_par = fem_par_s(N_s, xm, fB, temps)
+    fem_h_par = fem_par_h(N_s, x1, x2, fB, temps)
 
-                                            #!######################!#
-                                            #!          FFT         !#
-                                            #!######################!#
+    print("\nCalcul des tensions totales...")
+    fem_s_tot = fem_s + fem_s_par
+    fem_h_tot = fem_h + fem_h_par
 
+    Color_c = "#505050"
+    Color_h = "#3344CB"
+    Color_s = "#CAA307"
 
-Color_c = "#505050"
-Color_h = "#3344CB"
-Color_s = "#CAA307"
+    # Option pour tracer la FFT (ne s'exécute que si True)
+    tracer_fft = True
+    if tracer_fft:
+        print("-" * 100)
+        print("\nCalcul des FFT...")
+        print("\nParametres d'echantillonnage (avec unites) :")
+        print(f"Te = {Te_fft} s")
+        print(f"Ne = {Ne_fft} echantillons")
+        print(f"fs = {fs_fft:.6g} Hz")
+        print(f"Na = {Na}")
+        
+        print("\nCalcul des tensions en reponse a la vibration de la corde...")
+        temps_fft = np.linspace(0, Te_fft, Ne_fft, endpoint=False)
+        corde_fft = entree(Na, xm, temps_fft)
+        fem_s_fft = fem_singlecoil(Na, N_s, xm, temps_fft)
+        fem_h_fft = fem_humbucker(Na, N_s, x1, x2, temps_fft)
+        print("\nCalcul des tensions en reponse au champ parasite...")
+        champ_par_fft = B(0, fB, temps_fft)
+        fem_s_par_fft = fem_par_s(N_s, xm, fB, temps_fft)
+        fem_h_par_fft = fem_par_h(N_s, x1, x2, fB, temps_fft)
+        print("\nCalcul des tensions totales...")
+        fem_s_tot_fft = fem_s_fft + fem_s_par_fft
+        fem_h_tot_fft = fem_h_fft + fem_h_par_fft
+        
+        fft_s = np.fft.fft(fem_s_tot_fft)
+        fft_s_amp = 2 * np.abs(fft_s) / Ne_fft
+        fft_s_amp[0] /= 2
 
-"""
-print("-" * 100)
-print("\nCalcul des FFT...")
-fft_s = np.fft.fft(fem_s_tot)
-fft_s_amp = 2 * np.abs(fft_s) / Ne
-fft_s_amp[0] /= 2
+        fft_h = np.fft.fft(fem_h_tot_fft)
+        fft_h_amp = 2 * np.abs(fft_h) / Ne_fft
+        fft_h_amp[0] /= 2
 
-fft_h = np.fft.fft(fem_h_tot)
-fft_h_amp = 2 * np.abs(fft_h) / Ne
-fft_h_amp[0] /= 2
+        freqs = np.fft.fftfreq(Ne_fft, 1/fs_fft)
+        mask = 0 <= freqs
+        freqs = freqs[mask]
+        mask2 = freqs <= 1500
+        freqs = freqs[mask2]
 
-freqs = np.fft.fftfreq(Ne, 1/fs)
-mask = 0 <= freqs
-freqs = freqs[mask]
-mask2 = freqs <= 1500
-freqs = freqs[mask2]
+        fft_s_amp = fft_s_amp[mask]
+        fft_s_amp = fft_s_amp[mask2]
+        fft_h_amp = fft_h_amp[mask]
+        fft_h_amp = fft_h_amp[mask2]
+        print("FFT calculees.")
 
-fft_s_amp = fft_s_amp[mask]
-fft_s_amp = fft_s_amp[mask2]
-fft_h_amp = fft_h_amp[mask]
-fft_h_amp = fft_h_amp[mask2]
-print("FFT calculees.")
+        print("Affichage des FFT...")
+        Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
+        plt.figure(figsize=(6,5))
+        plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker")
+        plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Simple")
+        plt.title(Title)
+        plt.legend()
+        plt.xlabel("Frequence (Hz)")
+        plt.ylabel("Tension [V]")
+        plt.grid(True)
+        plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+        plt.savefig("Python/Exports/FFT.png")
+        plt.close()
+        print("FFT sauvegardees sous Python/Exports/FFT.png.")
 
-print("Affichage des FFT...")
-Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
-plt.figure(figsize=(6,5))
-plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker")
-plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Simple")
-plt.title(Title)
-plt.legend()
-plt.xlabel("Frequence (Hz)")
-plt.ylabel("Tension [V]")
-plt.grid(True)
-plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-plt.savefig("Python/Exports/FFT.png")
-plt.close()
-print("FFT sauvegardees sous Python/Exports/FFT.png.")
+    print("-" * 100)
+    print("\nAffichage des courbes...")
 
-                                            #!######################!#
-                                            #!   Affichage Courbes  !#
-                                            #!######################!#
-"""
-print("-" * 100)
-print("\nAffichage des courbes...")
+    #* --- Comparaison des micros (corde seule) ---*#
+    print("Comparaison des micros (corde seule)...")
+    fig, ax1 = plt.subplots()
+    ax1.set_ylabel("Tension induite [V]", color="#000000")
+    l3, = ax1.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
+    l2, = ax1.plot(temps, fem_s, color=Color_s, label="Micro Simple [V]")
+    ax1.tick_params(axis='y', labelcolor="#000000")
+    ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    fig.legend(handles=[l3, l2], loc='lower left')
+    plt.title("Tension induite en sortie du micro (Corde seule)")
+    fig.tight_layout()
+    plt.grid()
+    plt.savefig("Python/Exports/Comparaison_sh.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/Comparaison_sh.png.")
 
-#* --- Comparaison des micros (corde seule) ---*#
-print("Comparaison des micros (corde seule)...")
-fig, ax1 = plt.subplots()
-ax1.set_ylabel("Tension induite [V]", color="#000000")
-l3, = ax1.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
-l2, = ax1.plot(temps, fem_s, color=Color_s, label="Micro Simple [V]")
-ax1.tick_params(axis='y', labelcolor="#000000")
-ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-fig.legend(handles=[l3, l2], loc='lower left')
-plt.title("Tension induite en sortie du micro (Corde seule)")
-fig.tight_layout()
-plt.grid()
-plt.savefig("Python/Exports/Comparaison_sh.png")
-plt.close()
-print("Courbes sauvegardees sous Python/Exports/Comparaison_sh.png.")
+    #* --- Comparaison des micros (champ parasite seul) ---*#
+    print("Comparaison des micros (champ parasite seul)...")
+    fig, ax1 = plt.subplots()
 
-#* --- Comparaison des micros (champ parasite seul) ---*#
-print("Comparaison des micros (champ parasite seul)...")
-fig, ax1 = plt.subplots()
+    # Axe 1
+    ax1.set_xlabel("Temps [s]")
+    ax1.set_ylabel("Champ Parasite [T]", color=Color_c)
+    l1, = ax1.plot(temps, champ_par, color=Color_c, label="Champ Parasite [T]")
+    ax1.tick_params(axis='y', labelcolor=Color_c)
+    ax1.ticklabel_format(axis='y', style='sci', scilimits=(-6, -6))
 
-# Axe 1
-ax1.set_xlabel("Temps [s]")
-ax1.set_ylabel("Champ Parasite [T]", color=Color_c)
-l1, = ax1.plot(temps, champ_par, color=Color_c, label="Champ Parasite [T]")
-ax1.tick_params(axis='y', labelcolor=Color_c)
-ax1.ticklabel_format(axis='y', style='sci', scilimits=(-6, -6))
+    # Axe 2
+    ax2 = ax1.twinx()  # Deuxieme axe y
+    ax2.set_ylabel("Tension induite [V]", color="#000000")
+    l3, = ax2.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker [V]")
+    l2, = ax2.plot(temps, fem_s_par, color=Color_s, label="Micro Simple [V]")
+    ax2.tick_params(axis='y', labelcolor="#000000")
+    ax2.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
 
-# Axe 2
-ax2 = ax1.twinx()  # Deuxieme axe y
-ax2.set_ylabel("Tension induite [V]", color="#000000")
-l3, = ax2.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker [V]")
-l2, = ax2.plot(temps, fem_s_par, color=Color_s, label="Micro Simple [V]")
-ax2.tick_params(axis='y', labelcolor="#000000")
-ax2.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    # Legende unique
+    fig.legend(handles=[l1, l3, l2], loc='lower left')
 
-# Legende unique
-fig.legend(handles=[l1, l3, l2], loc='lower left')
+    # Mise en forme
+    plt.title("Tension induite en sortie du micro (champ parasite uniquement)")
+    fig.tight_layout()
+    plt.grid()
+    plt.savefig("Python/Exports/Parasite.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/Parasite.png.")
 
-# Mise en forme
-plt.title("Tension induite en sortie du micro (champ parasite uniquement)")
-fig.tight_layout()
-plt.grid()
-plt.savefig("Python/Exports/Parasite.png")
-plt.close()
-print("Courbes sauvegardees sous Python/Exports/Parasite.png.")
+    #* --- Comparaison des micros (total) ---*#
+    print("Comparaison des micros (total)...")
 
-#* --- Comparaison des micros (total) ---*#
-print("Comparaison des micros (total)...")
+    fig, ax1 = plt.subplots()
+    ax1.set_ylabel("Tension induite [V]", color="#000000")
+    l3, = ax1.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker [V]")
+    l2, = ax1.plot(temps, fem_s_tot, color=Color_s, label="Micro Simple [V]")
+    ax1.tick_params(axis='y', labelcolor="#000000")
+    ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    fig.legend(handles=[l3, l2], loc='lower left')
+    plt.title("Tension induite en sortie du micro (Corde + Champ parasite)")
+    fig.tight_layout()
+    plt.grid()
+    plt.savefig("Python/Exports/Total.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/Total.png.")
 
-fig, ax1 = plt.subplots()
-ax1.set_ylabel("Tension induite [V]", color="#000000")
-l3, = ax1.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker [V]")
-l2, = ax1.plot(temps, fem_s_tot, color=Color_s, label="Micro Simple [V]")
-ax1.tick_params(axis='y', labelcolor="#000000")
-ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-fig.legend(handles=[l3, l2], loc='lower left')
-plt.title("Tension induite en sortie du micro (Corde + Champ parasite)")
-fig.tight_layout()
-plt.grid()
-plt.savefig("Python/Exports/Total.png")
-plt.close()
-print("Courbes sauvegardees sous Python/Exports/Total.png.")
+    #* --- Micro Humbucker (corde) ---*#
+    print("Micro Humbucker seul...")
+    plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Tension induite en sortie du micro Humbucker (Corde seule)")
+    plt.xlabel("Temps [s]")
+    plt.ylabel("Tension [V]")
+    plt.gca().xaxis.set_major_locator(MultipleLocator(4e-3))
+    plt.gca().yaxis.set_major_locator(MultipleLocator(50e-3))
+    plt.grid(which='major', color='black', linestyle='-', linewidth=0.5)
+    plt.legend()
+    plt.savefig("Python/Exports/Humbucker_corde.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/Humbucker_corde.png.")
 
-#* --- Micro Humbucker (corde) ---*#
-print("Micro Humbucker seul...")
-plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
-plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-plt.title("Tension induite en sortie du micro Humbucker (Corde seule)")
-plt.xlabel("Temps [s]")
-plt.ylabel("Tension [V]")
-plt.gca().xaxis.set_major_locator(MultipleLocator(4e-3))
-plt.gca().yaxis.set_major_locator(MultipleLocator(50e-3))
-plt.grid(which='major', color='black', linestyle='-', linewidth=0.5)
-plt.legend()
-plt.savefig("Python/Exports/Humbucker_corde.png")
-plt.close()
-print("Courbes sauvegardees sous Python/Exports/Humbucker_corde.png.")
-
-print("-" * 100)
-print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
+    print("-" * 100)
+    print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
