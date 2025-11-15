@@ -39,9 +39,9 @@ RCC_s = 8.92*10**3      #A verifier ???
 lmoy_s = 0.147          #A verifier ???
 N_s = int(RCC_s*np.pi*d**2 / (4*rho*lmoy_s))
 #* Parametre Micro Humbucker
-RCC_h = None             #A verifier ???
-lmoy_h = None            #A verifier ???
-N_h = None               #A verifier ???
+RCC_h = 8.46*10**3             #A verifier ???
+lmoy_h = lmoy_s            #A verifier ???
+N_h = int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
 #* Parametre Champ parasite
 Nbob = 150              #A verifier ???
 R = 0.05                #A verifier ???
@@ -192,12 +192,12 @@ if __name__ == "__main__":
     temps = np.linspace(0, Te, Ne, endpoint=False)
     corde = entree(Na, xm, temps)
     fem_s = fem_singlecoil(Na, N_s, xm, temps)
-    fem_h = fem_humbucker(Na, N_s, x1, x2, temps)
+    fem_h = fem_humbucker(Na, N_h, x1, x2, temps)
 
     print("\nCalcul des tensions en reponse au champ parasite...")
     champ_par = B(0, fB, temps)
     fem_s_par = fem_par_s(N_s, xm, fB, temps)
-    fem_h_par = fem_par_h(N_s, x1, x2, fB, temps)
+    fem_h_par = fem_par_h(N_h, x1, x2, fB, temps)
 
     print("\nCalcul des tensions totales...")
     fem_s_tot = fem_s + fem_s_par
