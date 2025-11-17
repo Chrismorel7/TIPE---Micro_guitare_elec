@@ -46,10 +46,9 @@ for i in range(1, len(L_lignes)):
     Vvout_hum_deg.append(values[2])
     Vvout_sin_db.append(values[3])
     Vvout_sin_deg.append(values[4])
-
 file.close()
-print("Fichier Bode.txt lu.")
-print("Variables remplies.")
+
+
 
                                             #!####################!#
                                             #!     Affichage      !#
