@@ -52,8 +52,8 @@ U0 = 0.1                #A verifier ???
 B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))
 #* Parametre variable
 A = 8*10**(-4)          #A verifier ???
-x0 = 0.140              #A verifier ???
-F = 68.3                #A verifier ???
+x0 = 0.140
+F = 68.3
 T = 4*mu*(L*F)**2
 
 # Affichage des variables avec unites
