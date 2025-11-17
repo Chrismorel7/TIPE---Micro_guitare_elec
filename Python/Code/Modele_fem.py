@@ -39,12 +39,12 @@ RCC_s = 8.92*10**3      #A verifier ???
 lmoy_s = 0.147          #A verifier ???
 N_s = int(RCC_s*np.pi*d**2 / (4*rho*lmoy_s))
 #* Parametre Micro Humbucker
-RCC_h = 8.46*10**3             #A verifier ???
+RCC_h = 4.52*10**3
 lmoy_h = lmoy_s            #A verifier ???
 N_h = int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
 #* Parametre Champ parasite
 Nbob = 150              #A verifier ???
-R = 0.05                #A verifier ???
+R = 0.06
 Lbob = 1.5e-3           #A verifier ???
 Rbob = 10               #A verifier ???
 fB = 50                 #A verifier ???
@@ -52,8 +52,8 @@ U0 = 0.1                #A verifier ???
 B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))
 #* Parametre variable
 A = 8*10**(-4)          #A verifier ???
-x0 = 0.41               #A verifier ???
-F = 72.4                #A verifier ???
+x0 = 0.140              #A verifier ???
+F = 68.3                #A verifier ???
 T = 4*mu*(L*F)**2
 
 # Affichage des variables avec unites

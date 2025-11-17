@@ -33,9 +33,9 @@ print("Variables initialisees.")
                                             #! Lectures Fichiers  !#
                                             #!####################!#
 
-print("\nLecture du fichier Bode.txt...")
+print("\nLecture du fichier Bode2.txt...")
 
-file = open("Python/data/Bode.txt", 'r')
+file = open("Python/data/Bode2.txt", 'r')
 L_lignes = file.readlines()
 
 for i in range(1, len(L_lignes)):
@@ -63,7 +63,7 @@ plt.semilogx(freq, Vvout_hum_db, color=Color_h, label="Gain Humbucker")
 plt.semilogx(freq, Vvout_sin_db, color=Color_s, label="Gain Simple Coil")
 plt.grid()
 plt.ylabel("Gain (dB)")
-plt.ylim(-3, 23)
+plt.ylim(-23, 23)
 plt.xlim(20, 20000)
 plt.legend()
 plt.title("Réponse en fréquence du micro")
@@ -73,7 +73,7 @@ plt.semilogx(freq, Vvout_hum_deg, color=Color_h, label="Phase Humbucker")
 plt.semilogx(freq, Vvout_sin_deg, color=Color_s, label="Phase Simple Coil")
 plt.grid()
 plt.ylabel("Phase (°)")
-plt.ylim(-45, 15)
+plt.ylim(-90, 90)
 plt.xlim(20, 20000)
 plt.xlabel("Fréquence (Hz)")
 plt.legend()
