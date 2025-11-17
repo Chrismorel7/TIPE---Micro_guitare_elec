@@ -30,14 +30,15 @@ x1 = 0.140
 x2 = 0.160
 L = 0.845
 mu = 9*10**(-3)
-dBdy = 0.03             #A verifier ???
+dBdy = 0.1             #A verifier ???
 #* Parametre Micros
 d = 6.3*10**(-5)
 S = 7*10**(-4)
 #* Parametre Micro Singlecoil
 RCC_s = 8.92*10**3      #A verifier ???
-lmoy_s = 0.147          #A verifier ???
+lmoy_s = 0.147
 N_s = int(RCC_s*np.pi*d**2 / (4*rho*lmoy_s))
+N_s = 1500
 #* Parametre Micro Humbucker
 RCC_h = 4.52*10**3
 lmoy_h = lmoy_s            #A verifier ???
@@ -50,7 +51,7 @@ Rbob = 10               #A verifier ???
 fB = 50
 U0 = 10
 B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))   #= +- 20 micro T
-B0 = 10*10**-6
+B0 = 100*10**-6
 #* Parametre variable
 A = 35*10**(-4)          #A verifier ???
 x0 = 0.140
@@ -166,48 +167,71 @@ def fem_par_h(N:int, x1: float, x2: float, f:float, t: np.ndarray) -> np.ndarray
                                             #!       Resultats      !#
                                             #!######################!#
 Color_c = "#505050"
-Color_h = "#3344CB"
-Color_s = "#CAA307"
+Color_h_test = "#3344CB"
+Color_s_test = "#CAA307"
 
-Color_h_test = "#7086EA"
-Color_s_test = "#EACB07"
+Color_h = "#7086EA"
+Color_s = "#EACB07"
 
+if __name__ == "__main__":
+    print("Lecture des donnees de test...")
 
-print("Lecture des donnees de test...")
+    doc = open("Test/17-11-2025/Test final/Humbucker_corde.txt")
+    L_lignes = doc.readlines()
+    Test_temps_h = []
+    Test_h = []
+    for i in range(53195, 70000):
+        values = L_lignes[i].strip().split("\t")
+        values = [float(v.replace("\n", "")) for v in values]
+        Test_temps_h.append(values[0])
+        Test_h.append(values[1])
 
-doc = open("Test/17-11-2025/Test final/Humbucker_corde.txt")
-L_lignes = doc.readlines()
-Test_temps_h = []
-Test_h = []
-for i in range(53195, 70000):
-    values = L_lignes[i].strip().split("\t")
-    values = [float(v.replace("\n", "")) for v in values]
-    Test_temps_h.append(values[0])
-    Test_h.append(values[1])
+    Test_temps_h = np.array(Test_temps_h)
+    Test_temps_h -= Test_temps_h[0]
+    Test_temps_h_fft = np.array(Test_temps_h)
+    Test_temps_h = np.array(Test_temps_h[:4000])
+    Test_h_fft = np.array(Test_h)
+    Test_h = np.array(Test_h[:4000])
+    doc.close()
+    print("Donnees de test Humbucker corde seule lues.")
 
-Test_temps_h = np.array(Test_temps_h)
-print(Test_temps_h)
-Test_temps_h -= Test_temps_h[0]
-Test_temps_h_fft = np.array(Test_temps_h)
-Test_temps_h = np.array(Test_temps_h[:4000])
-Test_h_fft = np.array(Test_h)
-Test_h = np.array(Test_h[:4000])
-doc.close()
-print("Donnees de test Humbucker corde seule lues.")
+    doc = open("Test/17-11-2025/Test final/Humbucker Parasite seul.txt")
+    L_lignes = doc.readlines()
+    Test_temps_h_p = []
+    Test_h_p = []
+    for i in range(1, 4001):
+        values = L_lignes[i].strip().split("\t")
+        values = [float(v.replace("\n", "")) for v in values]
+        Test_temps_h_p.append(values[0])
+        Test_h_p.append(values[1])
+    
+    Test_temps_h_p = np.array(Test_temps_h_p)
+    Test_temps_h_p -= Test_temps_h_p[0]
+    Test_h_p = np.array(Test_h_p)
+    doc.close()
+    print("Donnees de test Humbucker parasite seules lues.")
+    
+    
+    doc= open("Test/17-11-2025/Test final/Humbucker parasite + corde.txt")
+    L_lignes = doc.readlines()
+    Test_temps_tot = []
+    Test_h_tot = []
+    for i in range(34360, 51165):
+        values = L_lignes[i].strip().split("\t")
+        values = [float(v.replace("\n", "")) for v in values]
+        Test_temps_tot.append(values[0])
+        Test_h_tot.append(values[1])
 
-doc= open("Test/17-11-2025/Test final/Humbucker parasite + corde 2.txt")
-L_lignes = doc.readlines()
-Test_temps_tot = []
-Test_h_tot = []
-for i in range(1, len(L_lignes)):
-    values = L_lignes[i].strip().split("\t")
-    values = [float(v.replace("\n", "")) for v in values]
-    Test_temps_tot.append(values[0])
-    Test_h_tot.append(values[1])
+    Test_temps_h_tot = np.array(Test_temps_tot)
+    Test_temps_h_tot -= Test_temps_h_tot[0]
+    Test_temps_h_tot_fft = np.array(Test_temps_h_tot)
+    Test_temps_h_tot = np.array(Test_temps_h_tot[:4000])
+    Test_h_tot_fft = np.array(Test_h_tot)
+    Test_h_tot = np.array(Test_h_tot[:4000])
+    doc.close()
+    print("Donnees de test Humbucker parasite + corde lues.")
 
-doc.close()
-print("Donnees de test Humbucker parasite + corde lues.")
-
+print("-" * 100)
                                             #!######################!#
                                             #!         Appel        !#
                                             #!######################!#
@@ -218,8 +242,8 @@ if __name__ == "__main__":
     print("-" * 100)
     print("\nCalcul des tensions induites...")
     print("\nEchantillonnage...")
-    Te = 0.03
-    Ne = 1_000
+    Te = 4000*0.00001
+    Ne = 4000
     fs = Ne/Te
     Na = 20
     
@@ -235,15 +259,15 @@ if __name__ == "__main__":
     print(f"Na = {Na}")
 
     print("\nCalcul des tensions en reponse a la vibration de la corde...")
-    temps = Test_temps_h #np.linspace(0, Te, Ne, endpoint=False)
+    temps = np.linspace(0, Te, Ne, endpoint=False)
     corde = entree(Na, xm, temps)
     fem_s = fem_singlecoil(Na, N_s, xm, temps)
-    fem_h = fem_humbucker(Na, N_h, x1, x2, Test_temps_h)
+    fem_h = fem_humbucker(Na, N_h, x1, x2, temps)
 
     print("\nCalcul des tensions en reponse au champ parasite...")
     champ_par = B(0, fB, temps)
     fem_s_par = fem_par_s(N_s, xm, fB, temps)
-    fem_h_par = fem_par_h(N_h, x1, x2, fB, Test_temps_h)
+    fem_h_par = fem_par_h(N_h, x1, x2, fB, temps)
 
     print("\nCalcul des tensions totales...")
     fem_s_tot = fem_s + fem_s_par
@@ -283,7 +307,7 @@ if __name__ == "__main__":
         fft_h_amp = 2 * np.abs(fft_h) / Ne_fft
         fft_h_amp[0] /= 2
         
-        fft_h_test = np.fft.fft(Test_h_fft)
+        fft_h_test = np.fft.fft(Test_h_tot_fft)
         fft_h_test_amp = 2 * np.abs(fft_h_test) / Ne_fft
         fft_h_test_amp[0] /= 2
 
@@ -299,18 +323,25 @@ if __name__ == "__main__":
         fft_h_amp = fft_h_amp[mask2]
         fft_h_test_amp = fft_h_test_amp[mask]
         fft_h_test_amp = fft_h_test_amp[mask2]
+        
+        """
+        max_amp = np.max([np.max(fft_h_amp), np.max(fft_s_amp), np.max(fft_h_test_amp)])
+        fft_h_amp = fft_h_amp / max_amp
+        fft_s_amp = fft_s_amp / max_amp
+        fft_h_test_amp = fft_h_test_amp / max_amp
+        """
         print("FFT calculees.")
 
         print("Affichage des FFT...")
         Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
         plt.figure(figsize=(6,5))
-        plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker")
-        plt.plot(freqs, fft_h_test_amp, "+", color=Color_h_test, label="Test H")
-        plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Simple")
+        plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker - Theorique")
+        plt.plot(freqs, fft_h_test_amp, "+", color=Color_h_test, label="Micro Humbucker - Test")
+        plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Singlecoil - Theorique")
         plt.title(Title)
         plt.legend()
         plt.xlabel("Frequence (Hz)")
-        plt.ylabel("Tension [V]")
+        plt.ylabel("Tension normalisee")
         plt.grid(True)
         plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
         plt.savefig("Python/Exports/00-FFT.png")
@@ -320,30 +351,13 @@ if __name__ == "__main__":
     print("-" * 100)
     print("\nAffichage des courbes...")
 
-    #* --- Micro Humbucker (corde) ---*#
-    print("Micro Humbucker seul...")
-    plt.plot(Test_temps_h, fem_h, color=Color_h, label="Micro Humbucker [V]")
-    plt.plot(Test_temps_h, Test_h, "+", color=Color_h_test, label="Donnees de test [V]")
-    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-    plt.title("Tension induite en sortie du micro Humbucker (Corde seule)")
-    plt.xlabel("Temps [s]")
-    plt.ylabel("Tension [V]")
-    plt.grid()
-    plt.legend()
-    plt.savefig("Python/Exports/01-Humbucker_corde.png")
-    plt.close()
-    print("Courbes sauvegardees sous Python/Exports/01-Humbucker_corde.png.")
-
-    print("-" * 100)
-    print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
-
     '''
     #* --- Micro Singlecoil (corde) ---*#
     print("Micro Singlecoil seul...")
     plt.plot(Test_temps_s, fem_s, color=Color_s, label="Micro Simple [V]")
     plt.plot(Test_temps_s, Test_s, "+", color=Color_s, label="Donnees de test [V]")
     plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-    plt.title("Tension induite en sortie du micro Simple (Corde seule)")
+    plt.title("Tension induite en sortie du micro Simple - Corde seule")
     plt.xlabel("Temps [s]")
     plt.ylabel("Tension [V]")
     plt.gca().xaxis.set_major_locator(MultipleLocator(10e-3))
@@ -354,69 +368,96 @@ if __name__ == "__main__":
     plt.close()
     print("Courbes sauvegardees sous Python/Exports/02-Simplecoil_corde.png.")
     '''
+    #* --- Micro Humbucker (corde) ---*#
+    print("Micro Humbucker (corde)...")
+    plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(temps, Test_h, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Tension induite en sortie du micro Humbucker - Corde seule")
+    plt.xlabel("Temps [s]")
+    plt.ylabel("Tension [V]")
+    plt.grid()
+    plt.legend()
+    plt.savefig("Python/Exports/01-Humbucker_corde.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/01-Humbucker_corde.png.")
+    
+    #* --- Micro Humbucker (Parasite) ---*#
+    print("Micro Humbucker (Parasite)...")
+    plt.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(temps, Test_h_p, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Tension induite en sortie des micros - Parasite seul")
+    plt.xlabel("Temps [s]")
+    plt.ylabel("Tension [V]")
+    plt.ylim(-0.8, 0.8)
+    plt.grid()
+    plt.legend()
+    plt.savefig("Python/Exports/02-Humbucker_parasite.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/02-Humbucker_parasite.png.")
 
-    print("-" * 100)
-    print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
+    
+    #* --- Humbucker (total) ---*#
+    print("Micro Humbucker (total)...")
+    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(temps, Test_h_tot, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Tension induite en sortie des micros")
+    plt.xlabel("Temps [s]")
+    plt.ylabel("Tension [V]")
+    plt.grid()
+    plt.legend()
+    plt.savefig("Python/Exports/03-Humbucker_total.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/03-Humbucker_total.png.")
 
-    #* --- Comparaison des micros (corde seule) ---*#
-    print("Comparaison des micros (corde seule)...")
+    
+    #* --- Total ---*#
+    print("Tous micros total...")
+    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(temps, Test_h_tot, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(temps, fem_s_tot, color=Color_s, label="Micro Singlecoil - Theorique [V]")
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Tension induite en sortie des micros")
+    plt.xlabel("Temps [s]")
+    plt.ylabel("Tension [V]")
+    plt.grid()
+    plt.legend()
+    plt.savefig("Python/Exports/99-total.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/99-total.png.")
+    
+    #* --- Comparaison des micros Theorique (corde seule) ---*#
+    print("Comparaison des micros  Theorique (corde seule)...")
     fig, ax1 = plt.subplots()
     ax1.set_ylabel("Tension induite [V]", color="#000000")
-    l3, = ax1.plot(temps, fem_h, color=Color_h, label="Micro Humbucker [V]")
-    l2, = ax1.plot(temps, fem_s, color=Color_s, label="Micro Simple [V]")
+    l3, = ax1.plot(temps, fem_h, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    l2, = ax1.plot(temps, fem_s, color=Color_s, label="Micro Singlecoil - Theorique [V]")
     ax1.tick_params(axis='y', labelcolor="#000000")
     ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
     fig.legend(handles=[l3, l2], loc='lower left')
-    plt.title("Tension induite en sortie du micro (Corde seule)")
+    plt.title("Tension induite en sortie des micros - Corde seule")
     fig.tight_layout()
     plt.grid()
-    plt.savefig("Python/Exports/Comparaison_sh.png")
+    plt.savefig("Python/Exports/Th-Corde.png")
     plt.close()
-    print("Courbes sauvegardees sous Python/Exports/Comparaison_sh.png.")
-
-    #* --- Comparaison des micros (champ parasite seul) ---*#
-    print("Comparaison des micros (champ parasite seul)...")
-    fig, ax1 = plt.subplots()
-
-    # Axe 1
-    ax1.set_xlabel("Temps [s]")
-    ax1.set_ylabel("Champ Parasite [T]", color=Color_c)
-    l1, = ax1.plot(temps, champ_par, color=Color_c, label="Champ Parasite [T]")
-    ax1.tick_params(axis='y', labelcolor=Color_c)
-    ax1.ticklabel_format(axis='y', style='sci', scilimits=(-6, -6))
-
-    # Axe 2
-    ax2 = ax1.twinx()  # Deuxieme axe y
-    ax2.set_ylabel("Tension induite [V]", color="#000000")
-    l3, = ax2.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker [V]")
-    l2, = ax2.plot(temps, fem_s_par, color=Color_s, label="Micro Simple [V]")
-    ax2.tick_params(axis='y', labelcolor="#000000")
-    ax2.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-
-    # Legende unique
-    fig.legend(handles=[l1, l3, l2], loc='lower left')
-
-    # Mise en forme
-    plt.title("Tension induite en sortie du micro (champ parasite uniquement)")
-    fig.tight_layout()
+    print("Courbes sauvegardees sous Python/Exports/Th-Corde.png.")
+    
+    #* --- Comparaison des micros Theorique (total) ---*#
+    print("Comparaison des micros  Theorique (total)...")
+    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(temps, fem_s_tot, color=Color_s, label="Micro Singlecoil - Theorique [V]")
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Tension induite en sortie des micros")
+    plt.xlabel("Temps [s]")
+    plt.ylabel("Tension [V]")
     plt.grid()
-    plt.savefig("Python/Exports/Parasite.png")
+    plt.legend()
+    plt.savefig("Python/Exports/Th-Total.png")
     plt.close()
-    print("Courbes sauvegardees sous Python/Exports/Parasite.png.")
+    print("Courbes sauvegardees sous Python/Exports/Th-Total.png.")
 
-    #* --- Comparaison des micros (total) ---*#
-    print("Comparaison des micros (total)...")
 
-    fig, ax1 = plt.subplots()
-    ax1.set_ylabel("Tension induite [V]", color="#000000")
-    l3, = ax1.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker [V]")
-    l2, = ax1.plot(temps, fem_s_tot, color=Color_s, label="Micro Simple [V]")
-    ax1.tick_params(axis='y', labelcolor="#000000")
-    ax1.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-    fig.legend(handles=[l3, l2], loc='lower left')
-    plt.title("Tension induite en sortie du micro (Corde + Champ parasite)")
-    fig.tight_layout()
-    plt.grid()
-    plt.savefig("Python/Exports/Total.png")
-    plt.close()
-    print("Courbes sauvegardees sous Python/Exports/Total.png.")
+print("-" * 100)
+print("\n---\nFin de l'execution de Modele_fem.py\n---\n")

@@ -20,3 +20,17 @@ POUR LA PROCHAINE FOIS :
 - IMPORTANT Refaire Soudure SingleCoil
 - Utiliser carte d'acquisition
 - Récupérer data Bobine
+
+## Jour 2 : 17/11/25
+
+Deuxieme journee d'experience
+
+- Humbucker : OK
+
+  - Test corde seule --> Coherent
+  - Test Parasite seul --> Leger signal visible --> Modelisation ??
+  - Test Total --> FFT Coherent
+
+- Singlecoil : NON
+
+  - Aucun signal visible malgre les nouvelles soudures
