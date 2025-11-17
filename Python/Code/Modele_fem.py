@@ -43,13 +43,13 @@ RCC_h = 4.52*10**3
 lmoy_h = lmoy_s            #A verifier ???
 N_h = int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
 #* Parametre Champ parasite
-Nbob = 150              #A verifier ???
-R = 0.06
+Nbob = 95
+R = 0.130/2
 Lbob = 1.5e-3           #A verifier ???
 Rbob = 10               #A verifier ???
-fB = 50                 #A verifier ???
-U0 = 0.1                #A verifier ???
-B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))
+fB = 50
+U0 = 10
+B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))   #= +- 20 micro T
 #* Parametre variable
 A = 8*10**(-4)          #A verifier ???
 x0 = 0.140
