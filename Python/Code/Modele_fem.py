@@ -30,7 +30,7 @@ x1 = 0.140
 x2 = 0.160
 L = 0.845
 mu = 9*10**(-3)
-dBdy = 0.1             #A verifier ???
+dBdy = 0.05             #A verifier ???
 #* Parametre Micros
 d = 6.3*10**(-5)
 S = 7*10**(-4)
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     L_lignes = doc.readlines()
     Test_temps_h = []
     Test_h = []
-    for i in range(53195, 70000):
+    for i in range(53195, 93195):
         values = L_lignes[i].strip().split("\t")
         values = [float(v.replace("\n", "")) for v in values]
         Test_temps_h.append(values[0])
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     L_lignes = doc.readlines()
     Test_temps_tot = []
     Test_h_tot = []
-    for i in range(34360, 51165):
+    for i in range(34360, 74360):
         values = L_lignes[i].strip().split("\t")
         values = [float(v.replace("\n", "")) for v in values]
         Test_temps_tot.append(values[0])
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         fft_h_test_amp = 2 * np.abs(fft_h_test) / Ne_fft
         fft_h_test_amp[0] /= 2
 
-        freqs = np.fft.fftfreq(16805, 1/fs_fft)
+        freqs = np.fft.fftfreq(40000, 1/fs_fft)
         mask = 0 <= freqs
         freqs = freqs[mask]
         mask2 = freqs <= 800
@@ -324,12 +324,12 @@ if __name__ == "__main__":
         fft_h_test_amp = fft_h_test_amp[mask]
         fft_h_test_amp = fft_h_test_amp[mask2]
         
-        """
-        max_amp = np.max([np.max(fft_h_amp), np.max(fft_s_amp), np.max(fft_h_test_amp)])
-        fft_h_amp = fft_h_amp / max_amp
-        fft_s_amp = fft_s_amp / max_amp
-        fft_h_test_amp = fft_h_test_amp / max_amp
-        """
+        
+        max_amp_h, max_amp_s, max_amp_test_h = np.max(fft_h_amp), np.max(fft_s_amp), np.max(fft_h_test_amp)
+        fft_h_amp = fft_h_amp / max_amp_h
+        fft_s_amp = fft_s_amp / max_amp_s
+        fft_h_test_amp = fft_h_test_amp / max_amp_test_h
+        
         print("FFT calculees.")
 
         print("Affichage des FFT...")
@@ -337,16 +337,28 @@ if __name__ == "__main__":
         plt.figure(figsize=(6,5))
         plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker - Theorique")
         plt.plot(freqs, fft_h_test_amp, "+", color=Color_h_test, label="Micro Humbucker - Test")
-        plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Singlecoil - Theorique")
         plt.title(Title)
         plt.legend()
         plt.xlabel("Frequence (Hz)")
         plt.ylabel("Tension normalisee")
         plt.grid(True)
         plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-        plt.savefig("Python/Exports/00-FFT.png")
+        plt.savefig("Python/Exports/00-FFT_h.png")
         plt.close()
-        print("FFT sauvegardees sous Python/Exports/00-FFT.png.")
+        print("FFT sauvegardees sous Python/Exports/00-FFT_h.png.")
+        
+        plt.figure(figsize=(6,5))
+        plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Singlecoil - Theorique")
+        #plt.plot(freqs, fft_h_test_amp, "+", color=Color_h_test, label="Micro Humbucker - Test")
+        plt.title(Title)
+        plt.legend()
+        plt.xlabel("Frequence (Hz)")
+        plt.ylabel("Tension normalisee")
+        plt.grid(True)
+        plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+        plt.savefig("Python/Exports/00-FFT_s.png")
+        plt.close()
+        print("FFT sauvegardees sous Python/Exports/00-FFT_s.png.")
 
     print("-" * 100)
     print("\nAffichage des courbes...")
@@ -390,7 +402,7 @@ if __name__ == "__main__":
     plt.title("Tension induite en sortie des micros - Parasite seul")
     plt.xlabel("Temps [s]")
     plt.ylabel("Tension [V]")
-    plt.ylim(-0.8, 0.8)
+    plt.ylim(-0.5, 0.5)
     plt.grid()
     plt.legend()
     plt.savefig("Python/Exports/02-Humbucker_parasite.png")
