@@ -228,6 +228,13 @@ if __name__ == "__main__":
     Test_h_tot = np.array(Test_h_tot[:4000])
     doc.close()
     print("Donnees de test Humbucker parasite + corde lues.")
+    
+    List_Par = np.linspace(0, 150*10**-6, 15)
+    List_amp_h_th = np.zeros(15)
+    List_amp_h_test = [0, 40*10**-3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    List_amp_s_th = [N_s*S*2*np.pi*fB*i for i in List_Par]
+    Liste_amp_s_test = np.zeros(15)
+    
 
 print("-" * 100)
                                             #!######################!#
@@ -410,7 +417,7 @@ if __name__ == "__main__":
     plt.title("Tension induite en sortie des micros - Parasite seul")
     plt.xlabel("Temps [s]")
     plt.ylabel("Tension [V]")
-    plt.ylim(-0.5, 0.5)
+    #plt.ylim(-0.5, 0.5)
     plt.grid()
     plt.legend()
     plt.savefig("Python/Exports/02-Humbucker_parasite.png")
@@ -478,6 +485,22 @@ if __name__ == "__main__":
     plt.close()
     print("Courbes sauvegardees sous Python/Exports/Th-Total.png.")
 
+    #* --- Droite champ parasite ---*#
+    print("Comparaison des micros champ parasite...")
+    plt.plot(List_Par, List_amp_h_th, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(List_Par, List_amp_h_test, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(List_Par, List_amp_s_th, color=Color_s, label="Micro Singlecoil - Theorique [V]")
+    plt.plot(List_Par, Liste_amp_s_test, "+", color=Color_s_test, label="Micro Singlecoil - Test [V]")
+    plt.gca().ticklabel_format(axis='x', style='sci', scilimits=(-6, -6))
+    plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
+    plt.title("Amplitude des tension induite en sortie des micros soumis à un champ parasite")
+    plt.xlabel("Amplitude du champ parasite [T]")
+    plt.ylabel("Ampltitude Tension [V]")
+    plt.grid()
+    plt.legend()
+    plt.savefig("Python/Exports/99-Doite.png")
+    plt.close()
+    print("Courbes sauvegardees sous Python/Exports/99-Droite.png.")
 
 print("-" * 100)
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
