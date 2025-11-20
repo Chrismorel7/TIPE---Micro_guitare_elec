@@ -9,7 +9,6 @@ print("-" * 100)
 print("\nImportation des bibliotheques...")
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
 import os
 import logging
 print("Bibliotheques importees.")
@@ -38,7 +37,7 @@ S = 7*10**(-4)
 RCC_s = 8.92*10**3      #A verifier ???
 lmoy_s = 0.147
 N_s = int(RCC_s*np.pi*d**2 / (4*rho*lmoy_s))
-N_s = 1500
+N_s = 3000
 #* Parametre Micro Humbucker
 RCC_h = 4.52*10**3
 lmoy_h = lmoy_s            #A verifier ???
@@ -46,12 +45,11 @@ N_h = int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h))
 #* Parametre Champ parasite
 Nbob = 95
 R = 0.130/2
-Lbob = 1.5e-3           #A verifier ???
+Lbob = 1           #A verifier ???
 Rbob = 10               #A verifier ???
 fB = 50
 U0 = 10
 B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))   #= +- 20 micro T
-B0 = 100*10**-6
 #* Parametre variable
 A = 35*10**(-4)          #A verifier ???
 x0 = 0.140
@@ -342,7 +340,6 @@ if __name__ == "__main__":
         plt.xlabel("Frequence (Hz)")
         plt.ylabel("Tension normalisee")
         plt.grid(True)
-        plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
         plt.savefig("Python/Exports/00-FFT_h.png")
         plt.close()
         print("FFT sauvegardees sous Python/Exports/00-FFT_h.png.")
@@ -355,11 +352,22 @@ if __name__ == "__main__":
         plt.xlabel("Frequence (Hz)")
         plt.ylabel("Tension normalisee")
         plt.grid(True)
-        plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
         plt.savefig("Python/Exports/00-FFT_s.png")
         plt.close()
         print("FFT sauvegardees sous Python/Exports/00-FFT_s.png.")
 
+        plt.figure(figsize=(6,5))
+        plt.plot(freqs, fft_h_amp, color=Color_h, label="Micro Humbucker - Théorique")
+        plt.plot(freqs, fft_s_amp, color=Color_s, label="Micro Singlecoil - Theorique")
+        plt.title(Title)
+        plt.legend()
+        plt.xlabel("Frequence (Hz)")
+        plt.ylabel("Tension normalisee")
+        plt.grid(True)
+        plt.savefig("Python/Exports/00-FFT_th.png")
+        plt.close()
+        print("FFT sauvegardees sous Python/Exports/00-FFT_th.png.")
+        
     print("-" * 100)
     print("\nAffichage des courbes...")
 
@@ -382,8 +390,8 @@ if __name__ == "__main__":
     '''
     #* --- Micro Humbucker (corde) ---*#
     print("Micro Humbucker (corde)...")
-    plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.plot(temps, Test_h, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
     plt.title("Tension induite en sortie du micro Humbucker - Corde seule")
     plt.xlabel("Temps [s]")
@@ -396,8 +404,8 @@ if __name__ == "__main__":
     
     #* --- Micro Humbucker (Parasite) ---*#
     print("Micro Humbucker (Parasite)...")
-    plt.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.plot(temps, Test_h_p, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(temps, fem_h_par, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
     plt.title("Tension induite en sortie des micros - Parasite seul")
     plt.xlabel("Temps [s]")
@@ -412,10 +420,10 @@ if __name__ == "__main__":
     
     #* --- Humbucker (total) ---*#
     print("Micro Humbucker (total)...")
-    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.plot(temps, Test_h_tot, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-    plt.title("Tension induite en sortie des micros")
+    plt.title("Tension induite en sortie du micro Humbucker - Total")
     plt.xlabel("Temps [s]")
     plt.ylabel("Tension [V]")
     plt.grid()
@@ -427,8 +435,8 @@ if __name__ == "__main__":
     
     #* --- Total ---*#
     print("Tous micros total...")
-    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.plot(temps, Test_h_tot, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(temps, fem_h_tot, color=Color_h, label="Micro Humbucker - Theorique [V]")
     plt.plot(temps, fem_s_tot, color=Color_s, label="Micro Singlecoil - Theorique [V]")
     plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
     plt.title("Tension induite en sortie des micros")
