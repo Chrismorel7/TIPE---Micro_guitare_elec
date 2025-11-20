@@ -41,7 +41,7 @@ N_s = 8000
 #* Parametre Micro Humbucker
 RCC_h = 4.52*10**3
 lmoy_h = lmoy_s            #A verifier ???
-N_h = 2*int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
+N_h = int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
 #* Parametre Champ parasite
 Nbob = 95
 R = 0.130/2
