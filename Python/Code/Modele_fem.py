@@ -37,24 +37,30 @@ S = 7*10**(-4)
 RCC_s = 8.92*10**3      #A verifier ???
 lmoy_s = 0.147
 N_s = int(RCC_s*np.pi*d**2 / (4*rho*lmoy_s))
-N_s = 3000
+N_s = 8000
 #* Parametre Micro Humbucker
 RCC_h = 4.52*10**3
 lmoy_h = lmoy_s            #A verifier ???
-N_h = int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
+N_h = 2*int(RCC_h*np.pi*d**2 / (8*rho*lmoy_h)) 
 #* Parametre Champ parasite
 Nbob = 95
 R = 0.130/2
-Lbob = 1           #A verifier ???
+Lbob = 1                #A verifier ???
 Rbob = 10               #A verifier ???
 fB = 50
 U0 = 10
-B0 = (0.8)**1.5 * (mu0*Nbob/R) * (U0/np.sqrt(Rbob**2 + (2*np.pi*fB*Lbob)**2))   #= +- 20 micro T
+I0 = 7                  #A verifier ???
 #* Parametre variable
 A = 35*10**(-4)          #A verifier ???
 x0 = 0.140
 F = 68.3
 T = 4*mu*(L*F)**2
+#* Couleurs graphiques
+Color_c = "#505050"
+Color_h_test = "#3344CB"
+Color_s_test = "#CAA307"
+Color_h = "#7086EA"
+Color_s = "#EACB07"
 
 # Affichage des variables avec unites
 print("Constantes initialisees.")
@@ -82,7 +88,7 @@ params = [
     ("Rbob", Rbob, "Ohm", "Resistance bobines Helmholtz"),
     ("fB", fB, "Hz", "Frequence du champ parasite"),
     ("U0", U0, "V", "Tension bobines Helmholtz"),
-    ("B0", B0, "T", "Amplitude champ magnetique parasite"),
+    #("B0", B0, "T", "Amplitude champ magnetique parasite"),
     ("A", A, "m", "Amplitude initiale de vibration"),
     ("x0", x0, "m", "Origine de la perturbation"),
     ("F", F, "Hz", "Frequence de la note jouee"),
@@ -149,30 +155,30 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.nda
 
     return N*S*dBdy*s
 
-def B(r:float, f: float, t: np.ndarray) -> np.ndarray:
-    return B0*np.sin(2*np.pi*f*t)
+def B(x:float, f: float, t: np.ndarray) -> np.ndarray:
+    return (Nbob*mu0*Rbob**2)/2 * (1 / (Rbob**2 + (x-Rbob/2)**2)**(3/2) + 1 / (Rbob**2 + (x+Rbob/2)**2)**(3/2)) * I0 * np.sin(2*np.pi*f*t)
 
-def dBdt(r:float, f: float, t: np.ndarray) -> np.ndarray:
-    return B0*2*np.pi*f*np.cos(2*np.pi*f*t)
+def dBdt(x:float, f: float, t: np.ndarray) -> np.ndarray:
+    return (Nbob*mu0*Rbob**2)/2 * (1 / (Rbob**2 + (x-Rbob/2)**2)**(3/2) + 1 / (Rbob**2 + (x+Rbob/2)**2)**(3/2))*2*I0*np.pi*f*np.cos(2*np.pi*f*t)
 
 def fem_par_s(N:int, xm: float, f:float, t: np.ndarray) -> np.ndarray:
     return -N*S*dBdt(0, f, t)
 
 def fem_par_h(N:int, x1: float, x2: float, f:float, t: np.ndarray) -> np.ndarray:
-    return -N*S*(dBdt(x1, f, t) - dBdt(x2, f, t))
+    return -N*S*(dBdt(0, f, t) - dBdt(abs(x2-x1), f, t))
 
                                             #!######################!#
                                             #!       Resultats      !#
                                             #!######################!#
-Color_c = "#505050"
-Color_h_test = "#3344CB"
-Color_s_test = "#CAA307"
-
-Color_h = "#7086EA"
-Color_s = "#EACB07"
 
 if __name__ == "__main__":
     print("Lecture des donnees de test...")
+
+    List_Ipar = np.linspace(1, 7, 7)
+    List_amp_h_th = np.zeros(7)
+    List_amp_h_test = [0, 40*10**-3, 0, 0, 0, 0, 0]
+    List_amp_s_th = [(N_s*S*Nbob*mu0*Rbob**2)/2 * (1 / (Rbob**2 + (0-Rbob/2)**2)**(3/2) + 1/(Rbob**2 + (0+Rbob/2)**2)**(3/2))*2*i*np.pi*fB for i in List_Ipar]
+    Liste_amp_s_test = [N_h*S* (((Nbob*mu0*Rbob**2)/2 * (1 / (Rbob**2 + (0-Rbob/2)**2)**(3/2) + 1/(Rbob**2 + (0+Rbob/2)**2)**(3/2))) - ((Nbob*mu0*Rbob**2)/2 * (1 / (Rbob**2 + (abs(x2-x1)-Rbob/2)**2)**(3/2) + 1/(Rbob**2 + ((x2-x1)+Rbob/2)**2)**(3/2))))*2*i*np.pi*fB for i in List_Ipar]
 
     doc = open("Test/17-11-2025/Test final/Humbucker_corde.txt")
     L_lignes = doc.readlines()
@@ -229,11 +235,6 @@ if __name__ == "__main__":
     doc.close()
     print("Donnees de test Humbucker parasite + corde lues.")
     
-    List_Par = np.linspace(0, 150*10**-6, 15)
-    List_amp_h_th = np.zeros(15)
-    List_amp_h_test = [0, 40*10**-3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    List_amp_s_th = [N_s*S*2*np.pi*fB*i for i in List_Par]
-    Liste_amp_s_test = np.zeros(15)
     
 
 print("-" * 100)
@@ -417,7 +418,7 @@ if __name__ == "__main__":
     plt.title("Tension induite en sortie des micros - Parasite seul")
     plt.xlabel("Temps [s]")
     plt.ylabel("Tension [V]")
-    #plt.ylim(-0.5, 0.5)
+    plt.ylim(-0.5, 0.5)
     plt.grid()
     plt.legend()
     plt.savefig("Python/Exports/02-Humbucker_parasite.png")
@@ -487,14 +488,14 @@ if __name__ == "__main__":
 
     #* --- Droite champ parasite ---*#
     print("Comparaison des micros champ parasite...")
-    plt.plot(List_Par, List_amp_h_th, color=Color_h, label="Micro Humbucker - Theorique [V]")
-    plt.plot(List_Par, List_amp_h_test, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
-    plt.plot(List_Par, List_amp_s_th, color=Color_s, label="Micro Singlecoil - Theorique [V]")
-    plt.plot(List_Par, Liste_amp_s_test, "+", color=Color_s_test, label="Micro Singlecoil - Test [V]")
-    plt.gca().ticklabel_format(axis='x', style='sci', scilimits=(-6, -6))
+    plt.plot(List_Ipar, List_amp_h_th, color=Color_h, label="Micro Humbucker - Theorique [V]")
+    plt.plot(List_Ipar, List_amp_h_test, "+", color=Color_h_test, label="Micro Humbucker - Test [V]")
+    plt.plot(List_Ipar, List_amp_s_th, color=Color_s, label="Micro Singlecoil - Theorique [V]")
+    plt.plot(List_Ipar, Liste_amp_s_test, "+", color=Color_s_test, label="Micro Singlecoil - Test [V]")
+    #plt.gca().ticklabel_format(axis='x', style='sci', scilimits=(-6, -6))
     plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
     plt.title("Amplitude des tension induite en sortie des micros soumis à un champ parasite")
-    plt.xlabel("Amplitude du champ parasite [T]")
+    plt.xlabel("Amplitude du champ parasite [A]")
     plt.ylabel("Ampltitude Tension [V]")
     plt.grid()
     plt.legend()
