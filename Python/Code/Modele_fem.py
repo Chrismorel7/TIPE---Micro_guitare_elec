@@ -30,13 +30,12 @@ dBdy = 0.05             #A verifier ???
 d = 6.3 * 10**(-5)
 S = 7 * 10**(-4)
 #* Parametre Micro Singlecoil
-RCC_s = 8.92 * 10**3      #A verifier ???
+RCC_s = 5.3 * 10**3
 lmoy_s = 0.147
 N_s = int(RCC_s * np.pi * d**2 / (4 * rho * lmoy_s))
-N_s = 8000
 #* Parametre Micro Humbucker
 RCC_h = 4.52 * 10**3
-lmoy_h = lmoy_s            #A verifier ???
+lmoy_h = lmoy_s/2            #A verifier ???
 N_h = int(RCC_h * np.pi * d**2 / (8 * rho * lmoy_h))
 #* Parametre Champ parasite
 Nbob = 95
@@ -213,6 +212,11 @@ def save_plot(fig_path: str, *plot_calls, title=None, xlabel=None, ylabel=None, 
     plt.savefig(fig_path)
     plt.close()
 
+def normalize_signal(signal: np.ndarray):
+    max_val = np.max(np.abs(signal))
+    if max_val == 0:
+        return signal
+    return signal / max_val
 
 def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
     fft = np.fft.fft(signal)
@@ -401,9 +405,9 @@ if __name__ == "__main__":
     #* --- Micro Humbucker (corde) ---*#
     print("Micro Humbucker (corde)...")
     save_plot("Python/Exports/01-Humbucker_corde.png",
-            (temps, Test_h, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            title="Tension induite en sortie du micro Humbucker - Corde seule",
+            (temps, normalize_signal(Test_h), {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
+            (temps, normalize_signal(fem_h), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            title="Tension induite (normalisee) en sortie du micro Humbucker - Corde seule",
             xlabel="Temps [s]", ylabel="Tension [V]")
     print("Courbes sauvegardees sous Python/Exports/01-Humbucker_corde.png.")
 
@@ -419,30 +423,29 @@ if __name__ == "__main__":
     #* --- Humbucker (total) ---*#
     print("Micro Humbucker (total)...")
     save_plot("Python/Exports/03-Humbucker_total.png",
-            (temps, Test_h_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            title="Tension induite en sortie du micro Humbucker - Total",
+            (temps, normalize_signal(Test_h_tot), {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
+            (temps, normalize_signal(fem_h_tot), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            title="Tension induite (normalisee) en sortie du micro Humbucker - Total",
             xlabel="Temps [s]", ylabel="Tension [V]")
     print("Courbes sauvegardees sous Python/Exports/03-Humbucker_total.png.")
 
     #* --- Total ---*#
     print("Tous micros total...")
     save_plot("Python/Exports/99-total.png",
-            (temps, Test_h_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-            title="Tension induite en sortie des micros",
+            (temps, normalize_signal(Test_h_tot), {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
+            (temps, normalize_signal(fem_h_tot), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            (temps, normalize_signal(fem_s_tot), {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite (normalisee) en sortie des micros",
             xlabel="Temps [s]", ylabel="Tension [V]")
     print("Courbes sauvegardees sous Python/Exports/99-total.png.")
 
     #* --- Comparaison des micros Theorique (corde seule) ---*#
     print("Comparaison des micros  Theorique (corde seule)...")
     plt.figure()
-    l3, = plt.plot(temps, fem_h, color=Color_h, label="Micro Humbucker - Theorique [V]")
-    l2, = plt.plot(temps, fem_s, color=Color_s, label="Micro Singlecoil - Theorique [V]")
+    l3, = plt.plot(temps, normalize_signal(fem_h), color=Color_h, label="Micro Humbucker - Theorique [V]")
+    l2, = plt.plot(temps, normalize_signal(fem_s), color=Color_s, label="Micro Singlecoil - Theorique [V]")
     plt.ylabel("Tension induite [V]")
-    plt.ticklabel_format(axis='y', style='sci', scilimits=(-3, -3))
-    plt.title("Tension induite en sortie des micros - Corde seule")
+    plt.title("Tension induite (normalisee) en sortie des micros - Corde seule")
     plt.legend(handles=[l3, l2], loc='lower left')
     plt.grid()
     plt.savefig("Python/Exports/Th-Corde.png")
@@ -452,9 +455,9 @@ if __name__ == "__main__":
     #* --- Comparaison des micros Theorique (total) ---*#
     print("Comparaison des micros  Theorique (total)...")
     save_plot("Python/Exports/Th-Total.png",
-            (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-            title="Tension induite en sortie des micros",
+            (temps, normalize_signal(fem_h_tot), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            (temps, normalize_signal(fem_s_tot), {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite (normalisee) en sortie des micros",
             xlabel="Temps [s]", ylabel="Tension [V]")
     print("Courbes sauvegardees sous Python/Exports/Th-Total.png.")
 
