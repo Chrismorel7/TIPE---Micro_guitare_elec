@@ -44,7 +44,8 @@ Lbob = 1                #A verifier ???
 Rbob = 10               #A verifier ???
 fB = 50
 U0 = 10
-I0 = 7                  #A verifier ???
+I0 = 1                  #A verifier ???
+alpha = 10              #A verifier ???
 #* Parametre variable
 A = 35 * 10**(-4)          #A verifier ???
 x0 = 0.140                  #A verifier ???
@@ -52,10 +53,10 @@ F = 68.3                    #A verifier ???
 T = 4 * mu * (L * F)**2
 #* Couleurs graphiques
 Color_c = "#505050"
-Color_h_test = "#3344CB"
-Color_s_test = "#CAA307"
-Color_h = "#7086EA"
-Color_s = "#EACB07"
+Color_h_test = "#4C9E31"
+Color_s_test = "#C63032"
+Color_h = "#3E77B2"
+Color_s = "#EF812C"
 
 if RCC_h is None or lmoy_h is None or N_h is None:
     logging.warning("Parametres humbucker (RCC_h, lmoy_h, N_h) non defini(s). Certaines simulations pourront utiliser N_s en substitution.")
@@ -143,20 +144,16 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.nda
     return N * S * dBdy * s
 
 
-def B(x: float, f: float, t: np.ndarray) -> np.ndarray:
-    return (Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (x - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + (x + Rbob / 2)**2)**(3 / 2)) * I0 * np.sin(2 * np.pi * f * t)
+def B0(x: float, I0: float = I0) -> float:
+    B0 = (Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (x - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + (x + Rbob / 2)**2)**(3 / 2)) * I0 
+    return B0
+
+def fem_par_s(N: int, fB: float, t: np.ndarray) -> np.ndarray:
+    return N*S*2*np.pi*fB*B0(0)*alpha*np.sin(2*np.pi*fB*t)
 
 
-def dBdt(x: float, f: float, t: np.ndarray) -> np.ndarray:
-    return (Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (x - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + (x + Rbob / 2)**2)**(3 / 2)) * 2 * I0 * np.pi * f * np.cos(2 * np.pi * f * t)
-
-
-def fem_par_s(N: int, xm: float, f: float, t: np.ndarray) -> np.ndarray:
-    return -N * S * dBdt(0, f, t)
-
-
-def fem_par_h(N: int, x1: float, x2: float, f: float, t: np.ndarray) -> np.ndarray:
-    return -N * S * (dBdt(0, f, t) - dBdt(abs(x2 - x1), f, t))
+def fem_par_h(N: int, x1: float, x2: float, fB: float, t: np.ndarray) -> np.ndarray:
+    return N*S*2*np.pi*fB*B0(0)*alpha*abs(x1-x2)*np.sin(2*np.pi*fB*t)
 
 
 # ------------------ Utilitaires (lecture / plot / fft) ----------
@@ -229,12 +226,20 @@ def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
 if __name__ == "__main__":
     print("Lecture des donnees de test...")
 
-    List_Ipar = np.linspace(1, 7, 7)
-    List_amp_h_th = np.zeros(7)
-    List_amp_h_test = [0, 40 * 10**-3, 0, 0, 0, 0, 0]
-    List_amp_s_th = [(N_s * S * Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (0 - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + (0 + Rbob / 2)**2)**(3 / 2)) * 2 * i * np.pi * fB for i in List_Ipar]
-    Liste_amp_s_test = [N_h * S * (((Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (0 - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + (0 + Rbob / 2)**2)**(3 / 2))) - ((Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (abs(x2 - x1) - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + ((x2 - x1) + Rbob / 2)**2)**(3 / 2)))) * 2 * i * np.pi * fB for i in List_Ipar]
-
+    List_Ipar = np.linspace(0, 7, 8)
+    List_Bpar = np.array([B0(0, I) for I in List_Ipar])
+    List_amp_h_th = np.array([N_h*S*2*np.pi*fB*B*alpha*abs(x1-x2) for B in List_Bpar])
+    List_amp_h_test = np.array([0,20*10**-3, 40 * 10**-3, 60*10**-3, 80*10**-3, 100*10**-3, 120*10**-3, 140*10**-3])
+    List_amp_s_th = np.array([N_s*S*2*np.pi*fB*B*alpha for B in List_Bpar])
+    List_amp_s_test = np.array([0,0, 0, 0, 0, 0, 0, 0])
+    [k_h_exp, v0h] = np.polyfit(List_Bpar, List_amp_h_test, 1)
+    [k_s_exp, v0s] = np.polyfit(List_Bpar, List_amp_s_test, 1)
+    List_amp_h_test_lin = k_h_exp * List_Bpar + v0h
+    List_amp_s_test_lin = k_s_exp * List_Bpar + v0s
+    
+    ks = N_s*S*2*np.pi*fB*alpha
+    kh = N_h*S*2*np.pi*fB*alpha*abs(x1-x2)
+    
     # Lire fichiers tests exactement comme dans la version originale
     doc_path = "Test/17-11-2025/Test final/Humbucker_corde.txt"
     try:
@@ -263,7 +268,7 @@ if __name__ == "__main__":
             L_lignes = doc.readlines()
         Test_temps_h_p = []
         Test_h_p = []
-        for i in range(1, 4001):
+        for i in range(8800, 12800):
             values = L_lignes[i].strip().split("\t")
             values = [float(v.replace("\n", "")) for v in values]
             Test_temps_h_p.append(values[0])
@@ -326,8 +331,7 @@ if __name__ == "__main__":
     fem_h = fem_humbucker(Na, N_h, x1, x2, temps)
 
     print("\nCalcul des tensions en reponse au champ parasite...")
-    champ_par = B(0, fB, temps)
-    fem_s_par = fem_par_s(N_s, xm, fB, temps)
+    fem_s_par = fem_par_s(N_s, fB, temps)
     fem_h_par = fem_par_h(N_h, x1, x2, fB, temps)
 
     print("\nCalcul des tensions totales...")
@@ -351,16 +355,18 @@ if __name__ == "__main__":
         fem_h_fft = fem_humbucker(Na, N_h, x1, x2, Test_temps_h_fft)
 
         print("\nCalcul des tensions en reponse au champ parasite...")
-        champ_par_fft = B(0, fB, temps_fft)
-        fem_s_par_fft = fem_par_s(N_s, xm, fB, temps_fft)
+        fem_s_par_fft = fem_par_s(N_s, fB, temps_fft)
         fem_h_par_fft = fem_par_h(N_s, x1, x2, fB, temps_fft)
 
         print("\nCalcul des tensions totales...")
         fem_s_tot_fft = fem_s_fft + fem_s_par_fft
         fem_h_tot_fft = fem_h_fft + fem_h_par_fft
 
-        fft_s_amp = compute_and_normalize_fft(fem_s_tot_fft, Ne_fft)
-        fft_h_amp = compute_and_normalize_fft(fem_h_tot_fft, Ne_fft)
+
+        fft_s_amp_fem = compute_and_normalize_fft(fem_s_fft, Ne_fft)
+        fft_h_amp_fem = compute_and_normalize_fft(fem_h_fft, Ne_fft)
+        fft_s_amp_tot = compute_and_normalize_fft(fem_s_tot_fft, Ne_fft)
+        fft_h_amp_tot = compute_and_normalize_fft(fem_h_tot_fft, Ne_fft)
         fft_h_test_amp = compute_and_normalize_fft(Test_h_tot_fft, Ne_fft)
 
         freqs = np.fft.fftfreq(40000, 1 / fs_fft)
@@ -369,108 +375,186 @@ if __name__ == "__main__":
         mask2 = freqs <= 800
         freqs = freqs[mask2]
 
-        fft_s_amp = fft_s_amp[mask][mask2]
-        fft_h_amp = fft_h_amp[mask][mask2]
+        fft_s_amp_fem = fft_s_amp_fem[mask][mask2]
+        fft_h_amp_fem = fft_h_amp_fem[mask][mask2]
+        fft_s_amp_tot = fft_s_amp_tot[mask][mask2]
+        fft_h_amp_tot = fft_h_amp_tot[mask][mask2]
         fft_h_test_amp = fft_h_test_amp[mask][mask2]
 
-        max_amp_h, max_amp_s, max_amp_test_h = np.max(fft_h_amp), np.max(fft_s_amp), np.max(fft_h_test_amp)
-        fft_h_amp = fft_h_amp / max_amp_h
-        fft_s_amp = fft_s_amp / max_amp_s
+        max_amp_h, max_amp_s, max_amp_test_h, max_amp_s_c, max_amp_h_c = np.max(fft_h_amp_tot), np.max(fft_s_amp_tot), np.max(fft_h_test_amp), np.max(fft_s_amp_fem), np.max(fft_h_amp_fem)
+        fft_h_amp_tot = fft_h_amp_tot / max_amp_h
+        fft_s_amp_tot = fft_s_amp_tot / max_amp_s
         fft_h_test_amp = fft_h_test_amp / max_amp_test_h
+        fft_s_amp_fem = fft_s_amp_fem / max_amp_s_c
+        fft_h_amp_fem = fft_h_amp_fem / max_amp_h_c
 
         print("FFT calculees.")
+        Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
 
         print("Affichage des FFT...")
-        Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
-        save_plot("Python/Exports/00-FFT_h.png",
-                (freqs, fft_h_amp, {'color': Color_h, 'label': "Micro Humbucker - Theorique"}),
-                (freqs, fft_h_test_amp, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test"}),
+        
+        #-- 01 --#
+        save_plot("Python/Exports/01-FFT_th.png",
+                (freqs, fft_h_amp_fem, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
+                (freqs, fft_s_amp_fem, {'color': Color_s, 'label': "Micro Singlecoil - Theorique", 'linestyle': 'dashed'}),
                 title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
-        print("FFT sauvegardees sous Python/Exports/00-FFT_h.png.")
-
-        save_plot("Python/Exports/00-FFT_s.png",
-                (freqs, fft_s_amp, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
+        print("FFT sauvegardees sous Python/Exports/01-FFT_th.png.")
+        
+        save_plot("Python/Exports/01-FFT_s.png",
+                (freqs, fft_s_amp_fem, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
                 title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
-        print("FFT sauvegardees sous Python/Exports/00-FFT_s.png.")
-
-        save_plot("Python/Exports/00-FFT_th.png",
-                (freqs, fft_h_amp, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
-                (freqs, fft_s_amp, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
+        print("FFT sauvegardees sous Python/Exports/01-FFT_s.png.")
+        
+        save_plot("Python/Exports/01-FFT_h.png",
+                (freqs, fft_h_amp_fem, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
                 title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
-        print("FFT sauvegardees sous Python/Exports/00-FFT_th.png.")
+        print("FFT sauvegardees sous Python/Exports/01-FFT_h.png.")
+        
+        #-- 02 --#
+        
+        #-- 03 --#
+        save_plot("Python/Exports/03-FFT_th.png",
+                (freqs, fft_h_amp_tot, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
+                (freqs, fft_s_amp_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique", 'linestyle': 'dashed'}),
+                title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+        print("FFT sauvegardees sous Python/Exports/03-FFT_th.png.")
+        
+        save_plot("Python/Exports/03-FFT_s.png",
+                (freqs, fft_s_amp_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
+                title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+        print("FFT sauvegardees sous Python/Exports/03-FFT_s.png.")
+        
+        save_plot("Python/Exports/03-FFT_h.png",
+                (freqs, fft_h_amp_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique"}),
+                (freqs, fft_h_test_amp, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental"}),
+                title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+        print("FFT sauvegardees sous Python/Exports/03-FFT_h.png.")
 
     print("-" * 100)
     print("\nAffichage des courbes...")
 
+    #-- 01 --#
+    
+    #* --- Comparaison des micros Theorique (total) ---*#
+    print("Comparaison des micros  Theorique (total)...")
+    save_plot("Python/Exports/01-fem_th.png",
+            (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite en sortie des micros",
+            xlabel="Temps [s]", ylabel="Tension [V]")
+    print("Courbes sauvegardees sous Python/Exports/01-fem_th.png.")
+
+    #* --- Comparaison des micros Theorique (corde seule) ---*#
+    print("Comparaison des micros  Theorique (corde seule)...")
+    save_plot("Python/Exports/01-fem_singlecoil.png",
+            #(temps, Test_s, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite en sortie du micro Singlecoil - Corde seule",
+            xlabel="Temps [s]", ylabel="Tension [V]")
+    print("Courbes sauvegardees sous Python/Exports/01-fem_singlecoil.png.")
+
     #* --- Micro Humbucker (corde) ---*#
     print("Micro Humbucker (corde)...")
-    save_plot("Python/Exports/01-Humbucker_corde.png",
-            (temps, normalize_signal(Test_h), {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (temps, normalize_signal(fem_h), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            title="Tension induite (normalisee) en sortie du micro Humbucker - Corde seule",
+    save_plot("Python/Exports/01-fem_humbucker.png",
+            (temps, Test_h, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
+            (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            title="Tension induite en sortie du micro Humbucker - Corde seule",
             xlabel="Temps [s]", ylabel="Tension [V]")
-    print("Courbes sauvegardees sous Python/Exports/01-Humbucker_corde.png.")
+    print("Courbes sauvegardees sous Python/Exports/01-fem_humbucker.png.")
+
+    #-- 02 --#
+    
+    #-- 03 --#
+    
+    #* --- Micro SingleCoil (Parasite) ---*#
+    print("Micro SingleCoil (Parasite)...")
+    save_plot("Python/Exports/03-Parasite_singlecoil.png",
+            #(temps, Test_s_p, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (temps, fem_s_par, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite en sortie des micros - Parasite seul",
+            xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.5, 0.5))
+    print("Courbes sauvegardees sous Python/Exports/03-Parasite_singlecoil.png.")
 
     #* --- Micro Humbucker (Parasite) ---*#
     print("Micro Humbucker (Parasite)...")
-    save_plot("Python/Exports/02-Humbucker_parasite.png",
-            (temps, Test_h_p, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
+    save_plot("Python/Exports/03-Parasite_humbucker.png",
+            (temps, Test_h_p, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
             (temps, fem_h_par, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
             title="Tension induite en sortie des micros - Parasite seul",
             xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.5, 0.5))
-    print("Courbes sauvegardees sous Python/Exports/02-Humbucker_parasite.png.")
+    print("Courbes sauvegardees sous Python/Exports/03-Parasite_humbucker.png.")
+
+    #* --- Droite champ parasite ---*#
+    print("Comparaison des micros champ parasite...")
+    save_plot("Python/Exports/03-Droite.png",
+            (List_Bpar*10**6, List_amp_h_th*10**3, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            (List_Bpar*10**6, List_amp_h_test*10**3, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
+            (List_Bpar*10**6, List_amp_h_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_h_test}),
+            (List_Bpar*10**6, List_amp_s_th*10**3, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            (List_Bpar*10**6, List_amp_s_test*10**3, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (List_Bpar*10**6, List_amp_s_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_s_test}),
+            title="Sensibilité au Bruit Parasite : Humbucker vs. Single Coil",
+            xlabel="Amplitude du champ parasite [micro Tesla]", ylabel="Ampltitude Tension [mV]")
+    print("Courbes sauvegardees sous Python/Exports/03-Droite.png.")
+
+    #* --- SingleCoil (total) ---*#
+    print("Micro SingleCoil (total)...")
+    save_plot("Python/Exports/03-Complet_singlecoil.png",
+            #(temps, Test_s_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite en sortie du micro Singlecoil - Total",
+            xlabel="Temps [s]", ylabel="Tension [V]")
+    print("Courbes sauvegardees sous Python/Exports/03-Complet_singlecoil.png.")
 
     #* --- Humbucker (total) ---*#
     print("Micro Humbucker (total)...")
-    save_plot("Python/Exports/03-Humbucker_total.png",
-            (temps, normalize_signal(Test_h_tot), {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (temps, normalize_signal(fem_h_tot), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            title="Tension induite (normalisee) en sortie du micro Humbucker - Total",
+    save_plot("Python/Exports/03-Complet_humbucker.png",
+            (temps, Test_h_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
+            (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            title="Tension induite en sortie du micro Humbucker - Total",
             xlabel="Temps [s]", ylabel="Tension [V]")
-    print("Courbes sauvegardees sous Python/Exports/03-Humbucker_total.png.")
+    print("Courbes sauvegardees sous Python/Exports/03-Complet_humbucker.png.")
+    
+    #* --- Comparaison des micros Theorique (total) ---*#
+    print("Comparaison des micros  Theorique (total)...")
+    save_plot("Python/Exports/03-Complet_th.png",
+            (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite en sortie des micros",
+            xlabel="Temps [s]", ylabel="Tension [V]")
+    print("Courbes sauvegardees sous Python/Exports/03-Complet_th.png.")
+
+    #-- 99 --#
 
     #* --- Total ---*#
     print("Tous micros total...")
     save_plot("Python/Exports/99-total.png",
-            (temps, normalize_signal(Test_h_tot), {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (temps, normalize_signal(fem_h_tot), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            (temps, normalize_signal(fem_s_tot), {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-            title="Tension induite (normalisee) en sortie des micros",
+            (temps, Test_h_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
+            (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+            (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+            title="Tension induite en sortie des micros",
             xlabel="Temps [s]", ylabel="Tension [V]")
     print("Courbes sauvegardees sous Python/Exports/99-total.png.")
 
-    #* --- Comparaison des micros Theorique (corde seule) ---*#
-    print("Comparaison des micros  Theorique (corde seule)...")
-    plt.figure()
-    l3, = plt.plot(temps, normalize_signal(fem_h), color=Color_h, label="Micro Humbucker - Theorique [V]")
-    l2, = plt.plot(temps, normalize_signal(fem_s), color=Color_s, label="Micro Singlecoil - Theorique [V]")
-    plt.ylabel("Tension induite [V]")
-    plt.title("Tension induite (normalisee) en sortie des micros - Corde seule")
-    plt.legend(handles=[l3, l2], loc='lower left')
-    plt.grid()
-    plt.savefig("Python/Exports/Th-Corde.png")
-    plt.close()
-    print("Courbes sauvegardees sous Python/Exports/Th-Corde.png.")
+print("-" * 100)
 
-    #* --- Comparaison des micros Theorique (total) ---*#
-    print("Comparaison des micros  Theorique (total)...")
-    save_plot("Python/Exports/Th-Total.png",
-            (temps, normalize_signal(fem_h_tot), {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            (temps, normalize_signal(fem_s_tot), {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-            title="Tension induite (normalisee) en sortie des micros",
-            xlabel="Temps [s]", ylabel="Tension [V]")
-    print("Courbes sauvegardees sous Python/Exports/Th-Total.png.")
+print(f"\nk_s = {ks*10**-3} mV/microTesla")
+print(f"k_h = {kh*10**-3} mV/microTesla")
+print(f"CMRR = { ks / kh }")
 
-    #* --- Droite champ parasite ---*#
-    print("Comparaison des micros champ parasite...")
-    save_plot("Python/Exports/99-Doite.png",
-            (List_Ipar, List_amp_h_th, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-            (List_Ipar, List_amp_h_test, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Test [V]"}),
-            (List_Ipar, List_amp_s_th, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-            (List_Ipar, Liste_amp_s_test, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Test [V]"}),
-            title="Amplitude des tension induite en sortie des micros soumis à un champ parasite",
-            xlabel="Amplitude du champ parasite [A]", ylabel="Ampltitude Tension [V]")
-    print("Courbes sauvegardees sous Python/Exports/99-Droite.png.")
+print(f"\nk_s_exp = {k_s_exp*10**-3} mV/microTesla")
+print(f"k_h_exp = {k_h_exp*10**-3} mV/microTesla")
+print(f"CMRR_exp = { k_s_exp / k_h_exp }")
+
+eps_h = abs((k_h_exp - kh) / kh) * 100
+eps_s = abs((k_s_exp - ks) / ks) * 100
+eps = abs((k_s_exp/k_h_exp - ks/kh) / (ks/kh)) * 100
+
+print(f"\nErreur relative k_h : {eps_h} %")
+print(f"Erreur relative k_s : {eps_s} %")
+print(f"Erreur relative CMRR : {eps} %")
+
+print("\n\n---\nFin des calculs de Modele_fem.py\n---\n")
 
 print("-" * 100)
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
