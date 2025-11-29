@@ -1,6 +1,4 @@
-# MCOT : Mise en Cohérence des Objectifs du T.I.P.E.
-
-## Titre : Guitare électrique : Etude de l’influence d u type de micro
+# Guitare électrique : Etude de l’influence du type de micro
 
 ## Bibliographie Commentée :
 
