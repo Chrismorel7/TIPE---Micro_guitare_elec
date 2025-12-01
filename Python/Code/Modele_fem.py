@@ -17,40 +17,41 @@ print("Bibliotheques importees.")
 print("-" * 100)
 print("\nInitialisation des constantes")
 #* Constante physique
-rho = 1.68 * 10**(-8)
-mu0 = 4e-7 * np.pi
+rho = 1.68 * 10**(-8)   # Masse volumique du cuivre (Ohm.m)
+mu0 = 4e-7 * np.pi      # Permeabilite magnetique du vide (H.m-1)
 #* Parametre maquette
-xm = 0.105
-x1 = 0.140
-x2 = 0.160
-L = 0.845
-mu = 9 * 10**(-3)
-dBdy = 0.03             #A verifier ???
+xm = 0.105              # Position du micro singlecoil
+x1 = 0.140              # Position du micro humbucker 1
+x2 = 0.160              # Position du micro humbucker 2
+L = 0.845               # Longueur de la corde
+mu = 9 * 10**(-3)       # Masse lineique de la corde
+dBdy = 0.03             #? Gradient du champ magnetique (A verifier ???)
 #* Parametre Micros
-d = 6.3 * 10**(-5)
-S = 7 * 10**(-4)
+d = 0.063 * 10**(-3)    # Diametre du fil de cuivre
+S = 7 * 10**(-4)        # Surface de la bobine du micro
 #* Parametre Micro Singlecoil
-RCC_s = 5.3 * 10**3
-lmoy_s = 0.147
-N_s = int(RCC_s * np.pi * d**2 / (4 * rho * lmoy_s))
+RCC_s = 5.3 * 10**3     # Resistance DC micro singlecoil
+lmoy_s = 0.147          #? Longueur moyenne du fil enroule
+N_s = int(RCC_s * np.pi * d**2 / (4 * rho * lmoy_s))    # Nombre de spires du micro singlecoil
 #* Parametre Micro Humbucker
-RCC_h = 4.52 * 10**3
-lmoy_h = lmoy_s/2            #A verifier ???
-N_h = int(RCC_h * np.pi * d**2 / (8 * rho * lmoy_h))
+RCC_h = 4.52 * 10**3    # Resistance DC micro humbucker
+lmoy_h = lmoy_s         #? Longueur moyenne d'une bobine humbucker
+N_h = 2*int(RCC_h * np.pi * d**2 / (8 * rho * lmoy_h))
 #* Parametre Champ parasite
-Nbob = 95
-R = 0.130 / 2
-Lbob = 1                #A verifier ???
-Rbob = 10               #A verifier ???
-fB = 50
-U0 = 10
-I0 = 5                  #A verifier ???
-alpha = 0.02           #A verifier ???
+Nbob = 95               # Nombre de spires bobine Helmholtz
+R = 0.130 / 2           # Rayon des bobines Helmholtz
+Lbob = 1                #? Inductance bobines Helmholtz
+Rbob = 10               #? Resistance bobines Helmholtz
+fB = 50                 # Frequence du champ parasite
+U0 = 20                 # Tension bobines Helmholtz
+I0 = 5                  #? Courant bobines Helmholtz
+B0 = 50 * 10**(-6)        # Champ magnetique au centre des bobines Helmholtz
+alpha = 2               #? Coefficient alpha
 #* Parametre variable
-A = 35 * 10**(-4)          #A verifier ???
-x0 = 0.140                  #A verifier ???
-F = 68.3                    #A verifier ???
-T = 4 * mu * (L * F)**2
+A = 35 * 10**(-4)          #? Amplitude initiale de vibration
+x0 = 0.140                 #? Origine de la perturbation
+F = 78.0                   #? Frequence de la note jouee
+T = 4 * mu * (L * F)**2    #? Tension de la corde
 #* Couleurs graphiques
 Color_c = "#505050"
 Color_h_test = "#4C9E31"
@@ -144,17 +145,16 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.nda
     return N * S * dBdy * s
 
 
-def B0(x: float, I0: float = I0) -> float:
+def B(x: float, I0: float = I0) -> float:
     B0 = (Nbob * mu0 * Rbob**2) / 2 * (1 / (Rbob**2 + (x - Rbob / 2)**2)**(3 / 2) + 1 / (Rbob**2 + (x + Rbob / 2)**2)**(3 / 2)) * I0 
     return B0
 
 def fem_par_s(N: int, fB: float, t: np.ndarray) -> np.ndarray:
-    return N*S*2*np.pi*fB*B0(0)*np.sin(2*np.pi*fB*t)
+    return N*S*2*np.pi*fB*B0*np.sin(2*np.pi*fB*t - np.pi/2)
 
 
 def fem_par_h(N: int, x1: float, x2: float, fB: float, t: np.ndarray) -> np.ndarray:
-    return N*S*2*np.pi*fB*B0(0)*alpha*abs(x1-x2)*np.sin(2*np.pi*fB*t)
-
+    return N*S*2*np.pi*fB*B0*alpha*abs(x1-x2)*np.sin(2*np.pi*fB*t)
 
 # ------------------ Utilitaires (lecture / plot / fft) ----------
 def read_test_file(path: str, line_start: int, line_end: int):
@@ -226,12 +226,29 @@ def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
 if __name__ == "__main__":
     print("Lecture des donnees de test...")
 
-    List_Ipar = np.linspace(0, 7, 8)
-    List_Bpar = np.array([B0(0, I) for I in List_Ipar])
+    List_Bpar = np.array([0,5.5, 11, 16.5, 22, 27.5, 33, 38.5, 44, 49.5]) * 10**-6
     List_amp_h_th = np.array([N_h*S*2*np.pi*fB*B*alpha*abs(x1-x2) for B in List_Bpar])
-    List_amp_h_test = np.array([0,0, 20*10**-3, 0, 0, 0, 0, 0])
     List_amp_s_th = np.array([N_s*S*2*np.pi*fB*B for B in List_Bpar])
-    List_amp_s_test = np.array([0,0, 0, 0, 0, 0, 0, 0])
+    
+    List_amp_h_test = [0]
+    List_amp_s_test = [0]
+    
+    file = open("Python/Code/amplitudes.csv")
+    L_lignes = file.readlines()
+    for ligne in L_lignes[1:]:
+        ligne = ligne.strip().split('\t')
+        ligne = [x.replace('\n', '') for x in ligne]
+        ligne = [x.replace(',', '.') for x in ligne]
+        label = ligne[0]
+        amp = float(ligne[1])
+        if "Humbucker" in label:
+            List_amp_h_test.append(amp - 0.005)
+        elif "Single Coil" in label:
+            List_amp_s_test.append(amp)
+    
+    List_amp_h_test = np.array(List_amp_h_test)
+    List_amp_s_test = np.array(List_amp_s_test)
+    
     [k_h_exp, v0h] = np.polyfit(List_Bpar, List_amp_h_test, 1)
     [k_s_exp, v0s] = np.polyfit(List_Bpar, List_amp_s_test, 1)
     List_amp_h_test_lin = k_h_exp * List_Bpar + v0h
@@ -240,15 +257,66 @@ if __name__ == "__main__":
     ks = N_s*S*2*np.pi*fB
     kh = N_h*S*2*np.pi*fB*alpha*abs(x1-x2)
     
-    # Lire fichiers tests exactement comme dans la version originale
-    doc_path = "Test/17-11-2025/Test final/Humbucker_corde.txt"
+    doc_path = "Python/filtered data/SingleCoil_par_20V.csv"
     try:
         with open(doc_path) as doc:
             L_lignes = doc.readlines()
+        Test_temps_s_p = []
+        Test_s_p = []
+        for i in range(10001, 35001):
+            values = L_lignes[i].strip().split("\t")
+            values = [float(v.replace("\n", "")) for v in values]
+            Test_temps_s_p.append(values[0])
+            Test_s_p.append(values[1])
+        Test_temps_s_p = np.array(Test_temps_s_p)
+        Test_temps_s_p -= Test_temps_s_p[0]
+        Test_s_p = 5*np.array(Test_s_p)
+        print("Donnees de test Single Coil parasite seules lues.")
+    except Exception as e:
+        logging.error(f"Erreur lors de la lecture des donnees de test Single Coil parasite seules : {e}")
+
+    path = "Python/raw data/SingleCoil_corde_78,5.csv"
+    try:
+        with open(path) as doc:
+            L_lignes = doc.readlines()
+        Test_temps_s = []
+        Test_s = []
+        for i in range(35090, 60090):
+            values = L_lignes[i].strip().split(";")
+            values = [v.replace(',', '.') for v in values]
+            values = [float(v.replace("\n", "")) for v in values]
+            Test_temps_s.append(values[0])
+            Test_s.append(values[1])
+        Test_temps_s = np.array(Test_temps_s)
+        Test_temps_s -= Test_temps_s[0]
+        Test_temps_s_fft = np.array(Test_temps_s)
+        Test_temps_s = np.array(Test_temps_s[:4000])
+        Test_s_fft = np.array(Test_s)
+        Test_s = np.array(Test_s[:4000])
+        print("Donnees de test Single Coil corde seule lues.")
+    except Exception as e:
+        logging.error(f"Erreur lors de la lecture des donnees de test Single Coil corde seule : {e}")
+
+    try:
+        Test_s_tot = np.array(Test_s_p[:4000]) + np.array(Test_s[:4000])
+        Test_temps_s_tot = np.array(Test_temps_s[:4000])
+        
+        Test_s_tot_fft = np.array(Test_s_p) + np.array(Test_s_fft)
+        Test_temps_s_tot_fft = np.array(Test_temps_s_fft)
+        print("Donnees de test Single Coil parasite + corde lues.")
+    except Exception as e:
+        logging.error(f"Erreur lors de la lecture des donnees de test Single Coil parasite + corde : {e}")
+
+
+    path = "Python/raw data/Humbucker_corde_78,5.csv"
+    try:
+        with open(path) as doc:
+            L_lignes = doc.readlines()
         Test_temps_h = []
         Test_h = []
-        for i in range(53195, 93195):
-            values = L_lignes[i].strip().split("\t")
+        for i in range(58935, 83935):
+            values = L_lignes[i].strip().split(";")
+            values = [v.replace(',', '.') for v in values]
             values = [float(v.replace("\n", "")) for v in values]
             Test_temps_h.append(values[0])
             Test_h.append(values[1])
@@ -257,18 +325,18 @@ if __name__ == "__main__":
         Test_temps_h_fft = np.array(Test_temps_h)
         Test_temps_h = np.array(Test_temps_h[:4000])
         Test_h_fft = np.array(Test_h)
-        Test_h = np.array(Test_h[:4000])
+        Test_h = - np.array(Test_h[:4000])
         print("Donnees de test Humbucker corde seule lues.")
     except Exception as e:
         logging.error(f"Erreur lors de la lecture des donnees de test Humbucker corde seule : {e}")
 
-    doc_path = "Test/17-11-2025/Test final/Humbucker Parasite seul.txt"
+    doc_path = "Python/filtered data/Humbucker_par_8V.csv"
     try:
         with open(doc_path) as doc:
             L_lignes = doc.readlines()
         Test_temps_h_p = []
         Test_h_p = []
-        for i in range(8800, 12800):
+        for i in range(1, 25001):
             values = L_lignes[i].strip().split("\t")
             values = [float(v.replace("\n", "")) for v in values]
             Test_temps_h_p.append(values[0])
@@ -280,23 +348,12 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"Erreur lors de la lecture des donnees de test Humbucker parasite seules : {e}")
 
-    doc_path = "Test/17-11-2025/Test final/Humbucker parasite + corde.txt"
     try:
-        with open(doc_path) as doc:
-            L_lignes = doc.readlines()
-        Test_temps_tot = []
-        Test_h_tot = []
-        for i in range(34360, 74360):
-            values = L_lignes[i].strip().split("\t")
-            values = [float(v.replace("\n", "")) for v in values]
-            Test_temps_tot.append(values[0])
-            Test_h_tot.append(values[1])
-        Test_temps_h_tot = np.array(Test_temps_tot)
-        Test_temps_h_tot -= Test_temps_h_tot[0]
-        Test_temps_h_tot_fft = np.array(Test_temps_h_tot)
-        Test_temps_h_tot = np.array(Test_temps_h_tot[:4000])
-        Test_h_tot_fft = np.array(Test_h_tot)
-        Test_h_tot = np.array(Test_h_tot[:4000])
+        Test_h_tot = np.array(Test_h_p[:4000]) + np.array(Test_h[:4000])
+        Test_temps_h_tot = np.array(Test_temps_h[:4000])
+        
+        Test_h_tot_fft = np.array(Test_h_p) + np.array(Test_h_fft)
+        Test_temps_h_tot_fft = np.array(Test_temps_h_fft)
         print("Donnees de test Humbucker parasite + corde lues.")
     except Exception as e:
         logging.error(f"Erreur lors de la lecture des donnees de test Humbucker parasite + corde : {e}")
@@ -366,11 +423,13 @@ if __name__ == "__main__":
         fft_s_amp_fem = compute_and_normalize_fft(fem_s_fft, Ne_fft)
         fft_h_amp_fem = compute_and_normalize_fft(fem_h_fft, Ne_fft)
         fft_h_test = compute_and_normalize_fft(Test_h_fft, Ne_fft)
+        fft_s_test = compute_and_normalize_fft(Test_s_fft, Ne_fft)
         fft_s_amp_tot = compute_and_normalize_fft(fem_s_tot_fft, Ne_fft)
         fft_h_amp_tot = compute_and_normalize_fft(fem_h_tot_fft, Ne_fft)
         fft_h_test_tot = compute_and_normalize_fft(Test_h_tot_fft, Ne_fft)
+        fft_s_test_tot = compute_and_normalize_fft(Test_s_tot_fft, Ne_fft)
 
-        freqs = np.fft.fftfreq(40000, 1 / fs_fft)
+        freqs = np.fft.fftfreq(25000, 1 / fs_fft)
         mask = 0 <= freqs
         freqs = freqs[mask]
         mask2 = freqs <= 800
@@ -382,15 +441,18 @@ if __name__ == "__main__":
         fft_h_amp_tot = fft_h_amp_tot[mask][mask2]
         fft_h_test = fft_h_test[mask][mask2]
         fft_h_test_tot = fft_h_test_tot[mask][mask2]
-        
+        fft_s_test = fft_s_test[mask][mask2]
+        fft_s_test_tot = fft_s_test_tot[mask][mask2]
 
-        max_amp_h, max_amp_s, max_amp_test_h, max_amp_s_c, max_amp_h_c, max_amp_h_test = np.max(fft_h_amp_tot), np.max(fft_s_amp_tot), np.max(fft_h_test_tot), np.max(fft_s_amp_fem), np.max(fft_h_amp_fem), np.max(fft_h_test)
+        max_amp_h, max_amp_s, max_amp_test_h, max_amp_s_c, max_amp_h_c, max_amp_h_test, max_amp_s_test, max_amp_s_test_tot = np.max(fft_h_amp_tot), np.max(fft_s_amp_tot), np.max(fft_h_test_tot), np.max(fft_s_amp_fem), np.max(fft_h_amp_fem), np.max(fft_h_test), np.max(fft_s_test), np.max(fft_s_test_tot)
         fft_h_amp_tot = fft_h_amp_tot / max_amp_h
         fft_s_amp_tot = fft_s_amp_tot / max_amp_s
         fft_h_test_tot = fft_h_test_tot / max_amp_test_h
         fft_s_amp_fem = fft_s_amp_fem / max_amp_s_c
         fft_h_amp_fem = fft_h_amp_fem / max_amp_h_c
         fft_h_test = fft_h_test / max_amp_h_test
+        fft_s_test = fft_s_test / max_amp_s_test
+        fft_s_test_tot = fft_s_test_tot / max_amp_s_test_tot
 
         print("FFT calculees.")
         Title = "Spectre de la tension en sortie des micros (Fondamental à " + str(F) + " Hz)"
@@ -406,6 +468,7 @@ if __name__ == "__main__":
         
         save_plot("Python/Exports/01-FFT_s.png",
                 (freqs, fft_s_amp_fem, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
+                (freqs, fft_s_test, {'marker': '+', 'linestyle': '--', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental"}),
                 title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
         print("FFT sauvegardees sous Python/Exports/01-FFT_s.png.")
         
@@ -426,6 +489,7 @@ if __name__ == "__main__":
         
         save_plot("Python/Exports/03-FFT_s.png",
                 (freqs, fft_s_amp_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
+                (freqs, fft_s_test_tot, {'marker': '+', 'linestyle': '--', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental"}),
                 title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
         print("FFT sauvegardees sous Python/Exports/03-FFT_s.png.")
         
@@ -450,7 +514,7 @@ if __name__ == "__main__":
 
     #* --- Comparaison des micros Theorique (corde seule) ---*#
     save_plot("Python/Exports/01-fem_singlecoil.png",
-            #(temps, Test_s, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (temps, Test_s, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
             (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
             title="Tension induite en sortie du micro Singlecoil - Corde seule",
             xlabel="Temps [s]", ylabel="Tension [V]")
@@ -470,18 +534,18 @@ if __name__ == "__main__":
     
     #* --- Micro SingleCoil (Parasite) ---*#
     save_plot("Python/Exports/03-Parasite_singlecoil.png",
-            #(temps, Test_s_p, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (temps, Test_s_p[:4000], {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
             (temps, fem_s_par, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
             title="Tension induite en sortie des micros - Parasite seul",
-            xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.1, 0.1))
+            xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.5, 0.5))
     print("Courbes sauvegardees sous Python/Exports/03-Parasite_singlecoil.png.")
 
     #* --- Micro Humbucker (Parasite) ---*#
     save_plot("Python/Exports/03-Parasite_humbucker.png",
-            (temps, Test_h_p, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
+            (temps, Test_h_p[:4000], {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
             (temps, fem_h_par, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
             title="Tension induite en sortie des micros - Parasite seul",
-            xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.1, 0.1))
+            xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.5, 0.5))
     print("Courbes sauvegardees sous Python/Exports/03-Parasite_humbucker.png.")
 
     #* --- Droite champ parasite ---*#
@@ -498,7 +562,7 @@ if __name__ == "__main__":
 
     #* --- SingleCoil (total) ---*#
     save_plot("Python/Exports/03-Complet_singlecoil.png",
-            #(temps, Test_s_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+            (temps, Test_s_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
             (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
             title="Tension induite en sortie du micro Singlecoil - Total",
             xlabel="Temps [s]", ylabel="Tension [V]")
@@ -524,6 +588,7 @@ if __name__ == "__main__":
 
     #* --- Total ---*#
     save_plot("Python/Exports/99-total.png",
+            (temps, Test_s_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
             (temps, Test_h_tot, {'marker': '+', 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
             (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
             (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
@@ -548,7 +613,7 @@ print(f"CMRR_exp = {20*np.log10( k_s_exp / k_h_exp )} dB")
 print("\nCalcul des erreurs relatives...")
 eps_h = abs((k_h_exp - kh) / kh) * 100
 eps_s = abs((k_s_exp - ks) / ks) * 100
-eps = abs((k_s_exp/k_h_exp - ks/kh) / (ks/kh)) * 100
+eps = abs((ks/kh - k_s_exp/k_h_exp) / (ks/kh)) * 100
 
 print(f"\nErreur relative k_h : {eps_h} %")
 print(f"Erreur relative k_s : {eps_s} %")
@@ -558,3 +623,6 @@ print("\n\n---\nFin des calculs de Modele_fem.py\n---\n")
 
 print("-" * 100)
 print("\n---\nFin de l'execution de Modele_fem.py\n---\n")
+
+print(List_amp_h_test)
+print(List_amp_h_th)
