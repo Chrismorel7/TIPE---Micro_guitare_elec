@@ -281,7 +281,7 @@ if __name__ == "__main__":
             L_lignes = doc.readlines()
         Test_temps_s = []
         Test_s = []
-        for i in range(35090, 60090):
+        for i in range(35200, 60200):
             values = L_lignes[i].strip().split(";")
             values = [v.replace(',', '.') for v in values]
             values = [float(v.replace("\n", "")) for v in values]
