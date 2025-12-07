@@ -1,7 +1,7 @@
 """Modele de la vibration d'une corde et de la tension induite dans un micro simple
 et un humbucker.
 Auteur : Christophe Morel
-Date : Novembre 2025
+Date : Decembre 2025
 """
 
 print("\n\n---\nModele_fem.py\n---\n")
@@ -134,7 +134,6 @@ def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
         fn = (i / (2 * L)) * np.sqrt(T / mu)
         An = 2 * np.pi * fn * np.sin(i * np.pi * xm / L)
         Bn = (2 * A * np.sin((i * np.pi * x0) / (L))) / ((x0) / (L) * (1 - (x0) / (L)) * np.pi**2 * i**2)
-        print(i, Bn)
         s += An * Bn * np.sin(2 * np.pi * fn * t)
     return N * S * dBdy * s
 
@@ -156,34 +155,21 @@ def attenuation_theorique_db(frequences):
     
     Modèle : Filtrage en peigne dû à l'écartement des bobines.
     """
-    
-    # 1. Paramètres physiques de l'onde
-    # v : Célérité de l'onde sur la corde (m/s)
-    v = np.sqrt(T / mu) 
-    
-    # k : Nombre d'onde (rad/m) pour chaque fréquence
-    # k = omega / v = 2*pi*f / v
+    v = 2 * L * F
     k = 2 * np.pi * frequences / v
-    
-    # 2. Réponse géométrique du Single Coil
-    # Capte l'amplitude de l'onde à la position xm
-    # N_s : Nombre de spires total du Single Coil
-    geo_single = N_s * np.sin(k * xm)
-    
-    # 3. Réponse géométrique du Humbucker
-    # Capte l'amplitude à x1 et x2. Les signaux s'additionnent (inversion polarité + inversion bobinage)
-    # N_h : Nombre de spires d'UNE SEULE bobine du Humbucker
-    geo_humbucker = N_h * 1/2 * (np.sin(k * x1) + np.sin(k * x2))
-    
-    # 4. Calcul du Ratio (Gain complexe -> Module)
-    # On ajoute un epsilon (eps) pour éviter la division par zéro si le Single Coil est sur un nœud
-    eps = 1e-9
-    ratio_lineaire = np.abs(geo_single / (geo_humbucker + eps))
-    
-    # 5. Conversion en Décibels (dB)
-    gain_db = 20 * np.log10(ratio_lineaire + eps)
-    
-    return gain_db
+    delta_x = abs(x2-x1)
+    x_humbucker = (x2+x1)/2
+    signal_sc = np.abs(np.sin(k * xm))
+
+    # Signal HB (Position + Filtre Peigne)
+    # Note : x_humbucker est le centre du micro
+    filtre_peigne = np.cos(k * delta_x / 2)
+    signal_hb = np.abs(np.sin(k * x_humbucker)) * np.abs(filtre_peigne)
+
+    # Ratio Théorique (Avec gestion de la division par zéro)
+    ratio = np.divide(signal_hb, signal_sc, out=np.zeros_like(signal_sc), where=signal_sc!=0)
+    ratio_db = 20 * np.log10(ratio + 1e-6)
+    return ratio_db, 20*np.log10(np.abs(np.cos(k*delta_x/2)))
 
 
 def B(x: float, I0: float = I0) -> float:
@@ -229,7 +215,7 @@ def read_test_file_partial(path: str, line_start: int, line_end: int, keep_all=F
     return times, np.array(vals)
 
 
-def save_plot(fig_path: str, *plot_calls, title=None, xlabel=None, ylabel=None, ylim=None, legend=True):
+def save_plot(fig_path: str, *plot_calls, title=None, xlabel=None, ylabel=None, ylim=None, legend=True, log=False):
     """Utility to plot provided plot calls (each is a tuple: (x,y,kwargs_or_label))"""
     plt.figure(figsize=(6, 5))
     for call in plot_calls:
@@ -246,6 +232,8 @@ def save_plot(fig_path: str, *plot_calls, title=None, xlabel=None, ylabel=None, 
     plt.grid()
     if legend:
         plt.legend()
+    if log:
+        plt.xscale('log')
     plt.savefig(fig_path)
     plt.close()
 
@@ -566,13 +554,23 @@ print("\nAffichage des courbes...")
 L_freqs, L_pic_s_exp = extraire_pics_separes(freqs, fft_s_test)
 L_freqs, L_pic_h_exp = extraire_pics_separes(freqs, fft_h_test)
 
-ratio_exp = 20*np.log10(L_pic_s_exp / L_pic_h_exp)
-ratio_th = attenuation_theorique_db(freqs[5:])
+freqs = np.linspace(20, 20_000, 1000)
+ratio_exp = 20*np.log10(L_pic_h_exp / L_pic_s_exp)
+ratio_th, peigne = attenuation_theorique_db(freqs)
 
 save_plot("Python/Exports/01-Attenuation.png",
-        (freqs[5:], ratio_th, {'color': Color_h, 'label': "Attenuation Theorique [dB]"}),
-        (L_freqs, ratio_exp, {'marker': '+', 'markersize': 10, 'linestyle': '', 'color': Color_h_test, 'label': "Atteunation experimentale [dB]"}),
-        title="Attenuation du micro Humbucker", xlabel="Frequence [Hz]", ylabel="Attenuation [dB]")
+        (freqs, ratio_th, {'color': "grey", 'label': "Gain Theorique [dB]", "linewidth": 0.5}),
+        (L_freqs, ratio_exp, {'marker': '+', 'markersize': 10, 'linestyle': '', 'color': Color_h_test, 'label': "Gain experimentale [dB]"}),
+        (freqs, peigne, {'color': Color_h, 'label': "Filtrage en peigne spatial [dB]", "linewidth": 2}),
+        title="Mise en évidence du filtrage en peigne spatial", xlabel="Frequence [Hz]", ylabel="Gain relatif [dB]", log=True)
+
+f_att_th = 440
+f_att_exp = 470
+eps_att = (f_att_th - f_att_exp) / f_att_th * 100
+
+print(f"freq theorique : {f_att_th} Hz")
+print(f"freq exp : {f_att_exp} Hz")
+print(f"\nEcart a la théorie d'attenuation : {eps_att} %\n")
 
 """
 L_freqs, ratio_th, ratio_exp = get_ratio(freqs, fft_s_amp_fem, fft_h_amp_fem, F, 3, 10)
