@@ -51,7 +51,7 @@ I0 = 5                  #? Courant bobines Helmholtz
 B0 = 46 * 10**(-6)        # Champ magnetique au centre des bobines Helmholtz
 alpha = 2               #? Coefficient alpha
 #* Parametre variable
-A = 35 * 10**(-4)          #? Amplitude initiale de vibration
+A = 15 * 10**(-4)          #? Amplitude initiale de vibration
 x0 = 0.140                 #? Origine de la perturbation
 F = 78.0                   #? Frequence de la note jouee
 T = 4 * mu * (L * F)**2    #? Tension de la corde
@@ -134,9 +134,11 @@ def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray) -> np.ndarray:
         fn = (i / (2 * L)) * np.sqrt(T / mu)
         An = 2 * np.pi * fn * np.sin(i * np.pi * xm / L)
         Bn = (2 * A * np.sin((i * np.pi * x0) / (L))) / ((x0) / (L) * (1 - (x0) / (L)) * np.pi**2 * i**2)
+        print(i, Bn)
         s += An * Bn * np.sin(2 * np.pi * fn * t)
     return N * S * dBdy * s
 
+vide = fem_singlecoil(10, N_h, xm, np.linspace(0, 1, 100))
 
 def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray) -> np.ndarray:
     s = 0
@@ -171,7 +173,7 @@ def attenuation_theorique_db(frequences):
     # 3. Réponse géométrique du Humbucker
     # Capte l'amplitude à x1 et x2. Les signaux s'additionnent (inversion polarité + inversion bobinage)
     # N_h : Nombre de spires d'UNE SEULE bobine du Humbucker
-    geo_humbucker = N_h * (np.sin(k * x1) + np.sin(k * x2))
+    geo_humbucker = N_h * 1/2 * (np.sin(k * x1) + np.sin(k * x2))
     
     # 4. Calcul du Ratio (Gain complexe -> Module)
     # On ajoute un epsilon (eps) pour éviter la division par zéro si le Single Coil est sur un nœud

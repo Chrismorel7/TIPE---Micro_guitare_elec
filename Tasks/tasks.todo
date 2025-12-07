@@ -4,7 +4,7 @@ General:
     ✔ Recherche Bibliographique @done (10/6/2025, 11:07:14 PM)
     ✔ Realiser une modelisation mathematique @done (10/6/2025, 11:04:22 PM)
     ✔ Realiser une simulation numerique @done (10/6/2025, 11:04:25 PM)
-    ☐ Realiser une analyse experimentale (2/9) @high 
+    ✔ Realiser une analyse experimentale (9/9) @high @done (12/6/2025, 12:41:25 PM)
     ☐ Rediger un rapport (0/9) @low 
     ☐ Preparer une presentation orale (0/5) @high
 
@@ -36,12 +36,12 @@ Analyse Experimentale:
     ✔ Concevoir un protocole experimental @done (10/6/2025, 11:01:05 PM)
     ✔ Faire une liste du materiel necessaire @done (10/6/2025, 11:01:03 PM)
     ✔ Preparer le banc d'essai et le materiel @high @done (11/14/2025, 11:08:47 PM)
-    ☐ Mesurer la vibration d'une corde de guitare
-    ☐ Mesurer la reponse freuquentielle d'un micro
-    ☐ Mesurer la reponse a un champ magnetique parasite
-    ☐ Mesurer la reponse a une excitation de la corde
-    ☐ Comparer les resultats experimentaux avec les simulations
-    ☐ Analyser les differences entre les resultats experimentaux et les simulations
+    ✔ Mesurer la vibration d'une corde de guitare @done (12/6/2025, 12:41:06 PM)
+    ✔ Mesurer la reponse freuquentielle d'un micro @done (12/6/2025, 12:41:08 PM)
+    ✔ Mesurer la reponse a un champ magnetique parasite @done (12/6/2025, 12:41:10 PM)
+    ✔ Mesurer la reponse a une excitation de la corde @done (12/6/2025, 12:41:11 PM)
+    ✔ Comparer les resultats experimentaux avec les simulations @done (12/6/2025, 12:41:13 PM)
+    ✔ Analyser les differences entre les resultats experimentaux et les simulations @done (12/6/2025, 12:41:15 PM)
 
 Redaction du Rapport:
     ☐ Structurer le rapport
@@ -60,3 +60,119 @@ Preparation de la Presentation Orale:
     ☐ Mettre en forme les diapositives
     ☐  Preparer le discours
     ☐ Preparar les reponses aux questions potentielles
+
+Pour la suite:
+1. 🛠️ L'Hypothèse de l'Asymétrie (Le vrai coupable du bruit):
+
+C'est ton plus gros point d'amélioration théorique.
+* **Le constat :** Tu as attribué le bruit résiduel du Humbucker uniquement au **gradient $\alpha$** (position dans Helmholtz). 
+    C'est une explication, mais elle est probablement minoritaire face à la réalité industrielle.
+* **La réalité :** Un Humbucker n'annule pas parfaitement le bruit souvent parce que les deux bobines ne sont pas strictement 
+    identiques (**Unbalanced Coils**). Si $N_1 \neq N_2$ ou $R_1 \neq R_2$, l'annulation échoue même en champ uniforme.
+* **Le travail à faire (1 mois) :**
+    1.  **Expérience :** Si ton Humbucker a 4 fils de sortie (ce qui est fréquent), 
+        mesure séparément la résistance et l'inductance de la Bobine 1 et de la Bobine 2. Si tu ne peux pas, essaye de te procurer deux micros simples identiques pour simuler un Humbucker "déséquilibré" en ajoutant des spires ou une résistance sur l'un des deux.
+    2.  **Modélisation :** Mets à jour ton code Python pour introduire un paramètre de **mismatch** ($\delta N$).
+    3.  **Conclusion :** Tu pourras dire : *"Le gradient explique 20% du résidu, mais l'asymétrie de bobinage en explique 80%."* 
+        Ça, c'est de la physique fine.
+
+---
+
+### 2. 🎸 L'Influence du Câble (La réalité du circuit RLC)
+
+Ton diagramme de Bode est très théorique. Dans la vraie vie, un guitariste branche un **câble Jack**.
+* **La physique :** Un câble coaxial ajoute une capacité linéique ($\approx 100 \text{ à } 150 \text{ pF/m}$). Un câble de 3m ajoute $\approx 400 \text{ pF}$ en parallèle.
+* **L'impact :** Cela fait chuter ta fréquence de résonance $f_0$ drastiquement (le son change).
+* **L'expérience facile (2 semaines) :**
+    * Ajoute des condensateurs connus en parallèle de ton micro sur ta maquette.
+    * Refais ton Bode ou ta FFT.
+    * Montre le déplacement du pic de résonance.
+* **L'intérêt :** Cela prouve que tu as compris que le micro interagit avec son environnement (Impédance). C'est purement "SI/Génie Électrique".
+
+---
+
+### 3. 🧲 Les Courants de Foucault (Eddy Currents)
+
+Tu as modélisé le micro comme une inductance pure + résistance série. Mais les micros ont des noyaux en fer/acier et parfois des capots métalliques.
+* **Le problème :** À haute fréquence, des courants de Foucault se créent dans le métal, ce qui agit comme une **résistance secondaire** qui amortit le pic de résonance (le $Q$ diminue).
+* **Le travail (1 mois - Difficile mais valorisant) :**
+    * Essaye d'ajouter une résistance en parallèle ($R_{loss}$) dans ton modèle RLC théorique pour voir si cela fit mieux la forme de ton Bode réel.
+    * Si tu as un micro avec un capot métallique, fais une mesure "Avec Capot" vs "Sans Capot". Tu verras une perte d'aigus. C'est une super "ouverture" traitée.
+
+---
+
+### 4. 🎧 La Preuve Sonore (Audio)
+
+Tu parles de son, de timbre, de "rond", de "brillant"... mais le jury ne l'entend pas.
+* **Le travail (1 semaine) :**
+    * Enregistre proprement (via ta carte son) le son de ta corde sur la maquette avec le Single Coil (avec du bruit 50Hz volontaire).
+    * Enregistre la même chose avec le Humbucker.
+    * Intègre ces 2 fichiers audio (10 secondes) dans ta présentation (si autorisé) ou garde-les sur ton ordi pour la partie questions.
+    * **Bonus :** Fais écouter le son "simulé" par ton Python (reconstruit par transformée inverse) et compare-le au réel. Si ça se ressemble, c'est le Graal.
+
+### Résumé du Plan de Bataille
+1.  **Février :** Mesure de l'asymétrie des bobines et mise à jour du modèle Python.
+2.  **Mars :** Étude de l'influence capacitive (Câble) pour valider le modèle RLC complet.
+3.  **Avril :** Enregistrements audio propres et peaufinage des graphiques finaux.
+
+Si tu fais ça, tu passes d'un TIPE "validé" à un TIPE "remarquable".
+
+
+
+C'est une excellente idée. [cite_start]Obtenir le Bode expérimental est la "pièce manquante" qui validerait définitivement votre modèle LTSpice (Slide 9 et 10) [cite: 6133-6140].
+
+Vous avez de la chance : **vous avez déjà tout le matériel nécessaire** (les bobines de Helmholtz et l'oscilloscope).
+
+Voici les deux méthodes pour le faire, de la plus "physique" à la plus "électronique".
+
+---
+
+### 🎯 Méthode 1 : Excitation Magnétique (Recommandée)
+*C'est la plus cohérente avec votre TIPE car elle teste le micro en tant que capteur.*
+
+**Le Principe :** Utiliser vos bobines de Helmholtz non plus pour créer un parasite à 50Hz, mais pour créer un champ magnétique "balayant" toutes les fréquences (20 Hz à 20 kHz).
+
+**Le Protocole :**
+1.  **Montage :** Placez le micro au centre des bobines de Helmholtz (comme pour l'expérience bruit).
+2.  **Source :** Branchez le GBF sur les bobines de Helmholtz.
+3.  **Signal :** Configurez le GBF en mode **"Sweep" (Balayage)** sinusoïdal logarithmique de **100 Hz à 20 kHz**.
+4.  **Mesure :** Branchez la sortie du micro sur l'oscilloscope (Voie 2).
+5.  **Référence (Crucial) :** Branchez une sonde de courant ou une résistance shunt en série avec les bobines Helmholtz pour mesurer le courant $I_{bobine}$ (Voie 1).
+
+**⚠️ Le Piège à éviter (L'Inductance des bobines Helmholtz) :**
+Vos bobines de Helmholtz ont elles-mêmes une inductance. Si vous gardez la tension du GBF constante, le courant $I$ (et donc le champ $B$) va **diminuer** quand la fréquence augmente ($Z = L\omega$).
+* **La solution :** Ne tracez pas $V_{micro}$ tout seul. Tracez le Gain :
+    $$G_{dB} = 20 \log \left( \frac{V_{micro}}{I_{bobine}} \right)$$
+    *(Car le champ $B$ est proportionnel à $I$, pas à la tension du GBF).*
+
+---
+
+### ⚡ Méthode 2 : Injection Électrique (Alternative)
+*C'est la méthode "pure électronique" pour caractériser le RLC, sans passer par le champ magnétique.*
+
+**Le Principe :** On injecte un signal électrique directement dans le micro pour mesurer sa réponse en fréquence (son impédance).
+
+**Le Protocole :**
+1.  **Montage :** Mettez une résistance $R_{inj}$ (ex: 100 k$\Omega$) en série avec le GBF, puis connectez le micro.
+    * `GBF (+) --> Résistance --> Micro (+) --> Micro (-) --> GBF (-)`
+2.  **Mesure :** Mesurez la tension **aux bornes du micro** avec l'oscilloscope.
+3.  **Balayage :** Faites varier la fréquence de 100 Hz à 20 kHz.
+
+**Ce que vous allez voir :**
+* À la fréquence de résonance ($f_0$), l'impédance du micro est maximale (circuit bouchon parallèle).
+* La tension mesurée à l'oscilloscope sera donc **maximale** à $f_0$.
+* Cela vous donnera directement la courbe en cloche du diagramme de Bode.
+
+---
+
+### 🚀 Mon Conseil pour les 3 mois restants
+
+Utilisez la **Méthode 2 (Injection Électrique)**.
+* Elle est plus simple à mettre en œuvre (pas besoin de gérer le champ magnétique variable).
+* Elle donne une courbe très propre.
+* Elle permet de mesurer précisément $f_0$ et $Q$ (largeur du pic).
+
+[cite_start]Une fois que vous avez cette courbe expérimentale, vous la superposez à votre courbe LTSpice (Slide 9) [cite: 6139-6140].
+* Si les pics se superposent $\rightarrow$ **Victoire totale**.
+* S'il y a un décalage $\rightarrow$ Vous ajustez les valeurs $L$ et $C$ dans LTSpice pour "fitter" la réalité (Identification de modèle).
+
