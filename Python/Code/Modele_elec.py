@@ -40,11 +40,11 @@ Color_s_test = "#C63032"
 Color_h = "#3E77B2"
 Color_s = "#EF812C"
 
-f0_sc_exp = 5800   # Hz
-Q_sc_exp  = 1.5    # Adimensionnel
+f0_sc_exp = 5000   # Hz
+Q_sc_exp  = 2.38    # Adimensionnel
 
-f0_hb_exp = 7800   # Hz
-Q_hb_exp  = 1.3    # Adimensionnel
+f0_hb_exp = 7500   # Hz
+Q_hb_exp  = 2.14    # Adimensionnel
 
 # --- 2. Fonction de Transfert (Modèle Passe-Bas 2nd Ordre) ---
 
@@ -161,27 +161,27 @@ print("\nAffichage du diagramme de Bode...")
 plt.figure(1)
 
 plt.subplot(2, 1, 1)
-plt.semilogx(freq, Vvout_hum_db, color=Color_h, label="Humbucker (Simule)")
-plt.semilogx(freq, Vvout_sin_db, color=Color_s, label="SingleCoil (Simule)")
-plt.semilogx(f, gain_sc, color=Color_s_test, linewidth=2, linestyle='--', label=f'Single Coil experimental')
-plt.semilogx(f, gain_hb, color=Color_h_test, linewidth=2, linestyle='--',label=f'Humbucker experimental')
+#plt.semilogx(freq, Vvout_hum_db, color=Color_h, label="Humbucker (Simule)")
+#plt.semilogx(freq, Vvout_sin_db, color=Color_s, label="SingleCoil (Simule)")
+plt.semilogx(f, gain_sc, color=Color_s_test, linewidth=2, linestyle='-', label=f'Single Coil experimental')
+plt.semilogx(f, gain_hb, color=Color_h_test, linewidth=2, linestyle='-',label=f'Humbucker experimental')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
-plt.ylabel("Gain (dB)")
+plt.ylabel("Gain [$dB$]")
 plt.ylim(-30, 30)
 plt.xlim(20, 20000)
 plt.title("Réponse en fréquence du micro")
 
 plt.subplot(2, 1, 2)
-plt.semilogx(freq, Vvout_hum_deg, color=Color_h, label="Humbucker (Simule)")
-plt.semilogx(freq, Vvout_sin_deg, color=Color_s, label="SingleCoil (Simule)")
-plt.semilogx(freq, phase_sc, color=Color_s_test, linewidth=2, linestyle='--', label=f'Single Coil experimental')
-plt.semilogx(freq, phase_hb, color=Color_h_test, linewidth=2, linestyle='--',label=f'Humbucker experimental')
+#plt.semilogx(freq, Vvout_hum_deg, color=Color_h, label="Humbucker (Simule)")
+#plt.semilogx(freq, Vvout_sin_deg, color=Color_s, label="SingleCoil (Simule)")
+plt.semilogx(freq, phase_sc, color=Color_s_test, linewidth=2, linestyle='-', label=f'Single Coil experimental')
+plt.semilogx(freq, phase_hb, color=Color_h_test, linewidth=2, linestyle='-',label=f'Humbucker experimental')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
-plt.ylabel("Phase (°)")
+plt.ylabel("Phase [$°$]")
 plt.ylim(-180, 45)
 plt.xlim(20, 20000)
 plt.legend(loc='lower left')
-plt.xlabel("Fréquence (Hz)")
+plt.xlabel("Fréquence [$Hz$]")
 
 plt.savefig("Python/Exports/Freq/00-Bode.png")
 plt.close()

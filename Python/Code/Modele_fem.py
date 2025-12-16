@@ -500,24 +500,24 @@ if tracer_fft:
     save_plot("Python/Exports/FFT/01-FFT_th.png",
             (freqs, fft_h_amp_fem, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
             (freqs, fft_s_amp_fem, {'color': Color_s, 'label': "Micro Singlecoil - Theorique", 'linestyle': 'dashed'}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print("FFT sauvegardees sous Python/Exports/01-FFT_th.png.")
     
     save_plot("Python/Exports/FFT/01-FFT_exp.png",
             (freqs, fft_s_test, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental"}),
             (freqs, fft_h_test, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental"}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     
     save_plot("Python/Exports/FFT/01-FFT_s.png",
             (freqs, fft_s_amp_fem, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
             (freqs, fft_s_test, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental"}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print("FFT sauvegardees sous Python/Exports/01-FFT_s.png.")
     
     save_plot("Python/Exports/FFT/01-FFT_h.png",
             (freqs, fft_h_amp_fem, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
             (freqs, fft_h_test, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental"}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print("FFT sauvegardees sous Python/Exports/01-FFT_h.png.")
     
     #-- 02 --#
@@ -526,25 +526,25 @@ if tracer_fft:
     save_plot("Python/Exports/FFT/03-FFT_th.png",
             (freqs, fft_h_amp_tot, {'color': Color_h, 'label': "Micro Humbucker - Théorique"}),
             (freqs, fft_s_amp_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique", 'linestyle': 'dashed'}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print("FFT sauvegardees sous Python/Exports/03-FFT_th.png.")
     
     save_plot("Python/Exports/FFT/03-FFT_s.png",
             (freqs, fft_s_amp_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique"}),
             (freqs, fft_s_test_tot, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental"}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print("FFT sauvegardees sous Python/Exports/03-FFT_s.png.")
     
     save_plot("Python/Exports/FFT/03-FFT_h.png",
             (freqs, fft_h_amp_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique"}),
             (freqs, fft_h_test_tot, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental"}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print("FFT sauvegardees sous Python/Exports/03-FFT_h.png.")
     
     save_plot("Python/Exports/FFT/03-FFT_exp.png",
             (freqs, fft_s_test_tot, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental"}),
             (freqs, fft_h_test_tot, {'marker': '+', 'markersize': 10, 'linestyle': '--', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental"}),
-            title=Title, xlabel="Frequence (Hz)", ylabel="Tension normalisee")
+            title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     
 print("-" * 100)
 print("\nAffichage des courbes...")
@@ -559,10 +559,10 @@ ratio_exp = 20*np.log10(L_pic_h_exp / L_pic_s_exp)
 ratio_th, peigne = attenuation_theorique_db(freqs)
 
 save_plot("Python/Exports/01-Attenuation.png",
-        (freqs, ratio_th, {'color': "grey", 'label': "Gain Theorique [dB]", "linewidth": 0.5}),
-        (L_freqs, ratio_exp, {'marker': '+', 'markersize': 10, 'linestyle': '', 'color': Color_h_test, 'label': "Gain experimentale [dB]"}),
-        (freqs, peigne, {'color': Color_h, 'label': "Filtrage en peigne spatial [dB]", "linewidth": 2}),
-        title="Mise en évidence du filtrage en peigne spatial", xlabel="Frequence [Hz]", ylabel="Gain relatif [dB]", log=True)
+        (freqs, ratio_th, {'color': "grey", 'label': "Gain Theorique [$dB$]", "linewidth": 0.5}),
+        (L_freqs, ratio_exp, {'marker': '+', 'markersize': 10, 'linestyle': '', 'color': Color_h_test, 'label': "Gain experimentale [$dB$]"}),
+        (freqs, peigne, {'color': Color_h, 'label': "Filtrage en peigne spatial [$dB$]", "linewidth": 2}),
+        title="Mise en évidence du filtrage en peigne spatial", xlabel="Frequence [$Hz$]", ylabel="Gain relatif [$dB$]", log=True)
 
 f_att_th = 440
 f_att_exp = 470
@@ -595,24 +595,24 @@ plt.close()
 """
 #* --- Comparaison des micros Theorique (total) ---*#
 save_plot("Python/Exports/Sig/01-fem_th.png",
-        (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-        (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+        (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
+        (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
         title="Tension induite en sortie des micros",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print("Courbes sauvegardees sous Python/Exports/01-fem_th.png.")
 #* --- Comparaison des micros Theorique (corde seule) ---*#
 save_plot("Python/Exports/Sig/01-fem_singlecoil.png",
-        (temps, Test_s, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
-        (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+        (temps, Test_s, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
+        (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
         title="Tension induite en sortie du micro Singlecoil - Corde seule",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print("Courbes sauvegardees sous Python/Exports/01-fem_singlecoil.png.")
 #* --- Micro Humbucker (corde) ---*#
 save_plot("Python/Exports/Sig/01-fem_humbucker.png",
-        (temps, Test_h, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
-        (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+        (temps, Test_h, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
+        (temps, fem_h, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
         title="Tension induite en sortie du micro Humbucker - Corde seule",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print("Courbes sauvegardees sous Python/Exports/01-fem_humbucker.png.")
 #-- 02 --#
 
@@ -620,60 +620,60 @@ print("Courbes sauvegardees sous Python/Exports/01-fem_humbucker.png.")
 
 #* --- Micro SingleCoil (Parasite) ---*#
 save_plot("Python/Exports/Sig/03-Parasite_singlecoil.png",
-        (temps, Test_s_p[:4000], {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
-        (temps, fem_s_par, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-        title="Tension induite en sortie des micros - Parasite seul",
-        xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.5, 0.5))
+        (temps, Test_s_p[:4000], {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
+        (temps, fem_s_par, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
+        title="Tension induite en sortie du SingleCoil \nsoumis à un champs magnétique de 50µT",
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]", ylim=(-0.5, 0.5))
 print("Courbes sauvegardees sous Python/Exports/03-Parasite_singlecoil.png.")
 #* --- Micro Humbucker (Parasite) ---*#
 save_plot("Python/Exports/Sig/03-Parasite_humbucker.png",
-        (temps, Test_h_p[:4000], {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
-        (temps, fem_h_par, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-        title="Tension induite en sortie des micros - Parasite seul",
-        xlabel="Temps [s]", ylabel="Tension [V]", ylim=(-0.5, 0.5))
+        (temps, Test_h_p[:4000], {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
+        (temps, fem_h_par, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
+        title="Tension induite en sortie du Humbucker \nsoumis à un champs magnétique de 50µT",
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]", ylim=(-0.5, 0.5))
 print("Courbes sauvegardees sous Python/Exports/03-Parasite_humbucker.png.")
 #* --- Droite champ parasite ---*#
 save_plot("Python/Exports/03-Droite.png",
-        (List_Bpar*10**6, List_amp_h_th*10**3, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-        (List_Bpar*10**6, List_amp_h_test*10**3, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
+        (List_Bpar*10**6, List_amp_h_th*10**3, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
+        (List_Bpar*10**6, List_amp_h_test*10**3, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
         (List_Bpar*10**6, List_amp_h_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_h_test}),
-        (List_Bpar*10**6, List_amp_s_th*10**3, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
-        (List_Bpar*10**6, List_amp_s_test*10**3, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
+        (List_Bpar*10**6, List_amp_s_th*10**3, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
+        (List_Bpar*10**6, List_amp_s_test*10**3, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
         (List_Bpar*10**6, List_amp_s_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_s_test}),
-        title="Sensibilité au Bruit Parasite : Humbucker vs. Single Coil",
-        xlabel="Amplitude du champ parasite [micro Tesla]", ylabel="Ampltitude Tension [mV]")
+        title="Sensibilité au bourdonnement des micros",
+        xlabel="Amplitude du champ parasite [$µT$]", ylabel="Ampltitude Tension [$mV$]")
 print("Courbes sauvegardees sous Python/Exports/03-Droite.png.")
 #* --- SingleCoil (total) ---*#
 save_plot("Python/Exports/Sig/03-Complet_singlecoil.png",
-        (temps, Test_s_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
-        (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+        (temps, Test_s_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
+        (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
         title="Tension induite en sortie du micro Singlecoil - Total",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print("Courbes sauvegardees sous Python/Exports/03-Complet_singlecoil.png.")
 #* --- Humbucker (total) ---*#
 save_plot("Python/Exports/Sig/03-Complet_humbucker.png",
-        (temps, Test_h_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
-        (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
+        (temps, Test_h_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
+        (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
         title="Tension induite en sortie du micro Humbucker - Total",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print("Courbes sauvegardees sous Python/Exports/03-Complet_humbucker.png.")
 
 #* --- Comparaison des micros Theorique (total) ---*#
 save_plot("Python/Exports/Sig/03-Complet_th.png",
-        (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-        (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+        (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
+        (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
         title="Tension induite en sortie des micros",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print("Courbes sauvegardees sous Python/Exports/03-Complet_th.png.")
 #-- 99 --#
 #* --- Total ---*#
 save_plot("Python/Exports/Sig/99-total.png",
-        (temps, Test_s_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [V]"}),
-        (temps, Test_h_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [V]"}),
-        (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [V]"}),
-        (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [V]"}),
+        (temps, Test_s_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
+        (temps, Test_h_tot, {'marker': '+', 'markersize': 10, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
+        (temps, fem_h_tot, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
+        (temps, fem_s_tot, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
         title="Tension induite en sortie des micros",
-        xlabel="Temps [s]", ylabel="Tension [V]")
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 
 print("Courbes sauvegardees sous Python/Exports/99-total.png.")
 print("-" * 100)
