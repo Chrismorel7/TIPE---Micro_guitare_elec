@@ -1,0 +1,42 @@
+Voici le plan d'action pour transformer ton TIPE actuel en un dossier capable de decrocher 16+ aux concours (X, Centrale, Mines).
+
+### etape 1 : Modelisation (Le niveau "Spe")
+
+*L'objectif est de depasser la simple "loi de Faraday" pour expliquer pourquoi le Humbucker change le timbre.*
+
+* **Theorie :** Loi de Faraday-Lenz et **Induction de Neumann**. Utilise le concept de **Mutuelle Inductance** () entre la corde (aimantee par le plot) et la bobine.
+* **Methode :** Modelise la corde comme un dipôle magnetique oscillant. Calcule l'expression analytique du flux  à travers une spire en fonction de la distance  micro/corde. Deduis-en la force electromotrice (f.e.m) .
+* **Matos :** Un logiciel de simulation de champ magnetique (type **FEMM**, gratuit) pour visualiser comment le champ du Humbucker est plus "etale" que celui d'un Single Coil, ce qui explique physiquement la perte d'harmoniques (filtrage spatial).
+
+### etape 2 : Metrologie (Passer du musicien à l'ingenieur)
+
+*Le jury deteste l'imprecision du "jeu à la main".*
+
+* **Theorie :** Analyse de la reponse frequentielle et linearite du système.
+* **Methode :** Construis un banc de test fixe. Remplace ton doigt par un **pot vibrant** ou un dispositif mecanique (ex: un petit moteur avec excentrique) pour exciter la corde avec une amplitude et une frequence constantes.
+* **Matos :** Un pied à coulisse pour mesurer precisement la distance entre le micro et la corde. Une **sonde à effet Hall** pour cartographier le champ magnetique reel de tes aimants (plots) et verifier s'ils sont identiques sur les deux bobines du Humbucker.
+
+### etape 3 : Informatique (Exploiter ton niveau 18/20)
+
+*Ton code Python ne doit plus seulement "afficher", il doit "analyser".*
+
+* **Theorie :** Optimisation numerique et traitement du signal.
+* **Methode :** 1.  **Fitting :** Utilise `scipy.optimize.curve_fit` pour faire correspondre ta courbe experimentale (reponse en frequence) à ton modèle de circuit RLC. Deduis-en les valeurs reelles de  et  de tes micros.
+2.  **Calcul du THD :** Code une fonction qui calcule le **Total Harmonic Distortion**. Compare le THD d'un Single Coil et d'un Humbucker pour quantifier la "richesse" perdue.
+* **Matos :** Sortie son de ta guitare vers un **oscilloscope numerique** (export .csv des donnees) ou une carte son haute fidelite (24-bit/96kHz) pour eviter de rajouter du bruit de quantification.
+
+### etape 4 : Validation du "Compromis"
+
+*C'est le cœur de ta problematique.*
+
+* **Theorie :** Rapport Signal sur Bruit (SNR).
+* **Methode :** Trace une courbe montrant l'evolution du **SNR vs Distance micro/corde** pour les deux types de micros.
+* **Le "Plus" :** Montre qu'il existe une distance optimale où le Humbucker rejette assez de bruit (via tes bobines de Helmholtz) sans trop degrader le spectre harmonique (via tes FFT).
+
+### etape 5 : Nettoyage du support (Le pitch final)
+
+* **Action :** Supprime les slides sur le "marche de la guitare".
+* **Remplacement :** Ajoute une slide sur **"L'incertitude de mesure"**. En PT, un candidat qui sait calculer l'incertitude sur ses dB ou son TRMC marque des points immediatement.
+* **Conclusion :** Ta conclusion ne doit pas être "le Humbucker c'est mieux", mais "voici l'equation qui permet de choisir le nombre de spires pour optimiser le compromis entre bruit et timbre".
+
+**Prochaine etape :** Dès que tu as tes premières courbes de "Fitting" Python, nous pourrons verifier si ton modèle de Spe tient la route face à tes mesures.

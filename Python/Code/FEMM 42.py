@@ -4,24 +4,24 @@ from scipy.signal import savgol_filter
 from scipy.interpolate import UnivariateSpline
 
 # --- CONFIGURATION DU LISSAGE ---
-# Choix : "AUCUN", "SAVGOL" (Recommandé), ou "SPLINE"
+# Choix : "AUCUN", "SAVGOL" (Recommande), ou "SPLINE"
 METHODE_LISSAGE = "SAVGOL" 
 
 # --- 1. Paramètres Physiques ---
-freq = 78  # Fréquence de la corde en Hz
+freq = 78  # Frequence de la corde en Hz
 omega = 2 * np.pi * freq
-N_spires = 1 # Nombre de spires (Mettez votre valeur réelle, ex: 6000)
+N_spires = 1 # Nombre de spires (Mettez votre valeur reelle, ex: 6000)
 
-# --- 2. Chargement des données ---
+# --- 2. Chargement des donnees ---
 try:
     data = np.loadtxt("Docs/FEMM/resultats_flux.txt", delimiter=",", skiprows=2)
 except OSError:
-    # Génération de données factices pour l'exemple si le fichier est absent
-    print("Fichier introuvable, génération de données de test...")
+    # Generation de donnees factices pour l'exemple si le fichier est absent
+    print("Fichier introuvable, generation de donnees de test...")
     t_test = np.linspace(0, 1/freq, 200)
     angles = t_test * omega
     deplacement = np.sin(angles)
-    # Flux avec bruit numérique simulé
+    # Flux avec bruit numerique simule
     flux = 3e-6 * (1 - 0.1*np.sin(angles)) + 1e-8 * np.random.normal(0, 1, 200)
 else:
     angles = data[:, 0]      
@@ -31,7 +31,7 @@ else:
 # --- 3. Conversion Espace -> Temps ---
 temps = angles / omega
 
-# --- 4. Traitement et Lissage (ÉTAPE CLÉ) ---
+# --- 4. Traitement et Lissage (eTAPE CLe) ---
 flux_lisse = flux.copy()
 dphi_dt = np.zeros_like(flux)
 
@@ -46,11 +46,11 @@ if METHODE_LISSAGE == "SAVGOL":
     dphi_dt = np.gradient(flux_lisse, temps)
 
 elif METHODE_LISSAGE == "SPLINE":
-    # Interpolation Spline : Crée une fonction mathématique lisse
+    # Interpolation Spline : Cree une fonction mathematique lisse
     # s = facteur de lissage. Trop grand = perte de signal, Trop petit = garde le bruit.
     spl = UnivariateSpline(temps, flux, s=1e-15) 
     flux_lisse = spl(temps)
-    dphi_dt = spl.derivative()(temps) # Dérivée analytique très propre
+    dphi_dt = spl.derivative()(temps) # Derivee analytique très propre
 
 else: # AUCUN
     flux_lisse = flux
@@ -61,19 +61,19 @@ else: # AUCUN
 tension = -N_spires * dphi_dt
 tension_mV = tension * 1000
 
-# --- 6. Tracé des courbes ---
+# --- 6. Trace des courbes ---
 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(10, 10))
 
 # Graphique 1 : Vibration corde
-ax1.plot(temps * 1000, deplacement, 'k--', alpha=0.5, label='Déplacement')
+ax1.plot(temps * 1000, deplacement, 'k--', alpha=0.5, label='Deplacement')
 ax1.set_ylabel('Position (mm)')
 ax1.grid(True, linestyle='--', alpha=0.7)
-ax1.set_title(f'Simulation FEMM (f = {freq} Hz) - Méthode : {METHODE_LISSAGE}')
+ax1.set_title(f'Simulation FEMM (f = {freq} Hz) - Methode : {METHODE_LISSAGE}')
 ax1.legend(loc='upper right')
 
-# Graphique 2 : Flux Magnétique (Comparaison Brut vs Lissé)
-ax2.plot(temps * 1000, flux * 1e6, 'b.', markersize=2, alpha=0.3, label='Flux Brut (Bruit numérique)')
-ax2.plot(temps * 1000, flux_lisse * 1e6, 'g-', linewidth=2, label='Flux Lissé')
+# Graphique 2 : Flux Magnetique (Comparaison Brut vs Lisse)
+ax2.plot(temps * 1000, flux * 1e6, 'b.', markersize=2, alpha=0.3, label='Flux Brut (Bruit numerique)')
+ax2.plot(temps * 1000, flux_lisse * 1e6, 'g-', linewidth=2, label='Flux Lisse')
 ax2.set_ylabel(r'Flux ($\mu$Wb)')
 ax2.grid(True, linestyle='--', alpha=0.7)
 ax2.legend(loc='upper right')

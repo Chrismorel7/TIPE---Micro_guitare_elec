@@ -1,9 +1,9 @@
 -- === SCRIPT ULTIME DE DEBUG ===
 showconsole()
 clearconsole()
-print("Démarrage...")
+print("Demarrage...")
 
--- 1. On définit explicitement le nom du fichier de travail
+-- 1. On definit explicitement le nom du fichier de travail
 -- Cela permet au script de retrouver la fenêtre si elle est perdue
 mi_saveas("Humucker.FEM")
 nom_fichier_doc = "Humbucker.FEM"
@@ -28,7 +28,7 @@ for i = 0, nb_points do
     -- On dit à FEMM : "Regarde le fichier de dessin, pas ailleurs"
     mi_setfocus(nom_fichier_doc)
 
-    -- Remise à zéro de la somme pour ce pas de temps
+    -- Remise à zero de la somme pour ce pas de temps
     deplacement_absolu = 0
     t = Te / i
     -- Boucle de sommation (Sigma)
@@ -39,28 +39,28 @@ for i = 0, nb_points do
 
     mouvement_step = deplacement_absolu - pos_precedente
     
-    -- C. Sélection et Mouvement
+    -- C. Selection et Mouvement
     mi_selectgroup(1)
     mi_movetranslate(0, mouvement_step)
     mi_clearselected() 
     
-    -- D. Résolution
+    -- D. Resolution
     -- On attend que le maillage soit fini avant de continuer
     if (mi_analyze(1) == 0) then
-        print("Erreur critique lors du maillage/calcul à l'étape " .. i)
+        print("Erreur critique lors du maillage/calcul à l'etape " .. i)
         -- On continue quand même pour voir, mais c'est mauvais signe
     end
     
-    mi_loadsolution() -- Ouvre la fenetre de résultats
+    mi_loadsolution() -- Ouvre la fenetre de resultats
     
-    -- E. Lecture Résultats
+    -- E. Lecture Resultats
     -- On attend un peu (hack) ou on espère que la fenêtre est active
     i_circ, v_circ, flux = mo_getcircuitproperties("Bobine")
     
-    -- Sécurité : Si flux est nil, c'est que la lecture a échoué
+    -- Securite : Si flux est nil, c'est que la lecture a echoue
     if (flux == nil) then 
         flux = 0 
-        print("Attention: Lecture flux échouée (fenêtre résultats non trouvée ?)")
+        print("Attention: Lecture flux echouee (fenêtre resultats non trouvee ?)")
     end
 
     -- F. Ecriture
@@ -74,4 +74,4 @@ for i = 0, nb_points do
 end
 
 closefile(handle)
-print("Terminé avec succès !")
+print("Termine avec succès !")
