@@ -14,7 +14,7 @@ eps = 1e-2
 
 """Partie 1 : Fonctions Utilitaires
     """
-def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:str="", ylim=None, legend:bool=True, log:bool=False, vspan:bool=False):
+def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:str="", ylim=None, xlim=None, legend:bool=True, log:bool=False, vspan:bool=False):
     """
     Enregistre une figure matplotlib avec des options de personnalisation.
 
@@ -57,13 +57,14 @@ def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:st
     if xlabel: plt.xlabel(xlabel)
     if ylabel: plt.ylabel(ylabel)
     if ylim is not None: plt.ylim(ylim)
+    if xlim is not None: plt.xlim(xlim)
     
     plt.grid(True, alpha=0.6) # Grid plus discrète pour le contraste
     if log: plt.xscale('log')
 
     if legend:
         # 1. Legende des courbes (Interne)
-        leg_courbes = plt.legend(handles=handles_curves, loc='upper left', framealpha=1)
+        leg_courbes = plt.legend(handles=handles_curves, loc='best', framealpha=1)
         
         # 2. Legende des zones (Externe à droite)
         if vspan:
@@ -129,8 +130,8 @@ def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
     """Calcul l'impedance d'un micro de guitare en une pulsation w
 
     Args:
-        X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance, C la capacite parallèle et
-            Rp la resistance parallèle modelisant les courants de foucauts
+        X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
+            Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float): Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre 
         w (np.ndarray): Tableau des pulsation w
 
@@ -151,8 +152,8 @@ def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
     """Basee sur l'algorythme de Levenberg_Marquardt, cette fonction retourne la matrice Jacobienne J
 
     Args:
-        X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance, C la capacite parallèle et
-            Rp la resistance parallèle modelisant les courants de foucauts
+        X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
+            Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float):Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
 
@@ -188,8 +189,8 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
     """Calcul l'ecart (l'erreur) entre l'impedance calcule theoriquement et l'impedance reelle experimentale
 
     Args:
-        X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance, C la capacite parallèle et
-            Rp la resistance parallèle modelisant les courants de foucauts
+        X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
+            Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float):Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
         Z_exp (np.ndarray): Tableau Numpy des impedances experimentale releve en Ohm
@@ -199,24 +200,26 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
     """
     return Z_exp - Z_micro(X, rs, 2 * np.pi * f)
 
-def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int)->np.ndarray:
+def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int)-> tuple[np.ndarray, float]:
     """Algorythme de Levenberg-Marquardt pour l'optimisation non-lineaire des parametres electriques du micro
 
     Args:
-        X_init (np.ndarray): Vecteur initial des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance, C la capacite parallèle et
-            Rp la resistance parallèle modelisant les courants de foucauts
+        X_init (np.ndarray): Vecteur initial des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
+            Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float): Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
         Z_exp (np.ndarray): Tableau Numpy des impedances experimentale releve en Ohm
         N (int): Nombre d'iterations de l'algorithme
 
     Returns:
-        np.ndarray: Vecteur optimisé des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance, C la capacite parallèle et
-            Rp la resistance parallèle modelisant les courants de foucauts
+        np.ndarray: Vecteur optimisé des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
+            Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
     """
     X = np.array(X_init, dtype=float)
     alpha = 0.01
     v = 2
+    r = None
+    S = None
     
     for _ in range(N):
         r = residus(X, rs, f, Z_exp)
@@ -243,19 +246,19 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
         if S_new < S:
             alpha /= v
             X = X_new
-            if np.linalg.norm(delta) / np.linalg.norm(X) < 1e-7:
+            if np.linalg.norm(delta) / np.linalg.norm(X) < 1e-12:
                 break
         else:
             alpha *= v
             
-    return X
+    return X, S
 
 def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np.ndarray, np.ndarray]:
     """Calcul la fonction de transfert en gain et phase d'un micro de guitare en fonction de ses parametres internes
 
     Args:
-        X (np.ndarray): Vecteur optimisé des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance, C la capacite parallèle et
-            Rp la resistance parallèle modelisant les courants de foucauts
+        X (np.ndarray): Vecteur optimisé des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
+            Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float): Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
         Ramp (float, optional): Resistance d'entree de l'amplificateur. Defaults to 1e6.
