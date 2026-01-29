@@ -200,7 +200,7 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
     """
     return Z_exp - Z_micro(X, rs, 2 * np.pi * f)
 
-def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int)-> tuple[np.ndarray, float]:
+def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
     """Algorythme de Levenberg-Marquardt pour l'optimisation non-lineaire des parametres electriques du micro
 
     Args:
@@ -216,7 +216,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
     """
     X = np.array(X_init, dtype=float)
-    alpha = 0.01
+    alpha = learning_rate
     v = 2
     r = None
     S = None
@@ -251,7 +251,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
         else:
             alpha *= v
             
-    return X, S
+    return X, S_new
 
 def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np.ndarray, np.ndarray]:
     """Calcul la fonction de transfert en gain et phase d'un micro de guitare en fonction de ses parametres internes

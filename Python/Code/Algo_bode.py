@@ -78,12 +78,13 @@ Z_hb = Ramp * (Vh / (24000 - Vh))
 # --- Execution ---
 # Initialisation suggeree : L=2H, C=0.5nF, Rp=300kOhm
 
+LR = 0.5
 Liste_S_sc = []
 Liste_S_hb = []
 liste_iter = []
 for i in range(1, 50):
-    _, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, i)
-    _, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, i)
+    _, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, i, LR)
+    _, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, i, LR)
     Liste_S_sc.append(S_sc)
     Liste_S_hb.append(S_hb)
     liste_iter.append(i)
@@ -91,8 +92,8 @@ for i in range(1, 50):
 Liste_S_sc = mod.normalize_signal(np.array(Liste_S_sc))
 Liste_S_hb = mod.normalize_signal(np.array(Liste_S_hb))
 
-X_sc, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, 20)
-X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, 20)
+X_sc, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, 20, LR)
+X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, 20, LR)
 
 print(f"SingleCoil: L={X_sc[0]:.2f}H, C={X_sc[1]:.2f}nF, Rp={X_sc[2]:.1f}kOhm")
 print(f"Humbucker: L={X_hb[0]:.2f}H, C={X_hb[1]:.2f}nF, Rp={X_hb[2]:.1f}kOhm")
