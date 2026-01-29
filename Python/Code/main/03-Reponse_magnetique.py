@@ -193,7 +193,7 @@ mod.save_plot(PATH_out + "Droite_de_sensibilite.png",
         (List_Bpar*10**6, List_amp_s_th*10**3, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
         (List_Bpar*10**6, List_amp_s_test*10**3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
         (List_Bpar*10**6, List_amp_s_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_s_test}),
-        title="Tension parasite induite en fonction du champ magnetique exterieur à 50 $Hz$",
+        title="Tension induite dans le micro en fonction d'un \nchamp magnetique exterieur à 50 $Hz$",
         xlabel="Amplitude du champ parasite [$µT$]", ylabel="Ampltitude Tension [$mV$]")
 print("Courbes sauvegardees sous Python/Exports/03-Droite.png.")
 

@@ -218,31 +218,23 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
     alpha = learning_rate
     v = 2
     r = None
-    S = None
+    eps = None
     
     for _ in range(N):
         r = residus(X, rs, f, Z_exp)
-        S = np.sum(r**2)
-        
+        eps = np.sum(r**2)
         J = Matrice_Jacobienne(X, rs, f)
-        H = np.dot(J.T, J)
-        g = np.dot(J.T, r)
-        
-        # Amortissement de Marquardt
-        H_lm = H + alpha * np.diag(np.diag(H) + 1e-8)
         
         try:
-            delta = np.linalg.solve(H_lm, g)
+            delta = np.linalg.solve(np.dot(J.T, T) + alpha*np.diag(np.dot(J.T, J) + 1e-8), np.dot(J.T, r))
         except np.linalg.LinAlgError:
             break
 
         X_new = X + delta
         # Contrainte physique : paramètres toujours positifs
         X_new = np.maximum(X_new, [0.1, 0.01, 10]) 
-        
-        S_new = np.sum(residus(X_new, rs, f, Z_exp)**2)
-        
-        if S_new < S:
+        eps_new = np.sum(residus(X_new, rs, f, Z_exp)**2)
+        if eps_new < eps:
             alpha /= v
             X = X_new
             if np.linalg.norm(delta) / np.linalg.norm(X) < 1e-12:
@@ -250,7 +242,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
         else:
             alpha *= v
             
-    return X, S_new
+    return X, eps_new
 
 def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np.ndarray, np.ndarray]:
     """Calcul la fonction de transfert en gain et phase d'un micro de guitare en fonction de ses parametres internes
