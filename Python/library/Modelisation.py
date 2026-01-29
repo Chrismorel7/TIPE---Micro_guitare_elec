@@ -99,8 +99,7 @@ def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
     """
     
     fft = np.fft.fft(signal)
-    amp = 2 * np.abs(fft) / Ne_fft
-    amp[0] /= 2
+    amp = np.abs(fft) / Ne_fft
     return amp
 
 def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):

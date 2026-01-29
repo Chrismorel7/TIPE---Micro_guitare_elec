@@ -8,13 +8,16 @@ print("\n\n---\nModele_elec.py\n---\n")
                                             #!####################!#
 
 print("\nImportation des bibliotheques...")
+print("\nImportation des bibliotheques...")
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from library import Modelisation as mod
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
 plt.close("all")
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 print("Bibliotheques importees.")
 
                                             #!####################!#
@@ -66,7 +69,7 @@ print("Variables initialisees.")
                                             #! Lectures Fichiers  !#
                                             #!####################!#
 
-Vin, f, Vs, Vh = lire_fichier("Python/raw data/Bodeexp.csv")
+Vin, f, Vs, Vh = lire_fichier("Python/data/raw/!Mesure_Impedance.csv")
 
 Z_sc = Ramp * (Vs / (24000 - Vs))
 Z_hb = Ramp * (Vh / (24000 - Vh))
@@ -89,8 +92,8 @@ for i in range(1, 50):
     Liste_S_hb.append(S_hb)
     liste_iter.append(i)
 
-Liste_S_sc = mod.normalize_signal(np.array(Liste_S_sc))
-Liste_S_hb = mod.normalize_signal(np.array(Liste_S_hb))
+Liste_S_sc = np.array(Liste_S_sc)
+Liste_S_hb = np.array(Liste_S_hb)
 
 X_sc, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, 20, LR)
 X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, 20, LR)
