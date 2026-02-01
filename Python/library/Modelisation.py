@@ -216,7 +216,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
     """
     X = np.array(X_init, dtype=float)
     alpha = learning_rate
-    v = 2
+    v = 3
     r = None
     eps = None
     
@@ -224,15 +224,21 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
         r = residus(X, rs, f, Z_exp)
         eps = np.sum(r**2)
         J = Matrice_Jacobienne(X, rs, f)
+
+        H = J.T @ J
+        g = J.T @ r
+        
+        # Amortissement de Marquardt
+        H_lm = H + alpha * np.diag(np.diag(H) + 1e-8)
         
         try:
-            delta = np.linalg.solve(np.dot(J.T, T) + alpha*np.diag(np.dot(J.T, J) + 1e-8), np.dot(J.T, r))
+            delta = np.linalg.solve(H_lm, g)
         except np.linalg.LinAlgError:
             break
 
         X_new = X + delta
         # Contrainte physique : paramètres toujours positifs
-        X_new = np.maximum(X_new, [0.1, 0.01, 10]) 
+        X_new = np.maximum(X_new, [1e-3, 1e-3, 1e-3]) 
         eps_new = np.sum(residus(X_new, rs, f, Z_exp)**2)
         if eps_new < eps:
             alpha /= v

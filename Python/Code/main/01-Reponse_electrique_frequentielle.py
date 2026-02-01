@@ -28,8 +28,8 @@ print("\nInitialisation des variables...")
 Rs = 5.3e3          # Resistance du single coil en ohms
 Rh = 4.52e3        # Resistance du humbucker en ohms
 Ramp = 1e6         # Resistance de l'ampli en ohms
-X0 = np.array([2.0, 0.5, 300.0])
-
+X0 = np.array([2, 0.5, 100])
+LR = 0.01
 Color_c = "#505050"
 Color_h_test = "#008B8B"
 Color_s_test = "#FF8C00"
@@ -81,15 +81,18 @@ Z_hb = Ramp * (Vh / (24000 - Vh))
 # --- Execution ---
 # Initialisation suggeree : L=2H, C=0.5nF, Rp=300kOhm
 
-LR = 0.5
 Liste_S_sc = []
 Liste_S_hb = []
 liste_iter = []
+Liste_Xsc = []
+Liste_Xhb =[]
 for i in range(1, 50):
-    _, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, i, LR)
-    _, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, i, LR)
+    X_sc, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, i, LR)
+    X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, i, LR)
     Liste_S_sc.append(S_sc)
     Liste_S_hb.append(S_hb)
+    Liste_Xsc.append(X_sc)
+    Liste_Xhb.append(X_hb)
     liste_iter.append(i)
 
 Liste_S_sc = np.array(Liste_S_sc)
@@ -133,9 +136,10 @@ plt.ylabel("Phase [$°$]")
 plt.xlabel("Frequence [$Hz$]")
 plt.xlim((0, 20000))
 plt.legend(loc='lower left')
-plt.savefig("Python/Exports/Freq/00-Bode.png")
+plt.savefig("Python/Exports/01-Reponse_electrique_frequetielle/00-Bode.png")
+plt.close()
 
-mod.save_plot("Python/Exports/Freq/Impedance.png",
+mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
                 (f, Z_sc*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_s_test, 'label': "Micro SingleCoil"}),
                 (f, Z_hb*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_h_test, 'label': "Micro Humbucker"}),
                 (np.linspace(20, 20000, 1000), mod.Z_micro(X_sc, Rs, 2*np.pi*np.linspace(20, 20000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Theorie"}),
@@ -147,7 +151,7 @@ mod.save_plot("Python/Exports/Freq/Impedance.png",
                 xlim=(20, 20000),
                 legend=True)
 
-mod.save_plot("Python/Exports/Freq/Convergence_algo.png",
+mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence_algo.png",
                 (liste_iter, Liste_S_sc, {'label':"SingleCoil", 'color':Color_s}),
                 (liste_iter, Liste_S_hb, {'label':"Humbucker", 'color':Color_h}),
                 title="Convergence de l'algorithme de Levenberg-Marquardt",
@@ -155,5 +159,12 @@ mod.save_plot("Python/Exports/Freq/Convergence_algo.png",
                 ylabel="Signal normalise des residus [a.u.]",
                 legend=True)
 
+plt.close()
+plt.plot(f, Z_sc*1e-3, '+r', markersize=ms_exp, label='Experience')
+for i in range(1, 10):
+    plt.plot(np.linspace(20, 20000, 1000), mod.Z_micro(Liste_Xsc[i-1], Rs, 2*np.pi*np.linspace(20, 20000, 1000))*1e-3, label=f"{i-1}")
+plt.xlim(20, 20000)
+plt.legend()
+plt.show()
 
 print("\n---\nFin de l'execution de Modele_elec.py\n---\n")
