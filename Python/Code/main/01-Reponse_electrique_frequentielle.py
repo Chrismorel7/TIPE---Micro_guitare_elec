@@ -35,8 +35,8 @@ Color_h_test = "#008B8B"
 Color_s_test = "#FF8C00"
 ls_exp=':'
 lw_exp=2
-m_exp="+"
-ms_exp=10
+m_exp="o"
+ms_exp=5
 Color_h = "#000080"
 Color_s = "#8B0000"
 ls_th='-'
@@ -70,9 +70,13 @@ print("Variables initialisees.")
                                             #!####################!#
 
 Vin, f, Vs, Vh = lire_fichier("Python/data/raw/!Mesure_Impedance.csv")
+f2, Vin2, Vs2, Vh2 = lire_fichier("Python/data/raw/!!Mesures_impedance_500Ohm_2_fev.csv")
 
 Z_sc = Ramp * (Vs / (24000 - Vs))
 Z_hb = Ramp * (Vh / (24000 - Vh))
+
+Z_sc2 = 500 * (21.1/Vs2 - 1)
+Z_hb2 = 500 * (21.1/Vh2 - 1)
 
                                             #!####################!#
                                             #!      Fonction      !#
@@ -103,6 +107,12 @@ X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, 20, LR)
 
 print(f"SingleCoil: L={X_sc[0]:.2f}H, C={X_sc[1]:.2f}nF, Rp={X_sc[2]:.1f}kOhm")
 print(f"Humbucker: L={X_hb[0]:.2f}H, C={X_hb[1]:.2f}nF, Rp={X_hb[2]:.1f}kOhm")
+
+X_sc2, S_sc2 = mod.Levenberg_Marquardt(X0, Rs, f2, Z_sc2, 20, LR)
+X_hb2, S_hb2 = mod.Levenberg_Marquardt(X0, Rh, f2, Z_hb2, 20, LR)
+
+print(f"SingleCoil: L={X_sc2[0]:.2f}H, C={X_sc2[1]:.2f}nF, Rp={X_sc2[2]:.1f}kOhm")
+print(f"Humbucker: L={X_hb2[0]:.2f}H, C={X_hb2[1]:.2f}nF, Rp={X_hb2[2]:.1f}kOhm")
 
                                             #!####################!#
                                             #!     Affichage      !#
@@ -142,13 +152,14 @@ plt.close()
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
                 (f, Z_sc*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_s_test, 'label': "Micro SingleCoil"}),
                 (f, Z_hb*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_h_test, 'label': "Micro Humbucker"}),
-                (np.linspace(20, 20000, 1000), mod.Z_micro(X_sc, Rs, 2*np.pi*np.linspace(20, 20000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Theorie"}),
-                (np.linspace(20, 20000, 1000), mod.Z_micro(X_hb, Rh, 2*np.pi*np.linspace(20, 20000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Theorie"}),
+                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_sc, Rs, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Prediction"}),
+                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_hb, Rh, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Prediction"}),
                 title=r"Impedances des micros $|Z|$ en fonction de la frequence",
                 xlabel="Frequence [$Hz$]",
                 ylabel=r"Impedance [$k\Omega$]",
                 vspan=True,
-                xlim=(20, 20000),
+                log=True,
+                ylim=(0,300),
                 legend=True)
 
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence_algo.png",
@@ -168,3 +179,16 @@ plt.legend()
 plt.show()
 
 print("\n---\nFin de l'execution de Modele_elec.py\n---\n")
+
+mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance2.png",
+                (f2, Z_sc2*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_s_test, 'label': "Micro SingleCoil"}),
+                (f2, Z_hb2*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_h_test, 'label': "Micro Humbucker"}),
+                #(np.linspace(20, 100_000, 1000), mod.Z_micro(X_sc2, Rs, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Theorie"}),
+                #(np.linspace(20, 100_000, 1000), mod.Z_micro(X_hb2, Rh, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Theorie"}),
+                title=r"Impedances des micros $|Z|$ en fonction de la frequence",
+                xlabel="Frequence [$Hz$]",
+                ylabel=r"Impedance [$k\Omega$]",
+                vspan=True,
+                log=True,
+                ylim=(0, 300),
+                legend=True)
