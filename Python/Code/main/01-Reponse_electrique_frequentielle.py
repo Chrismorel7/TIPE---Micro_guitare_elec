@@ -158,7 +158,8 @@ mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
                 xlabel="Frequence [$Hz$]",
                 ylabel=r"Impedance [$k\Omega$]",
                 vspan=True,
-                log=True,
+                log=False,
+                xlim=(0, 20_000),
                 ylim=(0,300),
                 legend=True)
 
