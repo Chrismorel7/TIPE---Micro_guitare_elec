@@ -91,8 +91,6 @@ print("-" * 85)
 
 
 # ======================== Resultats / Execution ========================
-
-
 print("Lecture des donnees de test...")
 List_Bpar = np.array([0, 5.5, 11, 16.5, 22, 27.5, 33, 38.5, 44, 49.5]) * 10**-6
 ks = N_s*S*2*np.pi*fB

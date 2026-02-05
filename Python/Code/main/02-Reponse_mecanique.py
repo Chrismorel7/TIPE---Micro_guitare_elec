@@ -294,7 +294,7 @@ mod.save_plot(PATH_exp + "temporel/Theorique.png",
         xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print(f"Courbes sauvegardees sous {PATH_exp + "temporel/Theorique.png"}")
 
-#* --- Comparaison des micros Theorique (corde seule) ---*#
+#* --- Micro Singlecoil (corde) ---*#
 mod.save_plot(PATH_exp + "temporel/Singlecoil.png",
         (Test_temps_s_fft[:4000], Test_s_fft[:4000], {'marker': m_exp, 'markersize': ms_exp, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
         (temps, fem_s, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),

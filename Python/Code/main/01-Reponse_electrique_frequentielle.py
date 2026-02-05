@@ -82,9 +82,6 @@ Z_hb2 = 500 * (21.1/Vh2 - 1)
                                             #!      Fonction      !#
                                             #!####################!#
 
-# --- Execution ---
-# Initialisation suggeree : L=2H, C=0.5nF, Rp=300kOhm
-
 Liste_S_sc = []
 Liste_S_hb = []
 liste_iter = []
@@ -172,6 +169,7 @@ mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence_alg
                 legend=True)
 
 plt.close()
+
 plt.plot(f, Z_sc*1e-3, '+r', markersize=ms_exp, label='Experience')
 for i in range(1, 10):
     plt.plot(np.linspace(20, 20000, 1000), mod.Z_micro(Liste_Xsc[i-1], Rs, 2*np.pi*np.linspace(20, 20000, 1000))*1e-3, label=f"{i-1}")
