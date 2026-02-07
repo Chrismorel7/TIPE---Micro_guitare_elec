@@ -17,25 +17,17 @@ eps = 1e-2
 def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:str="", ylim=None, xlim=None, legend:bool=True, log:bool=False, vspan:bool=False):
     """
     Enregistre une figure matplotlib avec des options de personnalisation.
-
-    :param fig_path: Chemin vers le fichier de sauvegarde
-    :type fig_path: str
-    :param plot_calls: Appels de tracé sous la forme (x, y, kwargs)
-    :type plot_calls: tuple
-    :param title: Titre de la figure
-    :type title: str
-    :param xlabel: nom de l'axe des x
-    :type xlabel: str
-    :param ylabel: nom de l'axe des y
-    :type ylabel: str
-    :param ylim: Limites de l'axe des y
-    :type ylim: tuple
-    :param legend: presence de la legende
-    :type legend: bool
-    :param log: presence d'une echelle logarithmique sur l'axe des x
-    :type log: bool
-    :param vspan: presence des zones de frequences fondamentales et harmoniques
-    :type vspan: bool
+    Args:
+        fig_path (str): Chemin vers le fichier de sauvegarde
+        plot_calls (tuple): Appels de tracé sous la forme (x, y, kwargs)
+        title (str): Titre de la figure
+        xlabel (str): nom de l'axe des x
+        ylabel (str): nom de l'axe des y
+        xlim (tuple): Limites de l'axe des x
+        ylim (tuple): Limites de l'axe des y
+        legend (bool): presence de la legende
+        log (bool): presence d'une echelle logarithmique sur l'axe des x
+        vspan (bool): presence des zones de frequences fondamentales et harmoniques
     """
     plt.figure(figsize=(6, 5)) 
     handles_curves = []
@@ -46,31 +38,25 @@ def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:st
         z1 = plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
         z_handles = [z1, z2]
-    
     for call in plot_calls:
         x, y, kwargs = call
         # On recupère l'objet ligne retourne par plot (c'est un tuple, d'où le [0])
         line, = plt.plot(x, y, **kwargs)
         handles_curves.append(line)
-    
     if title: plt.title(title)
     if xlabel: plt.xlabel(xlabel)
     if ylabel: plt.ylabel(ylabel)
     if ylim is not None: plt.ylim(ylim)
     if xlim is not None: plt.xlim(xlim)
-    
     plt.grid(True, alpha=0.6) # Grid plus discrète pour le contraste
     if log: plt.xscale('log')
-
     if legend:
         # 1. Legende des courbes (Interne)
         leg_courbes = plt.legend(handles=handles_curves, loc='best', framealpha=1)
-        
         # 2. Legende des zones (Externe à droite)
         if vspan:
             plt.gca().add_artist(leg_courbes)
             plt.legend(handles=z_handles, title="Zones d'etude", bbox_to_anchor=(0.5, -0.18), loc='upper center', ncol=2, borderaxespad=0.)
-    
     # Ajustement automatique pour ne pas couper la legende externe
     plt.tight_layout()
     plt.savefig(fig_path, dpi=300) # dpi=200 pour une nettete accrue en projection
@@ -91,13 +77,12 @@ def normalize_signal(signal: np.ndarray):
 def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
     """
     Calcule et normalise l'amplitude du spectre de Fourier d'un signal.
-
-    :param signal: Signal à analyser
-    :type signal: np.ndarray
-    :param Ne_fft: Nombre de points dans la FFT
-    :type Ne_fft: int
+    Args:
+        signal (np.ndarray): Signal a analyser
+        Ne_fft (int): Nombre de points dans la FFT
+    Returns:
+        amp: Signal numpy fft
     """
-    
     fft = np.fft.fft(signal)
     amp = np.abs(fft) / Ne_fft
     return amp
@@ -111,7 +96,9 @@ def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
         prominence (float): Hauteur relative du pic par rapport à sa base locale.
                             Permet de detecter les petits pics aigus sans prendre le bruit fort.
         distance (int): Distance minimale entre deux pics pour les considérer comme séparés.
-        
+    Returns:
+        L_freq: Liste des frequences
+        L_amp: Liste des amplitudes
     """
     # Utilisation de 'prominence' au lieu de 'height' pour le problème d'amplitude variable
     indices, _ = find_peaks(amplitudes, prominence=prominence, distance=distance)
@@ -127,35 +114,29 @@ def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
 
 def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
     """Calcul l'impedance d'un micro de guitare en une pulsation w
-
     Args:
         X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float): Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre 
         w (np.ndarray): Tableau des pulsation w
-
     Returns:
         np.darray: Tableau Numpy contenant le module de l'impedance complexe |Z| en chaque pulsation w 
     """
     L, C_n, Rp_k = X
     C, Rp = C_n * 1e-9, Rp_k * 1e3
-    
     # Parties reelle et imaginaire de l'admittance Y
     den_L = rs**2 + (L * w)**2
     Y_re = (1 / Rp) + (rs / den_L)
     Y_im = (C * w) - (L * w / den_L)
-    
     return 1 / np.sqrt(Y_re**2 + Y_im**2)
 
 def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
     """Basee sur l'algorythme de Levenberg_Marquardt, cette fonction retourne la matrice Jacobienne J
-
     Args:
         X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float):Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
-
     Returns:
         np.ndarray: Matrice Jacobienne definie tel que chaque colonne i contient les derivees partielles par rapport a la variable situe en i dans X pour toute
             pulsation w
@@ -186,14 +167,12 @@ def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
 
 def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray:
     """Calcul l'ecart (l'erreur) entre l'impedance calcule theoriquement et l'impedance reelle experimentale
-
     Args:
         X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float):Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
         Z_exp (np.ndarray): Tableau Numpy des impedances experimentale releve en Ohm
-
     Returns:
         np.ndarray: Tableau Numpy des distances separant chaque point theorique au point experimentaux
     """
@@ -252,28 +231,26 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
 
 def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np.ndarray, np.ndarray]:
     """Calcul la fonction de transfert en gain et phase d'un micro de guitare en fonction de ses parametres internes
-
     Args:
         X (np.ndarray): Vecteur optimisé des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
         rs (float): Resistance serie (DC) du micro. Peut etre mesure avec un Ohmmetre
         f (np.ndarray): Tableau des frequence f
         Ramp (float, optional): Resistance d'entree de l'amplificateur. Defaults to 1e6.
-
     Returns:
         tuple[np.ndarray, np.ndarray]: Deux tableaux Numpy contenant respectivement le gain (en dB) et la phase (en degres) de la fonction de transfert du micro
     """
     w = 2 * np.pi * f
     L, C, Rp = X[0], X[1] * 1e-9, X[2] * 1e3
     
-    # Impedance serie (la bobine qui genère le signal)
+    # Impedance serie
     Z_ser = rs + 1j * L * w
     
-    # Impedance parallèle (ce qui "shunte" le signal vers la masse)
+    # Impedance parallèle
     Y_para = (1 / Rp) + (1 / Ramp) + (1j * C * w)
     Z_para = 1 / Y_para
     
-    # Fonction de transfert correcte
+    # Fonction de transfert
     H = Z_para / (Z_ser + Z_para)
     
     gain = 20 * np.log10(np.abs(H))

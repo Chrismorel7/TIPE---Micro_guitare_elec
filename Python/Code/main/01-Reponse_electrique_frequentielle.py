@@ -75,8 +75,8 @@ f2, Vin2, Vs2, Vh2 = lire_fichier("Python/data/raw/!!Mesures_impedance_500Ohm_2_
 Z_sc = Ramp * (Vs / (24000 - Vs))
 Z_hb = Ramp * (Vh / (24000 - Vh))
 
-Z_sc2 = 500 * (21.1/Vs2 - 1)
-Z_hb2 = 500 * (21.1/Vh2 - 1)
+Z_sc2 = 100000 * (21.1/Vs2 - 1)
+Z_hb2 = 100000 * (21.1/Vh2 - 1)
 
                                             #!####################!#
                                             #!      Fonction      !#
@@ -182,12 +182,11 @@ print("\n---\nFin de l'execution de Modele_elec.py\n---\n")
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance2.png",
                 (f2, Z_sc2*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_s_test, 'label': "Micro SingleCoil"}),
                 (f2, Z_hb2*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_h_test, 'label': "Micro Humbucker"}),
-                #(np.linspace(20, 100_000, 1000), mod.Z_micro(X_sc2, Rs, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Theorie"}),
-                #(np.linspace(20, 100_000, 1000), mod.Z_micro(X_hb2, Rh, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Theorie"}),
+                (np.linspace(10, 100_000, 1000), mod.Z_micro(X_sc2, Rs, 2*np.pi*np.linspace(10, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Algorithme"}),
+                (np.linspace(10, 100_000, 1000), mod.Z_micro(X_hb2, Rh, 2*np.pi*np.linspace(10, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Algorithme"}),
                 title=r"Impedances des micros $|Z|$ en fonction de la frequence",
                 xlabel="Frequence [$Hz$]",
                 ylabel=r"Impedance [$k\Omega$]",
                 vspan=True,
                 log=True,
-                ylim=(0, 300),
                 legend=True)
