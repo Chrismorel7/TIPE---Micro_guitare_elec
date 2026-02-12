@@ -284,12 +284,13 @@ def entree(n: int, x: float, t: np.ndarray, A0: float, L: float, T: float, mu: f
         s += Bn * np.sin(i * np.pi * x / L) * np.cos(i * np.pi * v * t / L)
     return s
 
-def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray, A0: float, L: float, T: float, mu: float, x0: float, S: float, dBdy: float) -> np.ndarray:
-    """Force electromotrice induite dans le micro singlecoil
+def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray, A0: float, L: float, T: float, mu: float, x0: float, S: float, 
+                z0: float = 0.005, chi: float = 100, Vstr: float = 1.0e-8, B_max: float = 0.3, R_mag: float = 0.002) -> np.ndarray:
+    """Force electromotrice induite dans le micro singlecoil (Théorie Robuste Non-Linéaire)
 
     Args:
         n (int): Nombre de modes consideres
-        N (int): Nombre de spires de la bobine du micro singlecoil
+        N (int): Nombre de spires de la bobine
         xm (float): Position du micro sur la corde
         t (np.ndarray): Tableau des instants
         A0 (float): Amplitude initiale de la vibration
@@ -297,47 +298,105 @@ def fem_singlecoil(n: int, N: int, xm: float, t: np.ndarray, A0: float, L: float
         T (float): Tension de la corde
         mu (float): Masse linéique de la corde
         x0 (float): Position de la perturbation
-        S (float): Surface effective du micro
-        dBdy (float): Variation du flux magnétique par unité de déplacement vertical
+        S (float): Surface effective d'une spire
+        z0 (float): Distance corde-micro au repos (m) - NOUVEAU
+        chi (float): Susceptibilité magnétique de la corde - NOUVEAU
+        Vstr (float): Volume de la corde magnétisée (m3) - NOUVEAU
+        B_max (float): Champ au contact de l'aimant (T) - NOUVEAU
+        R_mag (float): Rayon de l'aimant (m) - NOUVEAU
 
     Returns:
-        np.ndarray: Tableau du signal de la force electromotrice induite dans le micro singlecoil
+        np.ndarray: Signal de la f.e.m. induite (V)
     """
-    s = 0
+    # 1. Calcul des trajectoires vibratoires (Position et Vitesse)
+    zs_t = np.full_like(t, z0)
+    vs_t = np.zeros_like(t)
+    omega1 = (np.pi / L) * np.sqrt(T / mu)
+    
     for i in range(1, n + 1):
-        fn = (i / (2 * L)) * np.sqrt(T / mu)
-        An = 2 * np.pi * fn * np.sin(i * np.pi * xm / L)
+        # Amplitude du mode n (selon votre rapport [cite: 1821, 2360])
         Bn = (A0 * L**2.5 * np.sqrt(2)) / (i**2 * np.pi**2 * x0 * (L - x0)) * np.sin(i * np.pi * x0 / L)
-        s += An * Bn * np.sin(2 * np.pi * fn * t)
-    return N * S * dBdy * s
+        
+        omega_i = i * omega1
+        spatial_node = np.sin(i * np.pi * xm / L)
+        
+        # Superposition des modes
+        zs_t += Bn * spatial_node * np.cos(omega_i * t)
+        vs_t -= Bn * omega_i * spatial_node * np.sin(omega_i * t)
 
-def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float, L: float, T: float, mu: float, x0: float, S: float, dBdy: float) -> np.ndarray:
-    """Force electromotrice induite dans le micro Humbucker
+    # 2. Modélisation du champ magnétique et de son gradient
+    # B_ext(z) = B_max * (R^2 / (R^2 + z^2)^1.5)
+    B_ext = B_max * (R_mag**2 / (R_mag**2 + zs_t**2)**1.5)
+    # dB/dz = -3 * B_max * R^2 * z / (R^2 + z^2)^2.5
+    dB_dz = -3 * B_max * R_mag**2 * zs_t / (R_mag**2 + zs_t**2)**2.5
+
+    # 3. Calcul du terme de transduction non-linéaire G(z)
+    # Issu de la loi de Faraday appliquée au dipôle induit 
+    transduction_gain = (3 * B_ext / zs_t**4) - (1 / zs_t**3 * dB_dz)
+
+    # 4. Calcul de la f.e.m. finale
+    # e(t) = (N * S * chi * Vstr / 2pi) * G(z) * vs(t)
+    constante_flux = (N * S * chi * Vstr) / (2 * np.pi)
+    
+    return constante_flux * transduction_gain * vs_t
+
+def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float, L: float, T: float, mu: float, x0: float, S: float, 
+                    z0: float = 0.005, chi: float = 100, Vstr: float = 1.0e-8, B_max: float = 0.3, R_mag: float = 0.002) -> np.ndarray:
+    """Force electromotrice induite dans le micro Humbucker (Théorie Robuste Non-Linéaire)
 
     Args:
         n (int): Nombre de modes consideres
-        N (int): Nombre de spires de la bobine du micro Humbucker
-        x1 (float): Position du 1er bobinage du micro sur la corde
-        x2 (float): Position du 2ème bobinage du micro sur la corde
+        N (int): Nombre de spires par bobine
+        x1 (float): Position du 1er bobinage sur la corde
+        x2 (float): Position du 2eme bobinage sur la corde
         t (np.ndarray): Tableau des instants
         A0 (float): Amplitude initiale de la vibration
         L (float): Longueur de la corde
         T (float): Tension de la corde
         mu (float): Masse linéique de la corde
         x0 (float): Position de la perturbation
-        S (float): Surface effective du micro
-        dBdy (float): Variation du flux magnétique par unité de déplacement vertical
+        S (float): Surface effective d'une spire
+        z0 (float): Distance corde-micro au repos (m)
+        chi (float): Susceptibilité magnétique de la corde
+        Vstr (float): Volume de la corde magnétisée (m3)
+        B_max (float): Champ au contact de l'aimant (T)
+        R_mag (float): Rayon de l'aimant (m)
 
     Returns:
-        np.ndarray: Tableau du signal de la force electromotrice induite dans le micro Humbucker
+        np.ndarray: Signal de la f.e.m. induite totale (V)
     """
-    s = 0
-    for i in range(1, n + 1):
-        fn = (i / (2 * L)) * np.sqrt(T / mu)
-        An = 2 * np.pi * fn * (np.sin(i * np.pi * x1 / L) + np.sin(i * np.pi * x2 / L))
-        Bn = (A0 * L**2.5 * np.sqrt(2)) / (i**2 * np.pi**2 * x0 * (L - x0)) * np.sin(i * np.pi * x0 / L)
-        s += An * Bn * np.sin(2 * np.pi * fn * t)
-    return N * S * dBdy * s
+    
+    def calculate_coil_fem(x_pos):
+        # 1. Calcul des trajectoires vibratoires (Position et Vitesse) à la position x_pos
+        zs_t = np.full_like(t, z0)
+        vs_t = np.zeros_like(t)
+        omega1 = (np.pi / L) * np.sqrt(T / mu)
+        
+        for i in range(1, n + 1):
+            # Amplitude du mode i [cite: 1800, 2360, 2821]
+            Bn = (A0 * L**2.5 * np.sqrt(2)) / (i**2 * np.pi**2 * x0 * (L - x0)) * np.sin(i * np.pi * x0 / L)
+            
+            omega_i = i * omega1
+            spatial_node = np.sin(i * np.pi * x_pos / L)
+            
+            # Superposition des modes [cite: 2814, 2830]
+            zs_t += Bn * spatial_node * np.cos(omega_i * t)
+            vs_t -= Bn * omega_i * spatial_node * np.sin(omega_i * t)
+
+        # 2. Modélisation du champ magnétique et de son gradient 
+        B_ext = B_max * (R_mag**2 / (R_mag**2 + zs_t**2)**1.5)
+        dB_dz = -3 * B_max * R_mag**2 * zs_t / (R_mag**2 + zs_t**2)**2.5
+
+        # 3. Calcul du terme de transduction non-linéaire G(z)
+        transduction_gain = (3 * B_ext / zs_t**4) - (1 / zs_t**3 * dB_dz)
+
+        # 4. Calcul de la f.e.m. élémentaire
+        constante_flux = (N * S * chi * Vstr) / (2 * np.pi)
+        return constante_flux * transduction_gain * vs_t
+
+    # Le Humbucker additionne les signaux utiles des deux bobines car 
+    # l'inversion de polarité magnétique compense l'inversion du bobinage 
+    return calculate_coil_fem(x1) + calculate_coil_fem(x2)
 
 def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: float, L: float, F: float) -> tuple[np.ndarray, np.ndarray]:
     """Calcule la Fonction de Transfert Relative (Attenuation) du Humbucker 

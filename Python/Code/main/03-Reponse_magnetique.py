@@ -25,38 +25,48 @@ print("\nInitialisation des constantes")
 #* Constantes code
 PATH_out = "Python/Exports/03-Reponse_magnetique/"
 #* Constante physiqu
-rho = 1.68 * 10**(-8)   # Masse volumique du cuivre (Ohm.m)
+rho = 5.41   # resistance lineique du cuivre (Ohm.m-1)
+mu0 = 4e-7 * np.pi      # Permeabilite magnetique du vide (H.m-1)
+mu_r = 3.5
+K = 0.7
 #* Parametre Micros
-S = 7 * 10**(-4)        # Surface de la bobine du micro
-d = 0.063 * 10**(-3)    # Diametre du fil de cuivre
+#* Parametre maquette
 xm = 0.105              # Position du micro singlecoil
 x1 = 0.140              # Position du micro humbucker 1
 x2 = 0.160              # Position du micro humbucker 2
 L = 0.845               # Longueur de la corde
 mu = 9 * 10**(-3)       # Masse lineique de la corde
-dBdy = 0.03             #? Gradient du champ magnetique (A verifier ???)
+dBdy = 0.03           #? Gradient du champ magnetique (A verifier ???)
+#* Parametre Micros
+S = 1.5e-4        #? Surface de la bobine du micro
 #* Parametre Micro Singlecoil
-RCC_s = 5.3 * 10**3     # Resistance DC micro singlecoil
-lmoy_s = 0.147          #? Longueur moyenne du fil enroule
-N_s = int(RCC_s * np.pi * d**2 / (4 * rho * lmoy_s))    # Nombre de spires du micro singlecoil
+RCC_s = 5.3e3     # Resistance DC micro singlecoil
+p_s = 0.13
+long_s = RCC_s / rho
+l_s = 1.5e-2             #? Epaisseur du micro
+L_s = 2.4
+N_s = np.sqrt(L_s * l_s / (mu0 * mu_r * S * K))
 #* Parametre Micro Humbucker
 RCC_h = 4.52 * 10**3    # Resistance DC micro humbucker
-lmoy_h = lmoy_s         #? Longueur moyenne d'une bobine humbucker
-N_h = 2*int(RCC_h * np.pi * d**2 / (8 * rho * lmoy_h))
+p_h = 0.13
+long_h = RCC_h / rho
+l_h = l_s
+L_h = 1.84               # Inductance du micro
+N_h = np.sqrt(2*L_h * l_h / (mu0 * mu_r * S * K))
 #* Parametre Champ parasite
 fB = 50                 # Frequence du champ parasite
 B0 = 46 * 10**(-6)      # Champ magnetique au centre des bobines Helmholtz
 alpha = 2               # Coefficient alpha
 #* Couleurs graphiques
-Color_h_test = "#008B8B"
-Color_s_test = "#FF8C00"
-m_exp="o"
-ms_exp=5
-Color_h = "#000080"
-Color_s = "#8B0000"
+kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
+kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
+kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
+kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - experience', 'marker':"o", 'markersize':5, 'linestyle':'None'}
+kw_Hs_exp = {'color': '#00CD00', 'label': 'Humbucker série - experience', 'marker':"o", 'markersize':5, 'linestyle':'None'}
+kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - experience', 'marker':"o", 'markersize':5, 'linestyle':'None'}
 
-if RCC_h is None or lmoy_h is None or N_h is None:
-    logging.warning("Parametres humbucker (RCC_h, lmoy_h, N_h) non defini(s). Certaines simulations pourront utiliser N_s en substitution.")
+if RCC_h is None or l_h is None or N_h is None:
+    logging.warning("Parametres humbucker (RCC_h, l_h, N_h) non defini(s). Certaines simulations pourront utiliser N_s en substitution.")
 
 print("Constantes initialisees.")
 print("\nValeurs des parametres (avec unites) :")
@@ -93,7 +103,7 @@ print("-" * 85)
 # ======================== Resultats / Execution ========================
 print("Lecture des donnees de test...")
 List_Bpar = np.array([0, 5.5, 11, 16.5, 22, 27.5, 33, 38.5, 44, 49.5]) * 10**-6
-ks = N_s*S*2*np.pi*fB
+ks = mu_r*N_s*S*2*np.pi*fB
 kh = N_h*S*2*np.pi*fB*alpha*np.abs(x1-x2)
 List_amp_h_th = np.array([kh * B for B in List_Bpar])
 List_amp_s_th = np.array([ks * B for B in List_Bpar])
@@ -171,26 +181,26 @@ fem_h_par = mod.fem_par_h(N_h, x1, x2, fB, temps, B0, alpha, S)
 
 #* --- Micro SingleCoil (Parasite) ---*#
 mod.save_plot(PATH_out + "Singlecoil.png",
-        (temps, Test_s_p[:4000], {'marker': m_exp, 'markersize': ms_exp, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
-        (temps, fem_s_par, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
+        (temps, Test_s_p[:4000], kw_S_exp),
+        (temps, fem_s_par, kw_S_th),
         title="Tension induite dans le micro SingleCoil \nsoumis à un champs magnetique de 50µT",
-        xlabel="Temps [$s$]", ylabel="Tension [$V$]", ylim=(-0.5, 0.5))
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]", ylim=(-0.2, 0.2))
 print("Courbes sauvegardees sous Python/Exports/03-Parasite_singlecoil.png.")
 #* --- Micro Humbucker (Parasite) ---*#
 mod.save_plot(PATH_out + "Humbucker.png",
-        (temps, Test_h_p[:4000], {'marker': m_exp, 'markersize': ms_exp, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
-        (temps, fem_h_par, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
+        (temps, Test_h_p[:4000], kw_Hp_exp),
+        (temps, fem_h_par, kw_Hp_th),
         title="Tension induite dans le micro Humbucker \nsoumis à un champs magnetique de 50µT",
-        xlabel="Temps [$s$]", ylabel="Tension [$V$]", ylim=(-0.5, 0.5))
+        xlabel="Temps [$s$]", ylabel="Tension [$V$]", ylim=(-0.2, 0.2))
 print("Courbes sauvegardees sous Python/Exports/03-Parasite_humbucker.png.")
 #* --- Droite champ parasite ---*#
 mod.save_plot(PATH_out + "Droite_de_sensibilite.png",
-        (List_Bpar*10**6, List_amp_h_th*10**3, {'color': Color_h, 'label': "Micro Humbucker - Theorique [$V$]"}),
-        (List_Bpar*10**6, List_amp_h_test*10**3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': 'None', 'color': Color_h_test, 'label': "Micro Humbucker - Experimental [$V$]"}),
-        (List_Bpar*10**6, List_amp_h_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_h_test}),
-        (List_Bpar*10**6, List_amp_s_th*10**3, {'color': Color_s, 'label': "Micro Singlecoil - Theorique [$V$]"}),
-        (List_Bpar*10**6, List_amp_s_test*10**3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': 'None', 'color': Color_s_test, 'label': "Micro Singlecoil - Experimental [$V$]"}),
-        (List_Bpar*10**6, List_amp_s_test_lin*10**3, {'linestyle': 'dashed', 'color': Color_s_test}),
+        (List_Bpar*10**6, List_amp_h_th*10**3, kw_Hp_th),
+        (List_Bpar*10**6, List_amp_h_test*10**3, kw_Hp_exp),
+        (List_Bpar*10**6, List_amp_h_test_lin*10**3, {'linestyle': 'dashed', 'color': '#9400D3'}),
+        (List_Bpar*10**6, List_amp_s_th*10**3, kw_S_th),
+        (List_Bpar*10**6, List_amp_s_test*10**3, kw_S_exp),
+        (List_Bpar*10**6, List_amp_s_test_lin*10**3, {'linestyle': 'dashed', 'color': '#FF8C00'}),
         title="Tension induite dans le micro en fonction d'un \nchamp magnetique exterieur à 50 $Hz$",
         xlabel="Amplitude du champ parasite [$µT$]", ylabel="Ampltitude Tension [$mV$]")
 print("Courbes sauvegardees sous Python/Exports/03-Droite.png.")

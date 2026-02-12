@@ -1,0 +1,71 @@
+Voici le bilan complet pour votre manipulation de physique (CPGE PT).
+
+---
+
+## 1. Rappels Théoriques et Sécurité
+
+### Formules Clés
+
+* **Champ Magnétique ()** : Pour vos bobines Jeulin (), le champ au centre est  ( en mT,  en A).
+* **Loi d'Ohm ()** : Indispensable pour l'oscilloscope. L'intensité est .
+* **Impédance** : La résistance totale ( shunt +  bobines ) est idéale pour l'amplificateur (plage ).
+
+### Vigilance Sécurité
+
+* **Thermique** : À , la résistance dissipe . Elle devient brûlante instantanément. Fixez-la sur votre plaque d'alu.
+* **Électrique** : Ne jamais débrancher les bobines pendant que l'ampli débite (risque d'étincelle de rupture due à l'inductance).
+* **Masse Oscillo** : Les "GND" des deux sondes de l'oscilloscope doivent être connectés au **même point** du circuit pour éviter un court-circuit.
+
+---
+
+## 2. Liste du Matériel
+
+| Catégorie | Équipement | Rôle |
+| --- | --- | --- |
+| **Source** | GBF | Génère le signal sinusoidal (fréquence audio) |
+| **Puissance** | Amplificateur Nobsound + Alim 19V | Amplifie le courant pour les bobines |
+| **Charge** | Résistance de puissance  /  | Protège l'ampli et sert de shunt de mesure |
+| **Champ** | Bobines de Helmholtz Jeulin (x2) | Génèrent le champ magnétique alternatif |
+| **Mesure** | Oscilloscope + Teslameter | Mesurent  et le champ  |
+| **Câbles** | BNC-RCA / Banane-Banane / Crocodiles | Assurent toutes les liaisons |
+
+---
+
+## 3. Protocole Expérimental
+
+### Étape 1 : Montage (Hors tension)
+
+1. **Chaîne de signal** : Reliez le **GBF** (Sortie 50 ) à l'entrée **AUX** de l'ampli via le câble BNC-RCA.
+2. **Chaîne de puissance (Série)** :
+* Sortie Ampli (+)  Résistance .
+* Résistance   Borne E Bobine 1.
+* Borne S Bobine 1  Borne E Bobine 2.
+* Borne S Bobine 2  Sortie Ampli (-).
+
+
+3. **Mise en place des sondes** :
+* Voie 1 Oscillo aux bornes de la résistance (pour ).
+* Voie 2 Oscillo aux bornes des deux bobines (pour ).
+* Sonde Hall du teslamètre fixée au centre des bobines.
+
+
+
+### Étape 2 : Réglages et Mesures
+
+1. Mettez le volume de l'ampli à **zéro**. Allumez le GBF ( ou  pour commencer).
+2. Augmentez progressivement le volume jusqu'à lire environ  crête sur la Voie 1 ( crête).
+3. **Relevés** :
+* Notez la valeur de  sur le teslamètre.
+* Observez le déphasage entre  (Voie 2) et  (Voie 1) dû à l'inductance .
+
+
+4. **Balayage** : Faites varier la fréquence pour observer l'influence de l'impédance inductive () sur l'intensité maximale atteignable.
+
+---
+
+### Étape 3 : Analyse
+
+* Comparez  (mesuré) avec .
+* Calculez l'inductance  via le déphasage  ou l'impédance .
+
+Souhaitez-vous que je vous prépare un tableau de mesures vide pour vos relevés en TP ?

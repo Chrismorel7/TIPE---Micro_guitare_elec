@@ -8,7 +8,6 @@ print("\n\n---\nModele_elec.py\n---\n")
                                             #!####################!#
 
 print("\nImportation des bibliotheques...")
-print("\nImportation des bibliotheques...")
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -25,22 +24,18 @@ print("Bibliotheques importees.")
                                             #!####################!#
 
 print("\nInitialisation des variables...")
-Rs = 5.3e3          # Resistance du single coil en ohms
-Rh = 4.52e3        # Resistance du humbucker en ohms
+Rs = 5.26e3          # Resistance du single coil en ohms
+Rhp = 4.52e3        # Resistance du humbucker en ohms
 Ramp = 1e6         # Resistance de l'ampli en ohms
 X0 = np.array([2, 0.5, 100])
 LR = 0.01
-Color_c = "#505050"
-Color_h_test = "#008B8B"
-Color_s_test = "#FF8C00"
-ls_exp=':'
-lw_exp=2
-m_exp="o"
-ms_exp=5
-Color_h = "#000080"
-Color_s = "#8B0000"
-ls_th='-'
-lw_th=2
+kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
+kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
+kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
+kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
+kw_Hs_exp = {'color': '#00CD00', 'label': 'Humbucker série - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
+kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
+
 
 # --- 2. Fonction de Transfert (Modèle Passe-Bas 2nd Ordre) ---
 def lire_fichier(PATH):
@@ -69,47 +64,18 @@ print("Variables initialisees.")
                                             #! Lectures Fichiers  !#
                                             #!####################!#
 
-Vin, f, Vs, Vh = lire_fichier("Python/data/raw/!Mesure_Impedance.csv")
-f2, Vin2, Vs2, Vh2 = lire_fichier("Python/data/raw/!!Mesures_impedance_500Ohm_2_fev.csv")
-
-Z_sc = Ramp * (Vs / (24000 - Vs))
-Z_hb = Ramp * (Vh / (24000 - Vh))
-
-Z_sc2 = 100000 * (21.1/Vs2 - 1)
-Z_hb2 = 100000 * (21.1/Vh2 - 1)
+f, Vin, Vs, Vhp = lire_fichier("Python/data/raw/!!Mesures_impedance_500Ohm_2_fev.csv")
+Z_s = 100000 * (21.1/Vs - 1)
+Z_hp = 100000 * (21.1/Vhp - 1)
 
                                             #!####################!#
                                             #!      Fonction      !#
                                             #!####################!#
 
-Liste_S_sc = []
-Liste_S_hb = []
-liste_iter = []
-Liste_Xsc = []
-Liste_Xhb =[]
-for i in range(1, 50):
-    X_sc, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, i, LR)
-    X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, i, LR)
-    Liste_S_sc.append(S_sc)
-    Liste_S_hb.append(S_hb)
-    Liste_Xsc.append(X_sc)
-    Liste_Xhb.append(X_hb)
-    liste_iter.append(i)
-
-Liste_S_sc = np.array(Liste_S_sc)
-Liste_S_hb = np.array(Liste_S_hb)
-
-X_sc, S_sc = mod.Levenberg_Marquardt(X0, Rs, f, Z_sc, 20, LR)
-X_hb, S_hb = mod.Levenberg_Marquardt(X0, Rh, f, Z_hb, 20, LR)
-
-print(f"SingleCoil: L={X_sc[0]:.2f}H, C={X_sc[1]:.2f}nF, Rp={X_sc[2]:.1f}kOhm")
-print(f"Humbucker: L={X_hb[0]:.2f}H, C={X_hb[1]:.2f}nF, Rp={X_hb[2]:.1f}kOhm")
-
-X_sc2, S_sc2 = mod.Levenberg_Marquardt(X0, Rs, f2, Z_sc2, 20, LR)
-X_hb2, S_hb2 = mod.Levenberg_Marquardt(X0, Rh, f2, Z_hb2, 20, LR)
-
-print(f"SingleCoil: L={X_sc2[0]:.2f}H, C={X_sc2[1]:.2f}nF, Rp={X_sc2[2]:.1f}kOhm")
-print(f"Humbucker: L={X_hb2[0]:.2f}H, C={X_hb2[1]:.2f}nF, Rp={X_hb2[2]:.1f}kOhm")
+X_s, S_s = mod.Levenberg_Marquardt(X0, Rs, f, Z_s, 20, LR)
+X_hp, S_hp = mod.Levenberg_Marquardt(X0, Rhp, f, Z_hp, 20, LR)
+print(f"SingleCoil: L={X_s[0]:.2f}H, C={X_s[1]:.2f}nF, Rp={X_s[2]:.1f}kOhm")
+print(f"Humbucker parallele: L={X_hp[0]:.2f}H, C={X_hp[1]:.2f}nF, Rp={X_hp[2]:.1f}kOhm")
 
                                             #!####################!#
                                             #!     Affichage      !#
@@ -122,71 +88,41 @@ plt.subplot(2, 1, 1)
 plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, label="Frequences fondamentales", zorder=0)
 plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
-plt.plot(np.linspace(20, 20000, 1000), mod.calcul_bode(X_sc, Rs, np.linspace(20, 20000, 1000), Ramp)[0], linestyle=ls_th, linewidth=lw_th, color=Color_s, label="Micro SingleCoil - Theorie")
-plt.plot(np.linspace(20, 20000, 1000), mod.calcul_bode(X_hb, Rh, np.linspace(20, 20000, 1000), Ramp)[0], linestyle=ls_th, linewidth=lw_th, color=Color_h, label="Micro Humbucker - Theorie")
+plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_s, Rs, np.linspace(10, 30000, 1000), Ramp)[0], **kw_S_th)
+plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_hp, Rhp, np.linspace(10, 30000, 1000), Ramp)[0], **kw_Hp_th)
 plt.xscale('log')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
 plt.ylabel("Gain [$dB$]")
 plt.title("Diagramme de Bode des micros")
 plt.xlabel("Frequence [$Hz$]")
-plt.xlim((0, 20000))
+plt.xlim((10, 30000))
 
 plt.subplot(2, 1, 2)
 plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, label="Frequences fondamentales", zorder=0)
 plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
-plt.plot(np.linspace(20, 20000, 1000), mod.calcul_bode(X_sc, Rs, np.linspace(20, 20000, 1000), Ramp)[1], linestyle=ls_th, linewidth=lw_th, color=Color_s, label="Micro SingleCoil - Theorie")
-plt.plot(np.linspace(20, 20000, 1000), mod.calcul_bode(X_hb, Rh, np.linspace(20, 20000, 1000), Ramp)[1], linestyle=ls_th, linewidth=lw_th, color=Color_h, label="Micro Humbucker - Theorie")
+plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_s, Rs, np.linspace(10, 30000, 1000), Ramp)[1], **kw_S_th)
+plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_hp, Rhp, np.linspace(10, 30000, 1000), Ramp)[1], **kw_Hp_th)
 plt.xscale('log')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
 plt.ylabel("Phase [$°$]")
 plt.xlabel("Frequence [$Hz$]")
-plt.xlim((0, 20000))
+plt.xlim((10, 30000))
 plt.legend(loc='lower left')
 plt.savefig("Python/Exports/01-Reponse_electrique_frequetielle/00-Bode.png")
 plt.close()
 
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
-                (f, Z_sc*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_s_test, 'label': "Micro SingleCoil"}),
-                (f, Z_hb*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_h_test, 'label': "Micro Humbucker"}),
-                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_sc, Rs, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Prediction"}),
-                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_hb, Rh, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Prediction"}),
+                (f, Z_s*1e-3, kw_S_exp),
+                (f, Z_hp*1e-3, kw_Hp_exp),
+                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_s, Rs, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, kw_S_th),
+                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_hp, Rhp, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, kw_Hp_th),
                 title=r"Impedances des micros $|Z|$ en fonction de la frequence",
                 xlabel="Frequence [$Hz$]",
                 ylabel=r"Impedance [$k\Omega$]",
                 vspan=True,
-                log=False,
-                xlim=(0, 20_000),
-                ylim=(0,300),
-                legend=True)
-
-mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence_algo.png",
-                (liste_iter, Liste_S_sc, {'label':"SingleCoil", 'color':Color_s}),
-                (liste_iter, Liste_S_hb, {'label':"Humbucker", 'color':Color_h}),
-                title="Convergence de l'algorithme de Levenberg-Marquardt",
-                xlabel="Nombre d'iterations",
-                ylabel="Signal normalise des residus [a.u.]",
-                legend=True)
-
-plt.close()
-
-plt.plot(f, Z_sc*1e-3, '+r', markersize=ms_exp, label='Experience')
-for i in range(1, 10):
-    plt.plot(np.linspace(20, 20000, 1000), mod.Z_micro(Liste_Xsc[i-1], Rs, 2*np.pi*np.linspace(20, 20000, 1000))*1e-3, label=f"{i-1}")
-plt.xlim(20, 20000)
-plt.legend()
-plt.show()
-
-print("\n---\nFin de l'execution de Modele_elec.py\n---\n")
-
-mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance2.png",
-                (f2, Z_sc2*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_s_test, 'label': "Micro SingleCoil"}),
-                (f2, Z_hb2*1e-3, {'marker': m_exp, 'markersize': ms_exp, 'linestyle': ls_exp, 'linewidth': lw_exp, 'color': Color_h_test, 'label': "Micro Humbucker"}),
-                (np.linspace(10, 100_000, 1000), mod.Z_micro(X_sc2, Rs, 2*np.pi*np.linspace(10, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_s, 'label': "Micro SingleCoil - Algorithme"}),
-                (np.linspace(10, 100_000, 1000), mod.Z_micro(X_hb2, Rh, 2*np.pi*np.linspace(10, 100_000, 1000))*1e-3, {'linestyle': ls_th, 'linewidth': lw_th, 'color': Color_h, 'label': "Micro Humbucker - Algorithme"}),
-                title=r"Impedances des micros $|Z|$ en fonction de la frequence",
-                xlabel="Frequence [$Hz$]",
-                ylabel=r"Impedance [$k\Omega$]",
-                vspan=True,
+                xlim=(10, 100_000),
                 log=True,
                 legend=True)
+
+print("\n---\nFin de l'execution de Modele_elec.py\n---\n")
