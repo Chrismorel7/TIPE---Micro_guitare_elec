@@ -24,8 +24,10 @@ print("Bibliotheques importees.")
                                             #!####################!#
 
 print("\nInitialisation des variables...")
-Rs = 5.26e3          # Resistance du single coil en ohms
-Rhp = 4.52e3        # Resistance du humbucker en ohms
+Rs_s = 5.26e3          # Resistance du single coil en ohms
+Rs_hp = 4.52e3        # Resistance du humbucker en ohms
+Rs_hs = 15.10e3
+
 Ramp = 1e6         # Resistance de l'ampli en ohms
 X0 = np.array([2, 0.5, 100])
 LR = 0.01
@@ -72,8 +74,8 @@ Z_hp = 100000 * (21.1/Vhp - 1)
                                             #!      Fonction      !#
                                             #!####################!#
 
-X_s, S_s = mod.Levenberg_Marquardt(X0, Rs, f, Z_s, 20, LR)
-X_hp, S_hp = mod.Levenberg_Marquardt(X0, Rhp, f, Z_hp, 20, LR)
+X_s, S_s = mod.Levenberg_Marquardt(X0, Rs_s, f, Z_s, 20, LR)
+X_hp, S_hp = mod.Levenberg_Marquardt(X0, Rs_hp, f, Z_hp, 20, LR)
 print(f"SingleCoil: L={X_s[0]:.2f}H, C={X_s[1]:.2f}nF, Rp={X_s[2]:.1f}kOhm")
 print(f"Humbucker parallele: L={X_hp[0]:.2f}H, C={X_hp[1]:.2f}nF, Rp={X_hp[2]:.1f}kOhm")
 
@@ -82,14 +84,18 @@ print(f"Humbucker parallele: L={X_hp[0]:.2f}H, C={X_hp[1]:.2f}nF, Rp={X_hp[2]:.1
                                             #!####################!#
 
 print("\nAffichage du diagramme de Bode...")
+freq = np.linspace(10, 100_000, 1000)
+gain_s, phase_s = mod.calcul_bode(X_s, Rs_s, freq, Ramp)
+gain_hp, phase_hp = mod.calcul_bode(X_hp, Rs_hp, freq, Ramp)
+
 
 plt.figure(figsize=(8,6))
 plt.subplot(2, 1, 1)
 plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, label="Frequences fondamentales", zorder=0)
 plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
-plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_s, Rs, np.linspace(10, 30000, 1000), Ramp)[0], **kw_S_th)
-plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_hp, Rhp, np.linspace(10, 30000, 1000), Ramp)[0], **kw_Hp_th)
+plt.plot(freq, gain_s, **kw_S_th)
+plt.plot(freq, gain_hp, **kw_Hp_th)
 plt.xscale('log')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
 plt.ylabel("Gain [$dB$]")
@@ -101,8 +107,8 @@ plt.subplot(2, 1, 2)
 plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, label="Frequences fondamentales", zorder=0)
 plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
-plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_s, Rs, np.linspace(10, 30000, 1000), Ramp)[1], **kw_S_th)
-plt.plot(np.linspace(10, 30000, 1000), mod.calcul_bode(X_hp, Rhp, np.linspace(10, 30000, 1000), Ramp)[1], **kw_Hp_th)
+plt.plot(freq, phase_s, **kw_S_th)
+plt.plot(freq, phase_hp, **kw_Hp_th)
 plt.xscale('log')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
 plt.ylabel("Phase [$°$]")
@@ -115,8 +121,8 @@ plt.close()
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
                 (f, Z_s*1e-3, kw_S_exp),
                 (f, Z_hp*1e-3, kw_Hp_exp),
-                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_s, Rs, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, kw_S_th),
-                (np.linspace(20, 100_000, 1000), mod.Z_micro(X_hp, Rhp, 2*np.pi*np.linspace(20, 100_000, 1000))*1e-3, kw_Hp_th),
+                (freq, mod.Z_micro(X_s, Rs_s, 2*np.pi*freq)*1e-3, kw_S_th),
+                (freq, mod.Z_micro(X_hp, Rs_hp, 2*np.pi*freq)*1e-3, kw_Hp_th),
                 title=r"Impedances des micros $|Z|$ en fonction de la frequence",
                 xlabel="Frequence [$Hz$]",
                 ylabel=r"Impedance [$k\Omega$]",

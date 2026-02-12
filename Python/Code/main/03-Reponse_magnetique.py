@@ -24,39 +24,24 @@ print("-" * 100)
 print("\nInitialisation des constantes")
 #* Constantes code
 PATH_out = "Python/Exports/03-Reponse_magnetique/"
-#* Constante physiqu
-rho = 5.41   # resistance lineique du cuivre (Ohm.m-1)
-mu0 = 4e-7 * np.pi      # Permeabilite magnetique du vide (H.m-1)
+#* Variable
+mu_0 = 4e-7 * np.pi      # Permeabilite magnetique du vide (H.m-1)
 mu_r = 3.5
 K = 0.7
-#* Parametre Micros
-#* Parametre maquette
-xm = 0.105              # Position du micro singlecoil
-x1 = 0.140              # Position du micro humbucker 1
-x2 = 0.160              # Position du micro humbucker 2
-L = 0.845               # Longueur de la corde
-mu = 9 * 10**(-3)       # Masse lineique de la corde
-dBdy = 0.03           #? Gradient du champ magnetique (A verifier ???)
-#* Parametre Micros
+x_hp1 = 0.140              # Position du micro humbucker 1
+x_hp2 = 0.160              # Position du micro humbucker 2
 S = 1.5e-4        #? Surface de la bobine du micro
-#* Parametre Micro Singlecoil
-RCC_s = 5.3e3     # Resistance DC micro singlecoil
-p_s = 0.13
-long_s = RCC_s / rho
-l_s = 1.5e-2             #? Epaisseur du micro
-L_s = 2.4
-N_s = np.sqrt(L_s * l_s / (mu0 * mu_r * S * K))
-#* Parametre Micro Humbucker
-RCC_h = 4.52 * 10**3    # Resistance DC micro humbucker
-p_h = 0.13
-long_h = RCC_h / rho
-l_h = l_s
+Rs_s = 5.26e3               # Resistance DC du SingleCoil [Ohm]
+L_s = 2.4                   # Inductance du SingleCoil [H]
+N_s = np.sqrt((L_s * 1.5e-2) / (mu_0 * mu_r * S * K))
+print(N_s)
 L_h = 1.84               # Inductance du micro
-N_h = np.sqrt(2*L_h * l_h / (mu0 * mu_r * S * K))
-#* Parametre Champ parasite
-fB = 50                 # Frequence du champ parasite
+N_hp = np.sqrt(2*L_h * 1.5e-2 / (mu_0 * mu_r * S * K))
+print(N_hp)
+FB = 50                 # Frequence du champ parasite
 B0 = 46 * 10**(-6)      # Champ magnetique au centre des bobines Helmholtz
-alpha = 2               # Coefficient alpha
+alpha = 4               # Coefficient alpha
+
 #* Couleurs graphiques
 kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
 kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
@@ -65,46 +50,13 @@ kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - experience', '
 kw_Hs_exp = {'color': '#00CD00', 'label': 'Humbucker série - experience', 'marker':"o", 'markersize':5, 'linestyle':'None'}
 kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - experience', 'marker':"o", 'markersize':5, 'linestyle':'None'}
 
-if RCC_h is None or l_h is None or N_h is None:
-    logging.warning("Parametres humbucker (RCC_h, l_h, N_h) non defini(s). Certaines simulations pourront utiliser N_s en substitution.")
-
 print("Constantes initialisees.")
-print("\nValeurs des parametres (avec unites) :")
-
-params = [
-    ("rho", rho, "Ohm.m", "Resistivite du fil de cuivre"),
-    ("S", S, "m2", "Surface de la bobine"),
-    ("N_s", N_s, "spires", "Nombre de spires du micro singlecoil"),
-    ("N_h", N_h, "spires", "Nombre de spires micro humbucker"),
-    ("fB", fB, "Hz", "Frequence du champ parasite"),
-    ("B0", B0, "T", "Champ magnetique au centre"),
-    ("alpha", alpha, "-", "Coefficient de rejet"),
-]
-
-try :
-    print(f"{'Var':<8} {'Valeur':>18} {'Unite':<10} {'Description':<45}")
-    print("-" * 85)
-    for i, (var, val, unit, desc) in enumerate(params):
-        if isinstance(val, (int, np.integer)):
-            val_str = f"{val:d}"
-        elif isinstance(val, (float, np.floating)):
-            val_str = f"{val:.6g}"
-        else:
-            val_str = str(val)
-        if i == 0:
-            print("-" * 70)
-        print(f"{var:<8} {val_str:>18} {unit:<10} {desc:<45}")
-except Exception as e:
-    logging.error(f"Erreur lors de l'affichage des parametres : {e}")
-
-print("-" * 85)
-
 
 # ======================== Resultats / Execution ========================
 print("Lecture des donnees de test...")
 List_Bpar = np.array([0, 5.5, 11, 16.5, 22, 27.5, 33, 38.5, 44, 49.5]) * 10**-6
-ks = mu_r*N_s*S*2*np.pi*fB
-kh = N_h*S*2*np.pi*fB*alpha*np.abs(x1-x2)
+ks = N_s*S*2*np.pi*FB*mu_r
+kh = N_hp*S*2*np.pi*FB*alpha*np.abs(x_hp1-x_hp2)*mu_r
 List_amp_h_th = np.array([kh * B for B in List_Bpar])
 List_amp_s_th = np.array([ks * B for B in List_Bpar])
 
@@ -175,8 +127,8 @@ print("\nCalcul des tensions induites au champ parasite...")
 Te = 4000 * 0.00001
 Ne = 4000
 temps = np.linspace(0, Te, Ne, endpoint=False)
-fem_s_par = mod.fem_par_s(N_s, fB, temps, B0, S, 2*np.pi/3)
-fem_h_par = mod.fem_par_h(N_h, x1, x2, fB, temps, B0, alpha, S)
+fem_s_par = mod.fem_par_s(temps, B0, np.pi / 2)
+fem_h_par = mod.fem_par_h(N_hp, x_hp1, x_hp2, temps, B0, alpha)
 
 
 #* --- Micro SingleCoil (Parasite) ---*#
