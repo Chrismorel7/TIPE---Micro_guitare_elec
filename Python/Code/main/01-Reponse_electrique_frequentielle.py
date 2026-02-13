@@ -1,7 +1,17 @@
-"""Modèle electrique du micro de guitare electrique et affichage de la reponse en frequence via un diagramme de Bode.
-    """
+"""Module de simulation electronique des micros de guitare électrique.
 
-print("\n\n---\nModele_elec.py\n---\n")
+Ce module implémente les modèles electriques equivalents pour 
+comparer les performances des micros SingleCoil et Humbucker. 
+Il repose sur l'analyse du filtrage électrique interne RLC.
+
+Calculs principaux :
+    - Impédance complexe |Z(jw)| du circuit équivalent.
+    -  Gain et phase d'un micro chargé H(jw)
+
+Auteur: Christophe Morel.
+Établissement: Lycée Ferdinand Buisson, CPGE PT.
+Projet: TIPE N°39662 - Session 2026.
+"""
 
                                             #!####################!#
                                             #!   Bibliothèques    !#
@@ -24,13 +34,14 @@ print("Bibliotheques importees.")
                                             #!####################!#
 
 print("\nInitialisation des variables...")
-Rs_s = 5.26e3          # Resistance du single coil en ohms
-Rs_hp = 4.52e3        # Resistance du humbucker en ohms
-Rs_hs = 15.10e3
+Rs_s = 5.26e3           # Resistance DC SingleCoil [Ohms]
+Rs_hp = 4.52e3          # Resistance DC Humbucker parallèle [Ohms]
+Rs_hs = 15.10e3         # Resistance DC Humbucker série [Ohms]
+Ramp = 1e6              # Resistance de l'ampli [Ohms]
+X0 = np.array([2, 0.5, 100])    # Initalisation [L, C, R_p]
+LR = 0.01               # Taux d'apprentissage
 
-Ramp = 1e6         # Resistance de l'ampli en ohms
-X0 = np.array([2, 0.5, 100])
-LR = 0.01
+# --- Graphique ---
 kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
 kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
 kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
@@ -39,14 +50,14 @@ kw_Hs_exp = {'color': '#00CD00', 'label': 'Humbucker série - experience', 'mark
 kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
 
 
-# --- 2. Fonction de Transfert (Modèle Passe-Bas 2nd Ordre) ---
+# --- Fonction pour lire les fichier experimentaux ---
 def lire_fichier(PATH):
     f = []
     Vin = []
     Vs = []
     Vh = []
-    file_s2 = open(PATH)
-    L_lignes = file_s2.readlines()
+    file = open(PATH)
+    L_lignes = file.readlines()
     
     for ligne in L_lignes[1:]:
         ligne = ligne.strip().split(',')
@@ -59,7 +70,6 @@ def lire_fichier(PATH):
     
     return np.array(Vin), np.array(f), np.array(Vs), np.array(Vh)
 
-
 print("Variables initialisees.")
 
                                             #!####################!#
@@ -67,6 +77,7 @@ print("Variables initialisees.")
                                             #!####################!#
 
 f, Vin, Vs, Vhp = lire_fichier("Python/data/raw/!!Mesures_impedance_500Ohm_2_fev.csv")
+# --- Pont diviseur de tension pour isoler |Z| ---
 Z_s = 100000 * (21.1/Vs - 1)
 Z_hp = 100000 * (21.1/Vhp - 1)
 
@@ -79,15 +90,16 @@ X_hp, S_hp = mod.Levenberg_Marquardt(X0, Rs_hp, f, Z_hp, 20, LR)
 print(f"SingleCoil: L={X_s[0]:.2f}H, C={X_s[1]:.2f}nF, Rp={X_s[2]:.1f}kOhm")
 print(f"Humbucker parallele: L={X_hp[0]:.2f}H, C={X_hp[1]:.2f}nF, Rp={X_hp[2]:.1f}kOhm")
 
-                                            #!####################!#
-                                            #!     Affichage      !#
-                                            #!####################!#
-
-print("\nAffichage du diagramme de Bode...")
 freq = np.linspace(10, 100_000, 1000)
 gain_s, phase_s = mod.calcul_bode(X_s, Rs_s, freq, Ramp)
 gain_hp, phase_hp = mod.calcul_bode(X_hp, Rs_hp, freq, Ramp)
 
+                                            #!####################!#
+                                            #!     Affichage      !#
+                                            #!####################!#
+
+# --- Diagramme de Bode ---
+print("\nAffichage du diagramme de Bode...")
 
 plt.figure(figsize=(8,6))
 plt.subplot(2, 1, 1)
@@ -118,6 +130,7 @@ plt.legend(loc='lower left')
 plt.savefig("Python/Exports/01-Reponse_electrique_frequetielle/00-Bode.png")
 plt.close()
 
+# --- Courbe Z = f(w) ---
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
                 (f, Z_s*1e-3, kw_S_exp),
                 (f, Z_hp*1e-3, kw_Hp_exp),

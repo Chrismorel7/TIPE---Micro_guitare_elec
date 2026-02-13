@@ -1,10 +1,35 @@
-"""Fichier contenant toute la modelisation du TIPE"""
+"""Bibliothèque de modélisation physique pour l'étude des micros de guitare.
 
-"""Importation des bibilothèques"""
+Ce module centralise les outils mathématiques et numériques nécessaires à la 
+caractérisation des micros SingleCoil et Humbucker. 
+Il permet de simuler la réponse du système depuis la vibration mécanique de la 
+corde jusqu'au signal électrique filtré.
+
+Fonctionnalités principales :
+    - Identification paramétrique (L, C, R_p) par l'algorithme de 
+        Levenberg-Marquardt.
+    - Calcul des fonctions de transfert H(p) et tracé des diagrammes de 
+        Bode.
+    - Modélisation de la f.e.m. induite e(t) via la loi de Faraday et 
+        l'approximation dipolaire.
+    - Analyse du filtrage en peigne spatial et de la rejection du 
+        bourdonnement (CMRR).
+
+Auteur: Christophe Morel.
+Établissement: Lycée Ferdinand Buisson, CPGE PT.
+Projet: TIPE N°39662 - Session 2026.
+"""
+
+                                            #!####################!#
+                                            #!   Bibliothèques    !#
+                                            #!####################!#
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
+                                            #!####################!#
+                                            #!    Constantes      !#
+                                            #!####################!#
 """Constantes programmes"""
 eps = 1e-5
 
@@ -46,8 +71,9 @@ Bm_max = 0.003                # Champ magnétique du micro à z=0 [T]
 Rm = 2.5e-3                 # Rayon d'un aimant du micro [m]
 
 
-"""Partie 1 : Fonctions Utilitaires
-    """
+                                            #!####################!#
+                                            #!    Utilitraires    !#
+                                            #!####################!#
 def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:str="", ylim=None, xlim=None, legend:bool=True, log:bool=False, vspan:bool=False):
     """
     Enregistre une figure matplotlib avec des options de personnalisation.
@@ -144,9 +170,9 @@ def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
     return np.array(liste_frequences), np.round(liste_amplitudes, 3)
 
 
-"""Partie 2 : Modelisation Electrique
-    """
-
+                                            #!####################!#
+                                            #!      I - Elec      !#
+                                            #!####################!#
 def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
     """Calcul l'impedance d'un micro de guitare en une pulsation w
     Args:
@@ -293,9 +319,9 @@ def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np
     return gain, phase
 
 
-"""Partie 3 : Modelisation Acoustique
-    """
-
+                                            #!####################!#
+                                            #!  II - Acoustique   !#
+                                            #!####################!#
 def entree(n: int, x: float, t: np.ndarray, A0: float, x0: float) -> np.ndarray:
     """Signal de vibration de la corde
 
@@ -443,9 +469,9 @@ def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: f
     return ratio_db, 20*np.log10(np.abs(np.cos(k*delta_x/2)))
 
 
-"""Partie 4 : Modelisation Magnétique
-    """
-    
+                                            #!####################!#
+                                            #!  III - Magnetique  !#
+                                            #!####################!#
 def B(x: float, I0: float, Nbob: float, Rbob: float) -> float:
     """Amplitude du champ magnétique dans un système de Bobine de Helmotz
 

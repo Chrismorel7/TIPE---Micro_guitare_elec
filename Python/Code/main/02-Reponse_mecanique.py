@@ -1,13 +1,17 @@
-"""Modele de la vibration d'une corde et de la tension induite dans un micro simple
-et un humbucker.
-Auteur : Christophe Morel
-Date : Decembre 2025
+"""Module de simulation acoustique des micros de guitare électrique.
+
+Ce module implémente les modèles de transduction electromagnétique pour 
+comparer les performances des micros SingleCoil et Humbucker. 
+Il repose sur la modélisation de l'induction par une corde vibrante.
+
+Calculs principaux :
+    - Flux magnétique Phi(z, t) selon l'approximation dipolaire.
+    - Force électromotrice e(x, t) induite par Faraday
+    
+Auteur: Christophe Morel.
+Établissement: Lycée Ferdinand Buisson, CPGE PT.
+Projet: TIPE N°39662 - Session 2026.
 """
-
-
-print("\n\n---\nModele_fem.py\n---\n")
-print("-" * 100)
-
 
                                             #!####################!#
                                             #!   Bibliothèques    !#
@@ -29,29 +33,35 @@ print("Bibliotheques importees.")
                                             #!    Constantes      !#
                                             #!####################!#
 
-print("-" * 100)
 print("\nInitialisation des constantes")
-#* Constante pour code
+
+# --- Constante pour code ---
 tracer_fft = True
 PATH_exp = "Python/Exports/02-Reponse_mecanique/"
+Na = 20
+Te = 4000 * 0.00001
+Ne = 4000
+fs = Ne / Te
+Te_fft = 1
+Ne_fft = 25_000
+fs_fft = Ne_fft / Te_fft
 
-#* Variables
-mu_0 = 4e-7 * np.pi     # Permeabilite magnetique du vide (H.m-1)
-mu_r = 3.5
-K=0.7
-x_hp1 = 0.147              # Position du micro humbucker 1
-x_hp2 = 0.165              # Position du micro humbucker 2
+# --- Variables ---
+mu_0 = 4e-7 * np.pi         # Permeabilite magnetique du vide [H.m-1]
+mu_r = 3.5                  # Permeabilite relative de l'Alnico 5 [.]
+K=0.7                       # Coeffient K [.]
+x_hp1, x_hp2 = 0.147, 0.165 # Position du micro humbucker [m]
 S = 1.5e-4                  # Surface d'une bobine [m2]
 Rs_s = 5.26e3               # Resistance DC du SingleCoil [Ohm]
 L_s = 2.4                   # Inductance du SingleCoil [H]
 N_s = np.sqrt(L_s * 1.5e-2 / (mu_0 * mu_r * S * K))
-L_h = 1.84               # Inductance du micro
-N_hp = np.sqrt(2*L_h * 1.5e-2 / (mu_0 * mu_r * S * K))
-A0 = 1e-3          #? Amplitude initiale de vibration
-x0 = 0.140                 #? Origine de la perturbation
-F = 78
+L_hp = 1.84                  # Inductance du Humbucker parallèle [H]
+N_hp = np.sqrt(2*L_hp * 1.5e-2 / (mu_0 * mu_r * S * K))
+A0 = 1e-3                   # Amplitude initiale de vibration [m]
+x0 = 0.140                  # Origine de la perturbation [m]
+F = 78                      # Frequence fondamentale [Hz]
 
-#* Couleurs graphiques
+# --- Couleurs graphiques ---
 kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
 kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
 kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
@@ -102,17 +112,8 @@ except Exception as e:
     logging.error(f"Erreur lors de la lecture des donnees de test Humbucker corde seule : {e}")
 
 
-
 print("\nCalcul des tensions induites...")
 print("\nEchantillonnage...")
-Na = 20
-Te = 4000 * 0.00001
-Ne = 4000
-fs = Ne / Te
-Te_fft = 1
-Ne_fft = 25_000
-fs_fft = Ne_fft / Te_fft
-# Affichage des parametres d'echantillonnage
 print("\nParametres d'echantillonnage (avec unites) :")
 print(f"Te = {Te} s")
 print(f"Ne = {Ne} echantillons")
@@ -125,19 +126,15 @@ fem_s = mod.fem_singlecoil(Na, temps, A0, x0)
 fem_hp = mod.fem_humbucker(Na, N_hp, x_hp1, x_hp2, temps, A0, x0) / 2
 
 
-
                                             #!####################!#
                                             #!       Exports      !#
                                             #!####################!#
 
 
-# Ensure export directory exists
+# Verifier si le fichier d'exportation existe
 os.makedirs("Python/Exports", exist_ok=True)
-print("-" * 100)
-
 
 if tracer_fft:
-    print("-" * 100)
     print("\nCalcul des FFT...")
     print("\nParametres d'echantillonnage (avec unites) :")
     print(f"Te = {Te_fft} s")
@@ -206,9 +203,7 @@ if tracer_fft:
             title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
     print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
-print("-" * 100)
 print("\nAffichage des courbes...")
-#-- 01 --#
 
 #* --- Attenuation --- *#
 L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs, fft_s_test)
@@ -225,7 +220,7 @@ mod.save_plot(PATH_exp + "Filtrage_spatial.png",
     (freqs, peigne, {'color': Color_h, 'label': "Filtrage en peigne spatial [$dB$]", "linewidth": 2}),
     title=f"Influence de la position du micro sur le spectre\nFiltrage spatial pour un fondamental à {F}$Hz$", xlabel="Frequence [$Hz$]", ylabel="Gain relatif [$dB$]", log=True, vspan=True)
 """
-#* --- Comparaison des micros Theorique (total) ---*#
+# --- Comparaison des micros Theorique ---
 mod.save_plot(PATH_exp + "temporel/Theorique.png",
         (temps, fem_hp, kw_Hp_th),
         (temps, fem_s, kw_S_th),
@@ -233,7 +228,7 @@ mod.save_plot(PATH_exp + "temporel/Theorique.png",
         xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print(f"Courbes sauvegardees sous {PATH_exp + "temporel/Theorique.png"}")
 
-#* --- Micro Singlecoil (corde) ---*#
+# --- Micro Singlecoil ---
 mod.save_plot(PATH_exp + "temporel/Singlecoil.png",
         (Test_temps_s_fft[:4000], Test_s_fft[:4000], kw_S_exp),
         (temps, fem_s, kw_S_th),
@@ -241,7 +236,7 @@ mod.save_plot(PATH_exp + "temporel/Singlecoil.png",
         xlabel="Temps [$s$]", ylabel="Tension [$V$]")
 print(f"Courbes sauvegardees sous {PATH_exp + "temporel/Singlecoil.png"}")
 
-#* --- Micro Humbucker (corde) ---*#
+# --- Micro Humbucker parallèle ---
 mod.save_plot(PATH_exp + "temporel/Humbucker.png",
         (Test_temps_hp_fft[:4000], Test_hp_fft[:4000], kw_Hp_exp),
         (temps, fem_hp, kw_Hp_th),
