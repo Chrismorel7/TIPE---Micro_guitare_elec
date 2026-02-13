@@ -173,6 +173,7 @@ def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
                                             #!####################!#
                                             #!      I - Elec      !#
                                             #!####################!#
+
 def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
     """Calcul l'impedance d'un micro de guitare en une pulsation w
     Args:
@@ -322,6 +323,7 @@ def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np
                                             #!####################!#
                                             #!  II - Acoustique   !#
                                             #!####################!#
+
 def entree(n: int, x: float, t: np.ndarray, A0: float, x0: float) -> np.ndarray:
     """Signal de vibration de la corde
 
@@ -344,41 +346,35 @@ def entree(n: int, x: float, t: np.ndarray, A0: float, x0: float) -> np.ndarray:
 
 def fem_singlecoil(n: int, t: np.ndarray, A0: float, x0: float) -> np.ndarray:
     """Force electromotrice induite dans le micro singlecoil (Théorie Robuste Non-Linéaire)
-
     Args:
         n (int): Nombre de modes consideres
         N (int): Nombre de spires de la bobine
         t (np.ndarray): Tableau des instants
         A0 (float): Amplitude initiale de la vibration
         x0 (float): Position de la perturbation
-
     Returns:
         np.ndarray: Signal de la f.e.m. induite (V)
     """
+    
     # 1. Calcul des trajectoires vibratoires (Position et Vitesse)
     zs_t = np.full_like(t, z_0)
     vs_t = np.zeros_like(t)
-    omega1 = (np.pi / L) * np.sqrt(T / mu_c)
+    omega1 = 2 * np.pi * F
     
     for i in range(1, n + 1):
-        # Amplitude du mode n (selon votre rapport [cite: 1821, 2360])
         Bn = (A0 * L**2.5 * np.sqrt(2)) / (i**2 * np.pi**2 * x0 * (L - x0)) * np.sin(i * np.pi * x0 / L)
         
         omega_i = i * omega1
         spatial_node = np.sin(i * np.pi * x_s / L)
-        
-        # Superposition des modes
+    
         zs_t += Bn * spatial_node * np.cos(omega_i * t)
         vs_t -= Bn * omega_i * spatial_node * np.sin(omega_i * t)
 
     # 2. Modélisation du champ magnétique et de son gradient
-    # B_ext(z) = B_max * (R^2 / (R^2 + z^2)^1.5)
     B_ext = Bm_max * (Rm**3 / (Rm**2 + zs_t**2)**1.5)
-    # dB/dz = -3 * B_max * R^2 * z / (R^2 + z^2)^2.5
     dB_dz = -3 * Bm_max * Rm**3 * zs_t / (Rm**2 + zs_t**2)**2.5
 
-    # 3. Calcul du terme de transduction non-linéaire G(z)
-    # Issu de la loi de Faraday appliquée au dipôle induit 
+    # 3. Calcul du terme de transduction non-linéaire
     transduction_gain = (3 * B_ext / zs_t**4) - (1 / zs_t**3 * dB_dz)
 
     # 4. Calcul de la f.e.m. finale
@@ -388,7 +384,6 @@ def fem_singlecoil(n: int, t: np.ndarray, A0: float, x0: float) -> np.ndarray:
 
 def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float, x0: float) -> np.ndarray:
     """Force electromotrice induite dans le micro Humbucker (Théorie Robuste Non-Linéaire)
-
     Args:
         n (int): Nombre de modes consideres
         N (int): Nombre de spires par bobine
@@ -397,7 +392,6 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
         t (np.ndarray): Tableau des instants
         A0 (float): Amplitude initiale de la vibration
         x0 (float): Position de la perturbation
-
     Returns:
         np.ndarray: Signal de la f.e.m. induite totale (V)
     """
@@ -406,10 +400,9 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
         # 1. Calcul des trajectoires vibratoires (Position et Vitesse) à la position x_pos
         zs_t = np.full_like(t, z_0)
         vs_t = np.zeros_like(t)
-        omega1 = (np.pi / L) * np.sqrt(T / mu_c)
+        omega1 = 2 * np.pi * F
         
         for i in range(1, n + 1):
-            # Amplitude du mode i [cite: 1800, 2360, 2821]
             Bn = (A0 * L**2.5 * np.sqrt(2)) / (i**2 * np.pi**2 * x0 * (L - x0)) * np.sin(i * np.pi * x0 / L)
             
             omega_i = i * omega1
@@ -437,9 +430,7 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
 def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: float) -> tuple[np.ndarray, np.ndarray]:
     """Calcule la Fonction de Transfert Relative (Attenuation) du Humbucker 
     par rapport au Single Coil en fonction de la frequence.
-    
     Modèle : Filtrage en peigne dû à l'ecartement des bobines.
-
     Args:
         frequences (np.ndarray): Tableau des fréquences
         x1 (float): Position du 1er bobinage du micro humbucker sur la corde
@@ -447,7 +438,6 @@ def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: f
         xm (float): Position du micro singlecoil sur la corde
         L (float): Longueur de la corde
         F (float): Fréquence fondamentale de la corde
-
     Returns:
         tuple[np.ndarray, np.ndarray]: fonction de transfert en dB du Humbucker par rapport au Single Coil, et atténuation due au filtre peigne seul
     """
@@ -489,23 +479,17 @@ def B(x: float, I0: float, Nbob: float, Rbob: float) -> float:
 
 def fem_par_s(t: np.ndarray, B0: float, phi: float) -> np.ndarray:
     """Force electromotrice induite dans une bobine par une variation sinusoïdale d'un champ magnétique exterieur
-
     Args:
         t (np.ndarray): Tableau des instants
         B0 (float): Amplitude du champ magnétique
         phi (float): Phase initiale de la variation du champ magnétique
-
     Returns:
         np.ndarray: Tableau du signal de la force electromotrice induite dans une bobine
-
-    Returns:
-        np.ndarray: _description_
     """
     return N_s*S*2*np.pi*F_B*B0*np.sin(2*np.pi*F_B*t + phi)*mu_r
 
 def fem_par_h(N: int, x1: float, x2: float, t: np.ndarray, B0: float, alpha: float) -> np.ndarray:
     """Force electromotrice induite dans un humbucker par une variation sinusoïdale d'un champ magnétique exterieur
-
     Args:
         N (int): Nombre de spires du micro
         x1 (float): Position du 1er bobinage du micro humbucker sur la corde
