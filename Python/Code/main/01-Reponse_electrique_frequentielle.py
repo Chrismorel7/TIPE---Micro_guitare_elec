@@ -40,6 +40,10 @@ Rs_hs = 15.34e3         # Resistance DC Humbucker série [Ohms]
 Ramp = 1e6              # Resistance de l'ampli [Ohms]
 X0 = np.array([2.5, 0.5, 450])    # Initalisation [L, C, R_p]
 LR = 0.001              # Taux d'apprentissage
+R = 97.6e3
+u_Ugbf = 0.01  # Incertitude sur tension GBF [V] (±1% lecture + résolution ADC)
+u_res = 0.01   # Incertitude sur tension mesurée [V]
+u_R = 97.6e3 * 0.01  # Incertitude sur R : ±1% (spec résistance de précision)
 
 # --- Graphique ---
 kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
@@ -78,15 +82,37 @@ print("Variables initialisees.")
                                             #! Lectures Fichiers  !#
                                             #!####################!#
 
-f, Vin, Vs, Vhp, Vhs = lire_fichier("Python/data/raw/!!Mesures_impedance_500Ohm_2_fev.csv")
+f, Vin, Vs, Vhp, Vhs = lire_fichier("Python/data/raw/01-Reponse_elec/Mesure_Impedance_PDT_100k.csv")
 # --- Pont diviseur de tension pour isoler |Z| ---
-Z_s = 100000 * (21.1/Vs - 1)
-Z_hp = 100000 * (21.1/Vhp - 1)
-Z_hs = 100000 * (21.1/Vhs - 1)
+Z_s = R * (21.1/Vs - 1)
+Z_hp = R * (21.1/Vhp - 1)
+Z_hs = R * (21.1/Vhs - 1)
 
                                             #!####################!#
                                             #!      Fonction      !#
                                             #!####################!#
+
+def calcul_incertitude_Z(R, u_R, U_gbf, u_Ugbf, u_res, u_ures):
+    """
+    Calcule l'incertitude ABSOLUE sur Z [Ohm].
+    
+    Formule : Z = R * (U_gbf / U_res - 1)
+    
+    Propagation d'erreur :
+        u(Z)/Z = sqrt[(u_R/R)² + (u_Ugbf/U_gbf)² + (u_ures/U_res)²]
+    """    
+    # Incertitude relative
+    u_Z_rel = np.sqrt((u_R / R)**2 + 
+                    (u_Ugbf / U_gbf)**2 + 
+                    (u_ures / u_res)**2)
+    
+    # Impédance pour chaque point
+    Z_calc = R * (U_gbf / u_res - 1)
+    
+    # Incertitude absolue [Ohm]
+    u_Z_abs = Z_calc * u_Z_rel
+    
+    return u_Z_abs
 
 L_S = np.zeros((3,30))
 for i in range(1,31):
@@ -113,6 +139,35 @@ gain_hs, phase_hs = mod.calcul_bode(X_hs, Rs_hs, freq, Ramp)
                                             #!####################!#
                                             #!     Affichage      !#
                                             #!####################!#
+
+u_Z_s = calcul_incertitude_Z(R, u_R, 21.1, u_Ugbf, Vs, u_res) * 1e-3  # kOhm
+u_Z_hp = calcul_incertitude_Z(R, u_R, 21.1, u_Ugbf, Vhp, u_res) * 1e-3  # kOhm
+u_Z_hs = calcul_incertitude_Z(R, u_R, 21.1, u_Ugbf, Vhs, u_res) * 1e-3  # kOhm
+
+kw_S_exp['yerr'] = u_Z_s
+kw_Hp_exp['yerr'] = u_Z_hp
+kw_Hs_exp['yerr'] = u_Z_hs
+
+# --- Affichage des incertitudes moyennes ---
+print("\n" + "="*60)
+print("INCERTITUDES SUR L'IMPEDANCE [kOhm]")
+print("="*60)
+print(f"SingleCoil:")
+print(f"  - Incertitude moyenne: {np.mean(u_Z_s):.4f} kOhm")
+print(f"  - Incertitude min/max: {np.min(u_Z_s):.4f} / {np.max(u_Z_s):.4f} kOhm")
+print(f"  - Incertitude relative: {np.mean(u_Z_s / (Z_s*1e-3))*100:.2f}%")
+
+print(f"\nHumbucker parallèle:")
+print(f"  - Incertitude moyenne: {np.mean(u_Z_hp):.4f} kOhm")
+print(f"  - Incertitude min/max: {np.min(u_Z_hp):.4f} / {np.max(u_Z_hp):.4f} kOhm")
+print(f"  - Incertitude relative: {np.mean(u_Z_hp / (Z_hp*1e-3))*100:.2f}%")
+
+print(f"\nHumbucker série:")
+print(f"  - Incertitude moyenne: {np.mean(u_Z_hs):.4f} kOhm")
+print(f"  - Incertitude min/max: {np.min(u_Z_hs):.4f} / {np.max(u_Z_hs):.4f} kOhm")
+print(f"  - Incertitude relative: {np.mean(u_Z_hs / (Z_hs*1e-3))*100:.2f}%")
+print("="*60 + "\n")
+
 
 # -- Convergence algo ---
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence.png",
@@ -174,6 +229,7 @@ mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
                 vspan=True,
                 xlim=(10, 30_000),
                 #log=True,
-                legend=True)
+                legend=True,
+                error_bars=True)
 
 print("\n---\nFin de l'execution de Modele_elec.py\n---\n")

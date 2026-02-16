@@ -72,7 +72,7 @@ Rm = 2.5e-3                 # Rayon d'un aimant du micro [m]
                                             #!####################!#
                                             #!    Utilitraires    !#
                                             #!####################!#
-def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:str="", ylim=None, xlim=None, legend:bool=True, log:bool=False, vspan:bool=False):
+def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:str="", ylim=None, xlim=None, legend:bool=True, log:bool=False, vspan:bool=False, error_bars:bool=False):
     """
     Enregistre une figure matplotlib avec des options de personnalisation.
     Args:
@@ -86,38 +86,47 @@ def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:st
         legend (bool): presence de la legende
         log (bool): presence d'une echelle logarithmique sur l'axe des x
         vspan (bool): presence des zones de frequences fondamentales et harmoniques
+        error_bars (bool): active l'utilisation de plt.errorbar (necessite yerr/xerr dans kwargs)
     """
     plt.figure(figsize=(6, 5)) 
     handles_curves = []
     z_handles = []
+    
     if vspan:
         z2 = plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, 
                         label="Frequences fondamentales", zorder=0)
         z1 = plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
         z_handles = [z1, z2]
+
     for call in plot_calls:
         x, y, kwargs = call
-        # On recupère l'objet ligne retourne par plot (c'est un tuple, d'où le [0])
-        line, = plt.plot(x, y, **kwargs)
-        handles_curves.append(line)
+        if error_bars:
+            # plt.errorbar retourne un ErrorbarContainer compatible avec legend()
+            line = plt.errorbar(x, y, **kwargs)
+            handles_curves.append(line)
+        else:
+            line, = plt.plot(x, y, **kwargs)
+            handles_curves.append(line)
+
     if title: plt.title(title)
     if log: plt.xscale('log')
     if xlabel: plt.xlabel(xlabel)
     if ylabel: plt.ylabel(ylabel)
     if ylim is not None: plt.ylim(ylim)
     if xlim is not None: plt.xlim(xlim)
-    plt.grid(True, alpha=0.6) # Grid plus discrète pour le contraste
+    
+    plt.grid(True, alpha=0.6)
+    
     if legend:
-        # 1. Legende des courbes (Interne)
         leg_courbes = plt.legend(handles=handles_curves, loc='best', framealpha=1)
-        # 2. Legende des zones (Externe à droite)
         if vspan:
             plt.gca().add_artist(leg_courbes)
-            plt.legend(handles=z_handles, title="Zones d'etude", bbox_to_anchor=(0.5, -0.18), loc='upper center', ncol=2, borderaxespad=0.)
-    # Ajustement automatique pour ne pas couper la legende externe
+            plt.legend(handles=z_handles, title="Zones d'etude", bbox_to_anchor=(0.5, -0.18), 
+                    loc='upper center', ncol=2, borderaxespad=0.)
+
     plt.tight_layout()
-    plt.savefig(fig_path, dpi=300) # dpi=200 pour une nettete accrue en projection
+    plt.savefig(fig_path, dpi=300)
     plt.close()
 
 def normalize_signal(signal: np.ndarray):

@@ -42,6 +42,7 @@ Na = 20
 Te = 1
 Ne = 10000
 fs = Ne / Te
+yerr_temp = (1e-5 / 2 )
 
 # --- Variables ---
 mu_0 = 4e-7 * np.pi         # Permeabilite magnetique du vide [H.m-1]
@@ -94,6 +95,11 @@ temps_s, V_s_exp = lire_fichier("Python/data/raw/02-Reponse_meca/S2.csv")
 temps_hp, V_hp_exp = lire_fichier("Python/data/raw/02-Reponse_meca/Hp2.csv")
 temps_hs, V_hs_exp = lire_fichier("Python/data/raw/02-Reponse_meca/Hs3.csv")
 
+
+                                            #!####################!#
+                                            #!         FFT        !#
+                                            #!####################!#
+
 print("\nCalcul des tensions induites...")
 print("\nEchantillonnage...")
 print("\nParametres d'echantillonnage (avec unites) :")
@@ -108,15 +114,6 @@ V_s_th = mod.fem_singlecoil(Na, temps, A0, x0)
 V_hp_th = mod.fem_humbucker(Na, N_hp, x_hp1, x_hp2, temps, A0, x0) / 2
 V_hs_th = mod.fem_humbucker(Na, N_hs, x_hs1, x_hs2, temps, A0, x0) / 2
 
-
-                                            #!####################!#
-                                            #!       Exports      !#
-                                            #!####################!#
-
-
-# Verifier si le fichier d'exportation existe
-os.makedirs("Python/Exports", exist_ok=True)
-
 fft_s_th = mod.compute_and_normalize_fft(V_s_th, Ne)
 fft_hp_th = mod.compute_and_normalize_fft(V_hp_th, Ne)
 fft_hs_th = mod.compute_and_normalize_fft(V_hs_th, Ne)
@@ -126,9 +123,19 @@ Ne_s = len(V_s_exp)
 Ne_hp = len(V_hp_exp)
 Ne_hs = len(V_hs_exp)
 
-fft_s_exp = mod.compute_and_normalize_fft(V_s_exp, Ne_s)
-fft_hp_exp = mod.compute_and_normalize_fft(V_hp_exp, Ne_hp)
-fft_hs_exp = mod.compute_and_normalize_fft(V_hs_exp, Ne_hs)
+fft_s_exp_abs = mod.compute_and_normalize_fft(V_s_exp, Ne_s)
+fft_hp_exp_abs = mod.compute_and_normalize_fft(V_hp_exp, Ne_hp)
+fft_hs_exp_abs = mod.compute_and_normalize_fft(V_hs_exp, Ne_hs)
+
+# Propager l'incertitude CSV vers la FFT (division par √N)
+yerr_s_fft_abs = yerr_temp / np.sqrt(Ne_s)
+yerr_hp_fft_abs = yerr_temp / np.sqrt(Ne_hp)
+yerr_hs_fft_abs = yerr_temp / np.sqrt(Ne_hs)
+
+print(f"\nIncertitude CSV: {yerr_temp:.2e} V")
+print(f"Incertitude FFT (S): {yerr_s_fft_abs:.2e} V")
+print(f"Incertitude FFT (Hp): {yerr_hp_fft_abs:.2e} V")
+print(f"Incertitude FFT (Hs): {yerr_hs_fft_abs:.2e} V")
 
 # Create frequency arrays for each dataset
 freqs_th = np.fft.fftfreq(Ne, 1 / (len(V_s_th) / (temps[-1] - temps[0])))
@@ -148,14 +155,47 @@ fft_s_th = mod.normalize_signal(fft_s_th[mask_th])
 fft_hp_th = mod.normalize_signal(fft_hp_th[mask_th])
 fft_hs_th = mod.normalize_signal(fft_hs_th[mask_th])
 
+# Normaliser les FFT ET l'incertitude avec le même facteur
+max_fft_s = np.max(fft_s_exp_abs)
+max_fft_hp = np.max(fft_hp_exp_abs)
+max_fft_hs = np.max(fft_hs_exp_abs)
+
 freqs_s_exp = freqs_s_exp[mask_s]
-fft_s_exp = mod.normalize_signal(fft_s_exp[mask_s])
+fft_s_exp_filtered = fft_s_exp_abs[mask_s]
+fft_s_exp = fft_s_exp_filtered / max_fft_s  # Normalisation manuelle
+yerr_s_exp = np.full_like(fft_s_exp_filtered, yerr_s_fft_abs) / max_fft_s  # Même normalisation
 
 freqs_hp_exp = freqs_hp_exp[mask_hp]
-fft_hp_exp = mod.normalize_signal(fft_hp_exp[mask_hp])
+fft_hp_exp_filtered = fft_hp_exp_abs[mask_hp]
+fft_hp_exp = fft_hp_exp_filtered / max_fft_hp
+yerr_hp_exp = np.full_like(fft_hp_exp_filtered, yerr_hp_fft_abs) / max_fft_hp
 
 freqs_hs_exp = freqs_hs_exp[mask_hs]
-fft_hs_exp = mod.normalize_signal(fft_hs_exp[mask_hs])
+fft_hs_exp_filtered = fft_hs_exp_abs[mask_hs]
+fft_hs_exp = fft_hs_exp_filtered / max_fft_hs
+yerr_hs_exp = np.full_like(fft_hs_exp_filtered, yerr_hs_fft_abs) / max_fft_hs
+
+# --- Affichage des incertitudes moyennes sur les FFT ---
+print("\n" + "="*60)
+print("INCERTITUDES SUR LES FFT (DONNÉES NORMALISÉES)")
+print("="*60)
+
+print(f"SingleCoil:")
+print(f"  - Incertitude moyenne: {np.mean(yerr_s_exp):.6e}")
+print(f"  - Incertitude min/max: {np.min(yerr_s_exp):.6e} / {np.max(yerr_s_exp):.6e}")
+print(f"  - Incertitude relative: {np.mean(yerr_s_exp / (fft_s_exp + 1e-12))*100:.4f}%")
+
+print(f"\nHumbucker parallèle:")
+print(f"  - Incertitude moyenne: {np.mean(yerr_hp_exp):.6e}")
+print(f"  - Incertitude min/max: {np.min(yerr_hp_exp):.6e} / {np.max(yerr_hp_exp):.6e}")
+print(f"  - Incertitude relative: {np.mean(yerr_hp_exp / (fft_hp_exp + 1e-12))*100:.4f}%")
+
+print(f"\nHumbucker série:")
+print(f"  - Incertitude moyenne: {np.mean(yerr_hs_exp):.6e}")
+print(f"  - Incertitude min/max: {np.min(yerr_hs_exp):.6e} / {np.max(yerr_hs_exp):.6e}")
+print(f"  - Incertitude relative: {np.mean(yerr_hs_exp / (fft_hs_exp + 1e-12))*100:.4f}%")
+
+print("="*60 + "\n")
 
 print("FFT calculees.")
 Title = "Spectre de la tension en sortie des micros\n(Fondamental à " + str(F) + " Hz)"
@@ -169,27 +209,28 @@ mod.save_plot(PATH_exp + "FFT/Theorie.png",
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Theorie.png"}")
 
 mod.save_plot(PATH_exp + "FFT/Experience.png",
-        (freqs_s_exp, fft_s_exp, kw_S_exp),
-        (freqs_hp_exp, fft_hp_exp, kw_Hp_exp),
-        (freqs_hs_exp, fft_hs_exp, kw_Hs_exp),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
+        (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
+        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
+        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Experience.png"}")
+
 mod.save_plot(PATH_exp + "FFT/Singlecoil.png",
-        (freqs_s_exp, fft_s_exp, kw_S_exp),
+        (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
         (freqs_th, fft_s_th, kw_S_th),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Singlecoil.png"}")
 
 mod.save_plot(PATH_exp + "FFT/Humbucker_parra.png",
-        (freqs_hp_exp, fft_hp_exp, kw_Hp_exp),
+        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
         (freqs_th, fft_hp_th, kw_Hp_th),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
 mod.save_plot(PATH_exp + "FFT/Humbucker_serie.png",
-        (freqs_hs_exp, fft_hs_exp, kw_Hs_exp),
+        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
         (freqs_th, fft_hs_th, kw_Hs_th),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
 print("\nAffichage des courbes...")
@@ -199,8 +240,8 @@ print("\nAffichage des courbes...")
 
 # Réduire prominence et distance pour détecter plus de pics
 freqs = np.linspace(10, 20000, 1000)
-L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=0.02, distance=5)
-L_freqs, L_pic_h_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.02, distance=5)
+L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=0.04, distance=5)
+L_freqs, L_pic_h_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
 
 peigne_exp = 20*np.log10(L_pic_h_exp / L_pic_s_exp)
 ratio_th, peigne = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
