@@ -7,10 +7,10 @@ def lire_fichier(PATH):
     file_s2 = open(PATH)
     L_lignes = file_s2.readlines()
 
-    for ligne in L_lignes[1:]:
-        ligne = ligne.strip().split(';')
+    for ligne in L_lignes[2:]:
+        ligne = ligne.strip().split(',')
         ligne = [x.replace('\n', '') for x in ligne]
-        ligne = [x.replace(',', '.') for x in ligne]
+        ligne = [x.replace('E', 'e') for x in ligne]
         List_temps.append(float(ligne[0]))
         List_sig.append(float(ligne[1]))
     
@@ -96,9 +96,9 @@ def comparer_filtres(PATH_in, PATH_out, window_size=100, tau=0.001):
 
     # Creer le graphique comparatif
     plt.figure(figsize=(6, 5))
-    plt.plot(List_temps[:3000], List_sig[:3000], label='Signal brut', color="#636363", linewidth=1)
-    plt.plot(List_temps[:3000], filtered_moy[:3000], label='Moyenne mobile', linewidth=2, color="#EE2222")
-    plt.plot(List_temps[:3000], filtered_pb[:3000], label='Passe-bas 1er ordre', linewidth=2, color="#0066CC")
+    plt.plot(List_temps, List_sig, label='Signal brut', color="#636363", linewidth=1)
+    plt.plot(List_temps, filtered_moy, label='Moyenne mobile', linewidth=2, color="#EE2222")
+    plt.plot(List_temps, filtered_pb, label='Passe-bas 1er ordre', linewidth=2, color="#0066CC")
     plt.xlabel('Temps [$s$]')
     plt.ylabel('Tension induite dans le micro [$V$]')
     plt.title('Comparaison des methodes de filtrage')
@@ -112,45 +112,23 @@ def comparer_filtres(PATH_in, PATH_out, window_size=100, tau=0.001):
     write_file(PATH_out, List_temps, filtered_pb)
 
 
-L_path_in = ['Python/raw data/SingleCoil_par_2V.csv',
-            'Python/raw data/SingleCoil_par_4V.csv',
-            'Python/raw data/SingleCoil_par_6V.csv',
-            'Python/raw data/SingleCoil_par_8V.csv',
-            'Python/raw data/SingleCoil_par_10V.csv',
-            'Python/raw data/SingleCoil_par_12,5V.csv',
-            'Python/raw data/SingleCoil_par_15V.csv',
-            'Python/raw data/SingleCoil_par_17,5V.csv',
-            'Python/raw data/SingleCoil_par_20V.csv',
-            
-            'Python/raw data/Humbucker_par_2V.csv',
-            'Python/raw data/Humbucker_par_4V.csv',
-            'Python/raw data/Humbucker_par_6V.csv',
-            'Python/raw data/Humbucker_par_8V.csv',
-            'Python/raw data/Humbucker_par_10V.csv',
-            'Python/raw data/Humbucker_par_12,5V.csv',
-            'Python/raw data/Humbucker_par_15V.csv',
-            'Python/raw data/Humbucker_par_17,5V.csv',
-            'Python/raw data/Humbucker_par_20V.csv']
+L_path_in = ['Python/data/raw/02-Reponse_meca/Hp1.csv',
+            'Python/data/raw/02-Reponse_meca/Hp2.csv',
+            'Python/data/raw/02-Reponse_meca/Hp3.csv',
+            'Python/data/raw/02-Reponse_meca/Hs1.csv',
+            'Python/data/raw/02-Reponse_meca/Hs2.csv',
+            'Python/data/raw/02-Reponse_meca/Hs3.csv',
+            'Python/data/raw/02-Reponse_meca/S1.csv',
+            'Python/data/raw/02-Reponse_meca/S2.csv']
 
-L_path_out = ['Python/filtered data/SingleCoil_par_2V.csv',
-            'Python/filtered data/SingleCoil_par_4V.csv',
-            'Python/filtered data/SingleCoil_par_6V.csv',
-            'Python/filtered data/SingleCoil_par_8V.csv',
-            'Python/filtered data/SingleCoil_par_10V.csv',
-            'Python/filtered data/SingleCoil_par_12,5V.csv',
-            'Python/filtered data/SingleCoil_par_15V.csv',
-            'Python/filtered data/SingleCoil_par_17,5V.csv',
-            'Python/filtered data/SingleCoil_par_20V.csv',
-            
-            'Python/filtered data/Humbucker_par_2V.csv',
-            'Python/filtered data/Humbucker_par_4V.csv',
-            'Python/filtered data/Humbucker_par_6V.csv',
-            'Python/filtered data/Humbucker_par_8V.csv',
-            'Python/filtered data/Humbucker_par_10V.csv',
-            'Python/filtered data/Humbucker_par_12,5V.csv',
-            'Python/filtered data/Humbucker_par_15V.csv',
-            'Python/filtered data/Humbucker_par_17,5V.csv',
-            'Python/filtered data/Humbucker_par_20V.csv']
+L_path_out = ['Python/data/filter/02-Reponse_meca/Hp1.csv',
+            'Python/data/filter/02-Reponse_meca/Hp2.csv',
+            'Python/data/filter/02-Reponse_meca/Hp3.csv',
+            'Python/data/filter/02-Reponse_meca/Hs1.csv',
+            'Python/data/filter/02-Reponse_meca/Hs2.csv',
+            'Python/data/filter/02-Reponse_meca/Hs3.csv',
+            'Python/data/filter/02-Reponse_meca/S1.csv',
+            'Python/data/filter/02-Reponse_meca/S2.csv']
 
 for i in range(len(L_path_in)):
     print(f"Fichier : {L_path_in[i]} : ...")

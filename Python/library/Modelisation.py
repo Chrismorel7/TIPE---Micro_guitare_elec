@@ -48,19 +48,17 @@ N_s = np.sqrt((L_s * 1.5e-2) / (mu_0 * mu_r * S * K))
 Rs_hp = 4.52e3              # Resistance DC du Humbucker parallèle [Ohm]
 L_hp = 1.84                 # Inductance du Humbucker parallèle [H]
 N_hp = np.sqrt((2 * L_hp * 1.5e-2) / (mu_0 * mu_r * S * K))
-Rs_hs = 15.1e3              # Resistance DC du Humbucker série [Ohm]
+Rs_hs = 15.34e3              # Resistance DC du Humbucker série [Ohm]
 L_hs = ...                  # Inductance du Humbucker parallèle [H]
 N_hs = ...
 
 """Constantes maquettes"""
 z_0 = 4e-3                  # Hauteur de la corde au repos [m]
 L = 0.845                   # Longueur de la corde [m]
-F = 78                      # Frequence fondamentale de la corde [Hz]
+F = 80                      # Frequence fondamentale de la corde [Hz]
 mu_c = 9e-3                 # Masse linéique de la corde [kg.m-1]
 T = 4 * mu_c * (L * F)**2   # Tension de la corde [N]
-x_s = 0.105                 # Position du SingleCoil [m]
-x_hp1, x_hp2 = 0.14, 0.16   # Position du Humbucker parallèle [m]
-x_hs1, x_hs2 = ..., ...     # Position du Humbucker série [m]
+x_s = 0.109                 # Position du SingleCoil [m]
 Delta = 20e-3               # Ecartement entre les bobinages [m]
 
 """Constantes magnétiques"""
@@ -104,12 +102,12 @@ def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:st
         line, = plt.plot(x, y, **kwargs)
         handles_curves.append(line)
     if title: plt.title(title)
+    if log: plt.xscale('log')
     if xlabel: plt.xlabel(xlabel)
     if ylabel: plt.ylabel(ylabel)
     if ylim is not None: plt.ylim(ylim)
     if xlim is not None: plt.xlim(xlim)
     plt.grid(True, alpha=0.6) # Grid plus discrète pour le contraste
-    if log: plt.xscale('log')
     if legend:
         # 1. Legende des courbes (Interne)
         leg_courbes = plt.legend(handles=handles_curves, loc='best', framealpha=1)
@@ -279,7 +277,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
 
         X_new = X + delta
         # Contrainte physique : paramètres toujours positifs
-        X_new = np.maximum(X_new, [1e-3, 1e-3, 1e-3]) 
+        X_new = np.maximum(X_new, [1e-2, 1e-2, 1e-2]) 
         eps_new = np.sum(residus(X_new, rs, f, Z_exp)**2)
         if eps_new < eps:
             alpha /= v
@@ -427,7 +425,7 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
     # l'inversion de polarité magnétique compense l'inversion du bobinage 
     return calculate_coil_fem(x1) + calculate_coil_fem(x2)
 
-def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: float) -> tuple[np.ndarray, np.ndarray]:
+def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float) -> tuple[np.ndarray, np.ndarray]:
     """Calcule la Fonction de Transfert Relative (Attenuation) du Humbucker 
     par rapport au Single Coil en fonction de la frequence.
     Modèle : Filtrage en peigne dû à l'ecartement des bobines.
@@ -435,9 +433,6 @@ def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: f
         frequences (np.ndarray): Tableau des fréquences
         x1 (float): Position du 1er bobinage du micro humbucker sur la corde
         x2 (float): Position du 2ème bobinage du micro humbucker sur la corde
-        xm (float): Position du micro singlecoil sur la corde
-        L (float): Longueur de la corde
-        F (float): Fréquence fondamentale de la corde
     Returns:
         tuple[np.ndarray, np.ndarray]: fonction de transfert en dB du Humbucker par rapport au Single Coil, et atténuation due au filtre peigne seul
     """
@@ -446,7 +441,7 @@ def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float, xm: f
     delta_x = abs(x2-x1)
     x_humbucker = (x2+x1)/2
     
-    signal_sc = np.abs(np.sin(k * xm))
+    signal_sc = np.abs(np.sin(k * x_s))
 
     # Signal HB (Position + Filtre Peigne)
     # Note : x_humbucker est le centre du micro
