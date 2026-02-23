@@ -13,11 +13,7 @@ Auteur: Christophe Morel.
 Projet: TIPE N°39662 - Session 2026.
 """
 
-                                            #!####################!#
-                                            #!   Bibliothèques    !#
-                                            #!####################!#
-
-print("\nImportation des bibliotheques...")
+# --- Importations des bibliothèques ---
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -29,20 +25,15 @@ plt.close("all")
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 print("Bibliotheques importees.")
 
-                                            #!####################!#
-                                            #!    Constantes      !#
-                                            #!####################!#
-
-print("\nInitialisation des constantes")
 
 # --- Constante pour code ---
 tracer_fft = True
 PATH_exp = "Python/Exports/02-Reponse_mecanique/"
-Na = 20
-Te = 1
-Ne = 10000
-fs = Ne / Te
-yerr_temp = (1e-5 / 2 )
+Na = 20         # Nombre de mode considérés
+Te = 1          # Temps d'echentillonage [s]
+Ne = 10000      # Nombre de point d'echantillonage
+fs = Ne / Te    # Frequence d'echantillonage [Hz]
+yerr_temp = (1e-5 / 2 )         # Incertitude de mesure oscillo [V]
 
 # --- Variables ---
 mu_0 = 4e-7 * np.pi         # Permeabilite magnetique du vide [H.m-1]
@@ -66,29 +57,25 @@ F = 80                      # Frequence fondamentale [Hz]
 kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
 kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
 kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
-kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
-kw_Hs_exp = {'color': "#00AB00", 'label': 'Humbucker série - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
-kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
+kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':':'}
+kw_Hs_exp = {'color': "#00AB00", 'label': 'Humbucker série - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':':'}
+kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':':'}
 kw_peigne = {'color': '#006400', 'label': 'Peigne Spatial  Théorie', 'linewidth': 2}
 kw_peigne_exp = {'color': "#00AB00", 'label': 'Peigne spatial - Experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
+Title = "Spectre de la tension en sortie des micros\n(Fondamental à " + str(F) + " Hz)"
 
-                                            #!####################!#
-                                            #!      Get data      !#
-                                            #!####################!#
-
+# --- Lecture des données experimentales ---
 def lire_fichier(PATH):
     List_temps = []
     List_sig = []
     file_s2 = open(PATH)
     L_lignes = file_s2.readlines()
-
     for ligne in L_lignes[2:]:
         ligne = ligne.strip().split(',')
         ligne = [x.replace('\n', '') for x in ligne]
         ligne = [x.replace('E', 'e') for x in ligne]
         List_temps.append(float(ligne[0]))
         List_sig.append(float(ligne[1]))
-    
     return np.array(List_temps), np.array(List_sig)
 
 temps_s, V_s_exp = lire_fichier("Python/data/raw/02-Reponse_meca/S2.csv")
@@ -96,19 +83,7 @@ temps_hp, V_hp_exp = lire_fichier("Python/data/raw/02-Reponse_meca/Hp2.csv")
 temps_hs, V_hs_exp = lire_fichier("Python/data/raw/02-Reponse_meca/Hs3.csv")
 
 
-                                            #!####################!#
-                                            #!         FFT        !#
-                                            #!####################!#
-
-print("\nCalcul des tensions induites...")
-print("\nEchantillonnage...")
-print("\nParametres d'echantillonnage (avec unites) :")
-print(f"Te = {Te} s")
-print(f"Ne = {Ne} echantillons")
-print(f"fs = {fs:.6g} Hz")
-print(f"Na = {Na} mode consideres")
-print("\nCalcul des tensions en reponse a la vibration de la corde...")
-
+# --- Calcul des FFT ---
 temps = np.linspace(-Te/2, Te/2, Ne)
 V_s_th = mod.fem_singlecoil(Na, temps, A0, x0)
 V_hp_th = mod.fem_humbucker(Na, N_hp, x_hp1, x_hp2, temps, A0, x0) / 2
@@ -118,7 +93,7 @@ fft_s_th = mod.compute_and_normalize_fft(V_s_th, Ne)
 fft_hp_th = mod.compute_and_normalize_fft(V_hp_th, Ne)
 fft_hs_th = mod.compute_and_normalize_fft(V_hs_th, Ne)
 
-# Recalculate with actual experimental data sizes
+# Nombre d'echantillon experimental
 Ne_s = len(V_s_exp)
 Ne_hp = len(V_hp_exp)
 Ne_hs = len(V_hs_exp)
@@ -132,38 +107,32 @@ yerr_s_fft_abs = yerr_temp / np.sqrt(Ne_s)
 yerr_hp_fft_abs = yerr_temp / np.sqrt(Ne_hp)
 yerr_hs_fft_abs = yerr_temp / np.sqrt(Ne_hs)
 
-print(f"\nIncertitude CSV: {yerr_temp:.2e} V")
-print(f"Incertitude FFT (S): {yerr_s_fft_abs:.2e} V")
-print(f"Incertitude FFT (Hp): {yerr_hp_fft_abs:.2e} V")
-print(f"Incertitude FFT (Hs): {yerr_hs_fft_abs:.2e} V")
-
-# Create frequency arrays for each dataset
+# Tableau de fréquence pour chaque données
 freqs_th = np.fft.fftfreq(Ne, 1 / (len(V_s_th) / (temps[-1] - temps[0])))
 freqs_s_exp = np.fft.fftfreq(Ne_s, 1 / (len(V_s_exp) / (temps_s[-1] - temps_s[0])))
 freqs_hp_exp = np.fft.fftfreq(Ne_hp, 1 / (len(V_hp_exp) / (temps_hp[-1] - temps_hp[0])))
 freqs_hs_exp = np.fft.fftfreq(Ne_hs, 1 / (len(V_hs_exp) / (temps_hs[-1] - temps_hs[0])))
 
-# Apply masks separately for theory and each experiment
-mask_th = (40 < freqs_th) & (freqs_th <= 800)
-mask_s = (40 < freqs_s_exp) & (freqs_s_exp <= 800)
-mask_hp = (40 < freqs_hp_exp) & (freqs_hp_exp <= 800)
-mask_hs = (40 < freqs_hs_exp) & (freqs_hs_exp <= 800)
+# Masque d'affichage entre 40Hz et 2000Hz
+mask_th = (40 < freqs_th) & (freqs_th <= 2000)
+mask_s = (40 < freqs_s_exp) & (freqs_s_exp <= 2000)
+mask_hp = (40 < freqs_hp_exp) & (freqs_hp_exp <= 2000)
+mask_hs = (40 < freqs_hs_exp) & (freqs_hs_exp <= 2000)
 
-# Filter all arrays consistently
 freqs_th = freqs_th[mask_th]
 fft_s_th = mod.normalize_signal(fft_s_th[mask_th])
 fft_hp_th = mod.normalize_signal(fft_hp_th[mask_th])
 fft_hs_th = mod.normalize_signal(fft_hs_th[mask_th])
 
-# Normaliser les FFT ET l'incertitude avec le même facteur
+# Normaliser les FFT ET l'incertitude
 max_fft_s = np.max(fft_s_exp_abs)
 max_fft_hp = np.max(fft_hp_exp_abs)
 max_fft_hs = np.max(fft_hs_exp_abs)
 
 freqs_s_exp = freqs_s_exp[mask_s]
 fft_s_exp_filtered = fft_s_exp_abs[mask_s]
-fft_s_exp = fft_s_exp_filtered / max_fft_s  # Normalisation manuelle
-yerr_s_exp = np.full_like(fft_s_exp_filtered, yerr_s_fft_abs) / max_fft_s  # Même normalisation
+fft_s_exp = fft_s_exp_filtered / max_fft_s 
+yerr_s_exp = np.full_like(fft_s_exp_filtered, yerr_s_fft_abs) / max_fft_s
 
 freqs_hp_exp = freqs_hp_exp[mask_hp]
 fft_hp_exp_filtered = fft_hp_exp_abs[mask_hp]
@@ -197,10 +166,7 @@ print(f"  - Incertitude relative: {np.mean(yerr_hs_exp / (fft_hs_exp + 1e-12))*1
 
 print("="*60 + "\n")
 
-print("FFT calculees.")
-Title = "Spectre de la tension en sortie des micros\n(Fondamental à " + str(F) + " Hz)"
-print("Affichage des FFT...")
-
+# --- Enregistrer les spectres ---
 mod.save_plot(PATH_exp + "FFT/Theorie.png",
         (freqs_th, fft_s_th, kw_S_th),
         (freqs_th, fft_hp_th, kw_Hp_th),
@@ -233,97 +199,16 @@ mod.save_plot(PATH_exp + "FFT/Humbucker_serie.png",
         title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
-print("\nAffichage des courbes...")
-
-#* --- Attenuation --- *#
-#* --- Attenuation --- *#
-
-# Réduire prominence et distance pour détecter plus de pics
+# --- Mise en evidence du filtrage spatial ---
 freqs = np.linspace(10, 20000, 1000)
 L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=0.04, distance=5)
 L_freqs, L_pic_h_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
-
 peigne_exp = 20*np.log10(L_pic_h_exp / L_pic_s_exp)
-ratio_th, peigne = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
+ratio_th_hs, peigne_hs = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
 
 mod.save_plot(PATH_exp + "Filtrage_spatial.png",
-    (freqs, ratio_th, {'color': "#444444", 'label': "Gain Theorique [$dB$]", "linewidth": 0.5}),
+    (freqs, ratio_th_hs, {'color': "#444444", 'label': "Gain Theorique S [$dB$]", "linewidth": 0.5}),
     (L_freqs, peigne_exp, kw_peigne_exp),
-    (freqs, peigne, kw_peigne),
+    (freqs, peigne_hs, kw_peigne),
     title=f"Influence de la position du micro sur le spectre\nFiltrage spatial pour un fondamental à {F}$Hz$", 
     xlabel="Frequence [$Hz$]", ylabel="Gain relatif [$dB$]", xlim=(0, 20_000), log=True, vspan=True)
-
-Te = 0.1
-Ne = 1000
-fs = Ne / Te
-
-T_fundamental = 1 / F  # Période fondamentale
-t_range = 3 * T_fundamental  # 3 périodes
-t_min = -t_range / 2
-t_max = t_range / 2
-
-print(f"Période fondamentale: {T_fundamental:.6f} s")
-print(f"Plage affichée: [{t_min:.6f}, {t_max:.6f}] s")
-print(f"Durée affichée: {t_range:.6f} s (3 périodes)")
-
-# Générer les temps théoriques avec la bonne résolution
-temps = np.linspace(-Te/2, Te/2, Ne)
-V_s_th = mod.fem_singlecoil(Na, temps, A0, x0)
-V_hp_th = mod.fem_humbucker(Na, N_hp, x_hp1, x_hp2, temps, A0, x0) / 2
-V_hs_th = mod.fem_humbucker(Na, N_hs, x_hs1, x_hs2, temps, A0, x0) / 2
-
-# Créer les masques pour les plages temporelles
-mask_temps_th = (temps >= t_min) & (temps <= t_max)
-mask_temps_s = (temps_s >= t_min) & (temps_s <= t_max)
-mask_temps_hp = (temps_hp >= t_min) & (temps_hp <= t_max)
-mask_temps_hs = (temps_hs >= t_min) & (temps_hs <= t_max)
-
-# Filtrer les données
-temps_th = temps[mask_temps_th]
-V_s_th = V_s_th[mask_temps_th]
-V_hp_th = V_hp_th[mask_temps_th]
-V_hs_th = V_hs_th[mask_temps_th]
-
-temps_s = temps_s[mask_temps_s]
-V_s_exp = V_s_exp[mask_temps_s]
-
-temps_hp = temps_hp[mask_temps_hp]
-V_hp_exp = V_hp_exp[mask_temps_hp]
-
-temps_hs = temps_hs[mask_temps_hs]
-V_hs_exp = V_hs_exp[mask_temps_hs]
-
-# --- Comparaison des micros Théorie ---
-mod.save_plot(PATH_exp + "temporel/Theorique.png",
-        (temps_th, V_s_th, kw_S_th),
-        (temps_th, V_hp_th, kw_Hp_th),
-        (temps_th, V_hs_th, kw_Hs_th),
-        title="Tension induite dans les micros - 3 périodes\n(Fondamental à " + str(F) + " Hz)",
-        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
-print(f"Courbes sauvegardées sous {PATH_exp}temporel/Theorique.png")
-
-# --- Micro Singlecoil ---
-mod.save_plot(PATH_exp + "temporel/Singlecoil.png",
-        (temps_s, V_s_exp, kw_S_exp),
-        (temps_th, V_s_th, kw_S_th),
-        title="Tension induite dans le micro SingleCoil - 3 périodes\n(Fondamental à " + str(F) + " Hz)",
-        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
-print(f"Courbes sauvegardées sous {PATH_exp}temporel/Singlecoil.png")
-
-# --- Micro Humbucker parallèle ---
-mod.save_plot(PATH_exp + "temporel/Humbucker_parra.png",
-        (temps_hp, V_hp_exp, kw_Hp_exp),
-        (temps_th, V_hp_th, kw_Hp_th),
-        title="Tension induite dans le micro Humbucker parallèle - 3 périodes\n(Fondamental à " + str(F) + " Hz)",
-        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
-print(f"Courbes sauvegardées sous {PATH_exp}temporel/Humbucker_parra.png")
-
-# --- Micro Humbucker série ---
-mod.save_plot(PATH_exp + "temporel/Humbucker_serie.png",
-        (temps_hs, V_hs_exp, kw_Hs_exp),
-        (temps_th, V_hs_th, kw_Hs_th),
-        title="Tension induite dans le micro Humbucker série - 3 périodes\n(Fondamental à " + str(F) + " Hz)",
-        xlabel="Temps [$s$]", ylabel="Tension [$V$]")
-print(f"Courbes sauvegardées sous {PATH_exp}temporel/Humbucker_serie.png")
-
-print("\nAffichage temporel terminé !")

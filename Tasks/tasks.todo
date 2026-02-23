@@ -83,7 +83,7 @@ C'est ton plus gros point d'amelioration theorique.
 Ton diagramme de Bode est très theorique. Dans la vraie vie, un guitariste branche un **câble Jack**.
 * **La physique :** Un câble coaxial ajoute une capacite lineique ($\approx 100 \text{ à } 150 \text{ pF/m}$). Un câble de 3m ajoute $\approx 400 \text{ pF}$ en parallèle.
 * **L'impact :** Cela fait chuter ta frequence de resonance $f_0$ drastiquement (le son change).
-* **L'experience facile (2 semaines) :**
+* **L'expérimentale facile (2 semaines) :**
     * Ajoute des condensateurs connus en parallèle de ton micro sur ta maquette.
     * Refais ton Bode ou ta FFT.
     * Montre le deplacement du pic de resonance.
@@ -133,7 +133,7 @@ Voici les deux methodes pour le faire, de la plus "physique" à la plus "electro
 **Le Principe :** Utiliser vos bobines de Helmholtz non plus pour creer un parasite à 50Hz, mais pour creer un champ magnetique "balayant" toutes les frequences (20 Hz à 20 kHz).
 
 **Le Protocole :**
-1.  **Montage :** Placez le micro au centre des bobines de Helmholtz (comme pour l'experience bruit).
+1.  **Montage :** Placez le micro au centre des bobines de Helmholtz (comme pour l'expérimentale bruit).
 2.  **Source :** Branchez le GBF sur les bobines de Helmholtz.
 3.  **Signal :** Configurez le GBF en mode **"Sweep" (Balayage)** sinusoïdal logarithmique de **100 Hz à 20 kHz**.
 4.  **Mesure :** Branchez la sortie du micro sur l'oscilloscope (Voie 2).

@@ -18,8 +18,8 @@ try:
 except OSError:
     # Generation de donnees factices pour l'exemple si le fichier est absent
     print("Fichier introuvable, generation de donnees de test...")
-    t_test = np.linspace(0, 1/freq, 200)
-    angles = t_test * omega
+    t_exp = np.linspace(0, 1/freq, 200)
+    angles = t_exp * omega
     deplacement = np.sin(angles)
     # Flux avec bruit numerique simule
     flux = 3e-6 * (1 - 0.1*np.sin(angles)) + 1e-8 * np.random.normal(0, 1, 200)

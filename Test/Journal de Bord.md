@@ -22,7 +22,7 @@ POUR LA PROCHAINE FOIS :
 
 ## Jour 2 : 17/11/25
 
-Deuxieme journee d'experience
+Deuxieme journee d'expérimentale
 
 - Humbucker : OK
   - Test corde seule --> Coherent

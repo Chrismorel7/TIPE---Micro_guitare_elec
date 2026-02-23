@@ -134,3 +134,9 @@ for i in range(len(L_path_in)):
     print(f"Fichier : {L_path_in[i]} : ...")
     comparer_filtres(L_path_in[i], L_path_out[i])
     print(f"Fichier : {L_path_in[i]} : done")
+    
+for i in range(len(L_path_in)):
+    print(f"Fichier : {L_path_in[i]} : ...")
+    L_temps, sig_brut = lire_fichier(L_path_in[i])
+    write_file(L_path_out[i], L_temps, filtre_passe_bas_1er_ordre(sig_brut, L_temps))
+    print(f"Fichier : {L_path_in[i]} : done")

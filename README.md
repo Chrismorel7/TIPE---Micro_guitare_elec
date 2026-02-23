@@ -77,7 +77,7 @@ https://www.seymourduncan.com/blog/latest-updates/seymour-w-duncans-interview-wi
 
 • Tasks : Liste des taches
 
-• Test : Compte rendu et photo experience
+• Test : Compte rendu et photo expérimentale
 
 • Views : Fichier de presentation
 
