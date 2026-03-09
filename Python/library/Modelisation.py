@@ -93,7 +93,7 @@ def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:st
     z_handles = []
     
     if vspan:
-        z2 = plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, 
+        z2 = plt.axvspan(82.41, 1174.66, color="#ADD8E6", alpha=0.6, 
                         label="Frequences fondamentales", zorder=0)
         z1 = plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
@@ -434,12 +434,13 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
     # l'inversion de polarité magnétique compense l'inversion du bobinage 
     return calculate_coil_fem(x1) + calculate_coil_fem(x2)
 
-def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float) -> tuple[np.ndarray, np.ndarray]:
+def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Calcule la Fonction de Transfert Relative (Attenuation) du Humbucker 
     par rapport au Single Coil en fonction de la frequence.
     Modèle : Filtrage en peigne dû à l'ecartement des bobines.
     Args:
         frequences (np.ndarray): Tableau des fréquences
+        xm (float): Position du micro SingleCoil
         x1 (float): Position du 1er bobinage du micro humbucker sur la corde
         x2 (float): Position du 2ème bobinage du micro humbucker sur la corde
     Returns:
@@ -447,20 +448,14 @@ def attenuation_theorique_db(frequences: np.ndarray, x1: float, x2: float) -> tu
     """
     v = 2 * L * F
     k = 2 * np.pi * frequences / v
-    delta_x = abs(x2-x1)
+    Delta = abs(x2-x1)
     x_humbucker = (x2+x1)/2
     
-    signal_sc = np.abs(np.sin(k * x_s))
-
-    # Signal HB (Position + Filtre Peigne)
-    # Note : x_humbucker est le centre du micro
-    filtre_peigne = np.cos(k * delta_x / 2)
-    signal_hb = np.abs(np.sin(k * x_humbucker)) * np.abs(filtre_peigne)
-
-    # Ratio Theorique (Avec gestion de la division par zero)
-    ratio = np.divide(signal_hb, signal_sc, out=np.zeros_like(signal_sc), where=signal_sc!=0)
-    ratio_db = 20 * np.log10(ratio + 1e-6)
-    return ratio_db, 20*np.log10(np.abs(np.cos(k*delta_x/2)))
+    signal_sc = np.sin(k * x_s)
+    Peigne_hb = np.cos(k * Delta / 2)
+    signal_hb = 2*Peigne_hb*np.sin(k * x_humbucker)
+    
+    return signal_hb, Peigne_hb,signal_sc
 
 
                                             #!####################!#

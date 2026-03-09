@@ -49,12 +49,12 @@ alpha = 4                   # Coefficient alpha [m-1]
 Delta = 0.018
 
 # --- Couleurs graphiques ---
-kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
-kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
-kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
-kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':'None'}
-kw_Hs_exp = {'color': '#00CD00', 'label': 'Humbucker série - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':'None'}
-kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':'None'}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
+kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
 
 # --- Données experimentales ---
 List_Bpar = np.array([0, 5.5, 11, 16.5, 22, 27.5, 33, 38.5, 44, 49.5]) * 10**-6
@@ -113,11 +113,11 @@ eps_cmrrp = abs((CMRRp_th - CMRRp_exp) / (CMRRp_th)) * 100
 mod.save_plot(PATH_out + "Droite_de_sensibilite.png",
         (List_Bpar*1e6, List_amp_s_th*1e3, kw_S_th),
         (List_Bpar*1e6, List_amp_s_exp*1e3, kw_S_exp),
+        (List_Bpar*1e6, List_amp_hs_th*1e3, kw_Hs_th),
         (List_Bpar*1e6, List_amp_hp_th*1e3, kw_Hp_th),
         (List_Bpar*1e6, List_amp_hp_exp*1e3, kw_Hp_exp),
-        (List_Bpar*1e6, List_amp_hs_th*1e3, kw_Hs_th),
-        title="Tension induite dans le micro en fonction d'un \nchamp magnetique exterieur à 50 $Hz$",
-        xlabel="Amplitude du champ parasite [$µT$]", ylabel="Amplitude Tension [$mV$]")
+        title="Sensibilité des micros à un champ magnétique exterieur ($50$ Hz)",
+        xlabel="Amplitude du champ parasite [$µT$]", ylabel="Amplitude de la tension induite [$mV$]")
 
 print(f"k_s = {ks*10**-3} mV/microTesla")
 print(f"k_hp = {khp*10**-3} mV/microTesla")

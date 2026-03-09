@@ -54,15 +54,14 @@ x0 = 0.300                  # Origine de la perturbation [m]
 F = 80                      # Frequence fondamentale [Hz]
 
 # --- Couleurs graphiques ---
-kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
-kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
-kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
-kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':':'}
-kw_Hs_exp = {'color': "#00AB00", 'label': 'Humbucker série - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':':'}
-kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':':'}
-kw_peigne = {'color': '#006400', 'label': 'Peigne Spatial  Théorie', 'linewidth': 2}
-kw_peigne_exp = {'color': "#00AB00", 'label': 'Peigne spatial - Experience', 'marker':"o", 'markersize':5, 'linestyle':':'}
-Title = "Spectre de la tension en sortie des micros\n(Fondamental à " + str(F) + " Hz)"
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
+kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker':"o", 'markersize':8, 'linestyle':':'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker':"o", 'markersize':8, 'linestyle':':'}
+kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker':"o", 'markersize':8, 'linestyle':':'}
+
+Title = "Spectre de la tension induite dans le micro"
 
 # --- Lecture des données experimentales ---
 def lire_fichier(PATH):
@@ -114,15 +113,20 @@ freqs_hp_exp = np.fft.fftfreq(Ne_hp, 1 / (len(V_hp_exp) / (temps_hp[-1] - temps_
 freqs_hs_exp = np.fft.fftfreq(Ne_hs, 1 / (len(V_hs_exp) / (temps_hs[-1] - temps_hs[0])))
 
 # Masque d'affichage entre 40Hz et 2000Hz
-mask_th = (40 < freqs_th) & (freqs_th <= 2000)
-mask_s = (40 < freqs_s_exp) & (freqs_s_exp <= 2000)
-mask_hp = (40 < freqs_hp_exp) & (freqs_hp_exp <= 2000)
-mask_hs = (40 < freqs_hs_exp) & (freqs_hs_exp <= 2000)
+mask_th = (40 < freqs_th) & (freqs_th <= 800)
+mask_s = (40 < freqs_s_exp) & (freqs_s_exp <= 800)
+mask_hp = (40 < freqs_hp_exp) & (freqs_hp_exp <= 800)
+mask_hs = (40 < freqs_hs_exp) & (freqs_hs_exp <= 800)
 
 freqs_th = freqs_th[mask_th]
 fft_s_th = mod.normalize_signal(fft_s_th[mask_th])
 fft_hp_th = mod.normalize_signal(fft_hp_th[mask_th])
 fft_hs_th = mod.normalize_signal(fft_hs_th[mask_th])
+
+freqs_env = np.linspace(80, 800, 800)
+envelope = (F / freqs_env) ** 1
+kw_env = {'color': 'k', 'linestyle': '--', 'label': 'Enveloppe $1/n$'}
+
 
 # Normaliser les FFT ET l'incertitude
 max_fft_s = np.max(fft_s_exp_abs)
@@ -166,49 +170,100 @@ print(f"  - Incertitude relative: {np.mean(yerr_hs_exp / (fft_hs_exp + 1e-12))*1
 
 print("="*60 + "\n")
 
-# --- Enregistrer les spectres ---
-mod.save_plot(PATH_exp + "FFT/Theorie.png",
+mod.save_plot(PATH_exp + "FFT/Singlecoil_th.png",
         (freqs_th, fft_s_th, kw_S_th),
-        (freqs_th, fft_hp_th, kw_Hp_th),
-        (freqs_th, fft_hs_th, kw_Hs_th),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee")
-print(f"FFT sauvegardees sous {PATH_exp + "FFT/Theorie.png"}")
-
-mod.save_plot(PATH_exp + "FFT/Experience.png",
-        (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
-        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
-        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
+        (freqs_env, envelope, kw_env),
         title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-print(f"FFT sauvegardees sous {PATH_exp + "FFT/Experience.png"}")
-
-mod.save_plot(PATH_exp + "FFT/Singlecoil.png",
+mod.save_plot(PATH_exp + "FFT/Singlecoil_exp.png",
         (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
+        (freqs_env, envelope, kw_env),
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
+mod.save_plot(PATH_exp + "FFT/Singlecoil.png",
         (freqs_th, fft_s_th, kw_S_th),
+        (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
+        (freqs_env, envelope, kw_env),
         title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Singlecoil.png"}")
 
-mod.save_plot(PATH_exp + "FFT/Humbucker_parra.png",
-        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
+
+mod.save_plot(PATH_exp + "FFT/Humbucker_parra_th.png",
         (freqs_th, fft_hp_th, kw_Hp_th),
+        (freqs_env, envelope, kw_env),
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
+mod.save_plot(PATH_exp + "FFT/Humbucker_parra_exp.png",
+        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
+        (freqs_env, envelope, kw_env),
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
+mod.save_plot(PATH_exp + "FFT/Humbucker_parra.png",
+        (freqs_th, fft_hp_th, kw_Hp_th),
+        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
+        (freqs_env, envelope, kw_env),
         title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
-mod.save_plot(PATH_exp + "FFT/Humbucker_serie.png",
-        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
+mod.save_plot(PATH_exp + "FFT/Humbucker_serie_th.png",
         (freqs_th, fft_hs_th, kw_Hs_th),
+        (freqs_env, envelope, kw_env),
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
+mod.save_plot(PATH_exp + "FFT/Humbucker_serie_exp.png",
+        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
+        (freqs_env, envelope, kw_env),
+        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
+mod.save_plot(PATH_exp + "FFT/Humbucker_serie.png",
+        (freqs_th, fft_hs_th, kw_Hs_th),
+        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
+        (freqs_env, envelope, kw_env),
         title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
 # --- Mise en evidence du filtrage spatial ---
-freqs = np.linspace(10, 20000, 1000)
+kw_peigne = {'color': "#000000", 'label': 'Peigne spatial', 'linewidth': 3}
+kw_att = {'color': "#888888", 'label': 'Gain relatif', 'linewidth': 1}
+
+
+freqs = np.linspace(80, 800, 800)
+Amplitude_standard_th = envelope
+signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
+signal_hp, peigne_hp, signal_sc = mod.attenuation_theorique_db(freqs, x_hp1, x_hp2)
+
+Attenuation_s_th = 20*np.log10(np.abs(signal_sc + 1e-6))
+Attenuation_hs_th = 20*np.log10(np.abs(signal_hs + 1e-6))
+Attenuation_hp_th = 20*np.log10(np.abs(signal_hp + 1e-6))
+
 L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=0.04, distance=5)
-L_freqs, L_pic_h_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
-peigne_exp = 20*np.log10(L_pic_h_exp / L_pic_s_exp)
-ratio_th_hs, peigne_hs = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
+L_freqs, L_pic_hs_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
+L_freqs, L_pic_hp_exp = mod.extraire_pics_separes(freqs_hp_exp, fft_hp_exp, prominence=0.03, distance=5)
+n_harmonics_exp = np.round(L_freqs / F).astype(int)
+Amplitude_standard_exp = 1 / n_harmonics_exp
+
+Attenuation_s_exp = 20*np.log10(L_pic_s_exp / Amplitude_standard_exp + 1e-6)
+Attenuation_hs_exp = 20*np.log10(L_pic_hs_exp / Amplitude_standard_exp + 1e-6)
+Attenuation_hp_exp = 20*np.log10(L_pic_hp_exp / Amplitude_standard_exp + 1e-6)
 
 mod.save_plot(PATH_exp + "Filtrage_spatial.png",
-    (freqs, ratio_th_hs, {'color': "#444444", 'label': "Gain Theorique S [$dB$]", "linewidth": 0.5}),
-    (L_freqs, peigne_exp, kw_peigne_exp),
-    (freqs, peigne_hs, kw_peigne),
-    title=f"Influence de la position du micro sur le spectre\nFiltrage spatial pour un fondamental à {F}$Hz$", 
-    xlabel="Frequence [$Hz$]", ylabel="Gain relatif [$dB$]", xlim=(0, 20_000), log=True, vspan=True)
+        (freqs, Attenuation_s_th, kw_S_th),
+        (L_freqs, Attenuation_s_exp, kw_S_exp),
+        (freqs, Attenuation_hs_th, kw_Hs_th),
+        (L_freqs, Attenuation_hs_exp, kw_Hs_exp),
+        #(freqs, Attenuation_hp_th, kw_Hp_th),
+        #(L_freqs, Attenuation_hp_exp, kw_Hp_exp),
+        #(freqs, peigne_hs, kw_peigne),
+        title=f"Mise en évidence du filtrage spatial", 
+        xlabel="Frequence [$Hz$]", ylabel="Écart par rapport à $1/n$ [dB]", xlim=(80, 800), 
+        #log=True
+        )
+
+freqs = np.linspace(30, 20000, 1000)
+signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
+signal_hp, peigne_hp, signal_sc = mod.attenuation_theorique_db(freqs, x_hp1, x_hp2)
+
+Attenuation_th = 20*np.log10(np.abs(signal_hs / (signal_sc + 1e-6)) + 1e-6)
+Attenuation_exp = 20*np.log10(np.abs(L_pic_hs_exp / (L_pic_s_exp + 1e-6)) + 1e-6)
+mod.save_plot(PATH_exp + "Filtrage_spatial.png",
+        (freqs, Attenuation_th, kw_att),
+        (L_freqs, Attenuation_exp, kw_Hs_exp),
+        (freqs, 20*np.log10(np.abs(peigne_hs)+1e-6), kw_peigne),
+        title=f"Filtrage spatial du micro Humbucker série", 
+        xlabel="Frequence [$Hz$]", ylabel="Gain [dB]", xlim=(30, 20000), vspan=True,
+        log=True
+        )

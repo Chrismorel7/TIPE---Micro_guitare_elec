@@ -40,12 +40,12 @@ u_res = 0.01   # Incertitude sur tension mesurée [V]
 u_R = 97.6e3 * 0.01  # Incertitude sur R : ±1% (spec résistance de précision)
 
 # --- Graphique ---
-kw_Hp_th = {'color': '#000080', 'label': 'Humbucker parallèle - Théorie', 'linewidth': 2}
-kw_S_th = {'color': '#8B0000', 'label': 'SingleCoil - Théorie', 'linewidth': 2}
-kw_Hs_th = {'color': '#006400', 'label': 'Humbucker série - Théorie', 'linewidth': 2}
-kw_Hp_exp = {'color': '#9400D3', 'label': 'Humbucker parallèle - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':'None'}
-kw_Hs_exp = {'color': '#00CD00', 'label': 'Humbucker série - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':'None'}
-kw_S_exp = {'color': '#FF8C00', 'label': 'SingleCoil - expérimentale', 'marker':"o", 'markersize':5, 'linestyle':'None'}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
+kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
 
 
 # --- Fonction pour lire les fichier experimentaux ---
@@ -148,8 +148,8 @@ gain_hs, phase_hs = mod.calcul_bode(X_hs, Rs_hs, freq, Ramp)
 # -- Courbe Convergence Algo ---
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence.png",
             (range(1,31), L_S[0]*100, kw_S_th),
-            (range(1,31), L_S[1]*100, kw_Hp_th),
             (range(1,31), L_S[2]*100, kw_Hs_th),
+            (range(1,31), L_S[1]*100, kw_Hp_th),
             title="Convergence de l'algorithme de Levenberg-Marquardt",
             xlabel="Nombre d'iteration [.]",
             ylabel="Image de l'erreur [%]")
@@ -158,12 +158,12 @@ mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence.png
 # --- Diagramme de Bode ---
 plt.figure(figsize=(8,6))
 plt.subplot(2, 1, 1)
-plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, label="Frequences fondamentales", zorder=0)
+plt.axvspan(82.41, 1174.66, color="#ADD8E6", alpha=0.6, label="Frequences fondamentales", zorder=0)
 plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
 plt.plot(freq, gain_s, **kw_S_th)
-plt.plot(freq, gain_hp, **kw_Hp_th)
 plt.plot(freq, gain_hs, **kw_Hs_th)
+plt.plot(freq, gain_hp, **kw_Hp_th)
 plt.xscale('log')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
 plt.ylabel("Gain [$dB$]")
@@ -172,12 +172,12 @@ plt.xlabel("Frequence [$Hz$]")
 plt.xlim((10, 30000))
 
 plt.subplot(2, 1, 2)
-plt.axvspan(82.41, 1174.66, color="#F0E68C", alpha=0.3, label="Frequences fondamentales", zorder=0)
+plt.axvspan(82.41, 1174.66, color="#ADD8E6", alpha=0.6, label="Frequences fondamentales", zorder=0)
 plt.axvspan(1174.66, 5*1174.66, facecolor="none", alpha=0.5, hatch="////", 
                         edgecolor="#424242", label="Frequences harmoniques", zorder=0)
 plt.plot(freq, phase_s, **kw_S_th)
-plt.plot(freq, phase_hp, **kw_Hp_th)
 plt.plot(freq, phase_hs, **kw_Hs_th)
+plt.plot(freq, phase_hp, **kw_Hp_th)
 plt.xscale('log')
 plt.grid(which='both', linestyle='--', linewidth=0.5)
 plt.ylabel("Phase [$°$]")
@@ -187,14 +187,27 @@ plt.legend(loc='lower left')
 plt.savefig("Python/Exports/01-Reponse_electrique_frequetielle/00-Bode.png")
 plt.close()
 
+mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/01-Gain.png",
+                (freq, gain_s, kw_S_th),
+                (freq, gain_hs, kw_Hs_th),
+                (freq, gain_hp, kw_Hp_th),
+                xlabel="Frequence $[Hz]$",
+                ylabel="Gain $[dB]$",
+                vspan=True,
+                legend=True,
+                xlim=(30, 20000),
+                title="Diagramme de Bode des micros",
+                log=True)
+
+
 # --- Courbe Z = f(w) ---
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Impedance.png",
-                (f, Z_s*1e-3, kw_S_exp),
-                (f, Z_hp*1e-3, kw_Hp_exp),
-                (f, Z_hs*1e-3, kw_Hs_exp),
                 (freq, mod.Z_micro(X_s, Rs_s, 2*np.pi*freq)*1e-3, kw_S_th),
-                (freq, mod.Z_micro(X_hp, Rs_hp, 2*np.pi*freq)*1e-3, kw_Hp_th),
+                (f, Z_s*1e-3, kw_S_exp),
                 (freq, mod.Z_micro(X_hs, Rs_hs, 2*np.pi*freq)*1e-3, kw_Hs_th),
+                (f, Z_hs*1e-3, kw_Hs_exp),
+                (freq, mod.Z_micro(X_hp, Rs_hp, 2*np.pi*freq)*1e-3, kw_Hp_th),
+                (f, Z_hp*1e-3, kw_Hp_exp),
                 title=r"Impedances des micros $|Z|$ en fonction de la frequence",
                 xlabel="Frequence [$Hz$]",
                 ylabel=r"Impedance [$k\Omega$]",
