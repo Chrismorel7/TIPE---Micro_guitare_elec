@@ -4,137 +4,128 @@ Ce module implémente les modèles de transduction electromagnétique pour
 comparer les performances des micros SingleCoil et Humbucker. 
 Il repose sur la modélisation d'un champ magnétique exterieur parasite.
 
-Calculs principaux :
-    - Force électromotrice e(x, t) induite par Faraday
-    - Taux de rejection de mode commun CMRR
-    
 Auteur: Christophe Morel.
 Établissement: Lycée Ferdinand Buisson, CPGE PT.
 Projet: TIPE N°39662 - Session 2026.
 """
 
-# --- Importations des bibliothèques ---
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from library import Modelisation as mod
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
+import os
+
 plt.close("all")
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-
-# --- Constantes code ---
-PATH_out = "Python/Exports/03-Reponse_magnetique/"
-Te = 4000 * 0.00001     # Temps d'echantillonage [s]
-Ne = 4000               # Nombre d'echantillon [.]
-
-# --- Variable ---
-mu_0 = 4e-7 * np.pi         # Permeabilite magnetique du vide [H.m-1]
-mu_r = 3.5                  # Permeabilite relative de l'Alnico 5 [.]
-K = 0.7                     # Coeffient K [.]
-x_hp1, x_hp2 = 0.147, 0.165 # Position du micro humbucker [m]
-S = 1.5e-4                  # Surface de la bobine du micro [m2]
-Rs_s = 5.26e3               # Resistance DC du SingleCoil [Ohm]
-L_s = 2.43                   # Inductance du SingleCoil [H]
-N_s = np.sqrt((L_s * 1.5e-2) / (mu_0 * mu_r * S * K))
-L_hp = 1.77                  # Inductance du micro [H]
-N_hp = np.sqrt(L_hp * 1.5e-2 / (mu_0 * mu_r * S * K)) / 2
-L_hs = 4.71                  # Inductance du micro [H]
-N_hs = np.sqrt(L_hs * 1.5e-2 / (mu_0 * mu_r * S * K)) / 2
-FB = 50                     # Frequence du champ parasite [Hz]
-B0 = 46 * 10**(-6)          # Champ magnetique au centre des bobines Helmholtz [T]
-alpha = 4                   # Coefficient alpha [m-1]
+# --- Constantes physiques et géométriques ---
+mu_0 = 4e-7 * np.pi
+mu_r = 2
+K = 0.7
+S = 8e-4
+FB = 50 
+alpha = 2 
 Delta = 0.018
 
-# --- Couleurs graphiques ---
-kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
-kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
-kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
-kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
-kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+n_helmholtz = 95
+r_helmholtz = 0.065
 
-# --- Données experimentales ---
-List_Bpar = np.array([0, 5.5, 11, 16.5, 22, 27.5, 33, 38.5, 44, 49.5]) * 10**-6
+L_s = 2.43
+N_s = np.sqrt((L_s * 1.5e-2) / (mu_0 * mu_r * S * K))
 
-def _read_amplitude_file(path): # Lire les fichiers contenant les données
-    s_list = [0]
-    hp_list = [0]
-    with open(path, 'r') as fh:
-        lines = fh.readlines()
-    for ligne in lines[1:]:
-        cols = ligne.strip().split('\t')
-        cols = [c.replace('\n', '') for c in cols]
-        cols = [c.replace(',', '.') for c in cols]
-        label, amp_s = cols[0], float(cols[1])
-        if "Humbucker" in label:
-            hp_list.append(amp_s)
-        elif "Single Coil" in label:
-            s_list.append(amp_s)
-    return np.array(hp_list), np.array(s_list)
+L_hp = 1.77
+N_hp = np.sqrt(L_hp * 1.5e-2 / (mu_0 * mu_r * S * K)) / 2
 
-List_amp_hp_exp, List_amp_s_exp = _read_amplitude_file("Python/data/filter/!Reponse_magnetique_amplitude.csv")
+L_hs = 4.71
+N_hs = np.sqrt(L_hs * 1.5e-2 / (mu_0 * mu_r * S * K)) / 2
 
-# ajustement linéaire expérimental
-k_h_exp, _ = np.polyfit(List_Bpar, List_amp_hp_exp, 1)
-k_s_exp, _ = np.polyfit(List_Bpar, List_amp_s_exp, 1)
-List_amp_hp_exp_lin = k_h_exp * List_Bpar
-List_amp_s_exp_lin = k_s_exp * List_Bpar
+# --- Fonctions utilitaires ---
+def load_and_compute_B(filepath):
+    """Charge les données expérimentales et gère la première ligne comme incertitudes."""
+    try:
+        data = np.loadtxt(filepath, delimiter=',', skiprows=1)
+        
+        # Extraction des incertitudes (1ère ligne de données)
+        ui = data[0, 0]
+        usig = data[0, 2]
+        
+        # Extraction des mesures (lignes suivantes)
+        mesures = data[1:, :]
+        I_exp = mesures[:, 0]
+        e_exp = mesures[:, 2]
+        
+        # Conversion Courant -> Champ B
+        facteur_B = (4/5)**1.5 * (mu_0 * n_helmholtz) / r_helmholtz
+        B_exp = facteur_B * I_exp
+        u_B = facteur_B * ui  # Propagation de l'incertitude sur B
+        
+        return B_exp, e_exp, u_B, usig
+    except Exception as err:
+        logging.error(f"Erreur avec {filepath}: {err}")
+        return np.array([]), np.array([]), 0, 0
 
+def calc_sensibilite_exp(B, e):
+    """Régression linéaire passant par l'origine pour calculer la pente k."""
+    if len(B) == 0: return 0
+    return np.sum(B * e) / np.sum(B**2)
 
-# --- Données Théorique ---
-ks = N_s * S * 2 * np.pi * FB * mu_r
-khp = 0.5 * N_hp * S * 2 * np.pi * FB * mu_r * alpha * Delta
-khs = N_hs * S * 2 * np.pi * FB * mu_r * alpha * Delta
+# --- 1. Données expérimentales ---
+PATH_DATA = "Python/data/raw/03-Reponse_mag/"
+B_sc_exp, e_sc_exp, uB_sc, ue_sc = load_and_compute_B(PATH_DATA + "13-05_S.csv")
+B_hp_exp, e_hp_exp, uB_hp, ue_hp = load_and_compute_B(PATH_DATA + "13-05_HP.csv")
+B_hs_exp, e_hs_exp, uB_hs, ue_hs = load_and_compute_B(PATH_DATA + "13-05_HS.csv")
 
-List_amp_s_th = ks * List_Bpar
-List_amp_hp_th = khp * List_Bpar
-List_amp_hs_th = khs * List_Bpar
+k_sc_exp = calc_sensibilite_exp(B_sc_exp, e_sc_exp)
+k_hp_exp = calc_sensibilite_exp(B_hp_exp, e_hp_exp)
+k_hs_exp = calc_sensibilite_exp(B_hs_exp, e_hs_exp)
 
-# --- Parrallèle ---
-CMRRp_exp = 20 * np.log10(k_s_exp / k_h_exp)
-CMRRp_th = 20 * np.log10(ks / khp)
-tauxp_th = ks / khp
-tauxp_exp = k_s_exp / k_h_exp
+# --- 2. Modèles Théoriques ---
+k_sc_th = N_s * S * 2 * np.pi * FB * mu_r
+k_hp_th = 0.5 * N_hp * S * 2 * np.pi * FB * mu_r * alpha * Delta
+k_hs_th = N_hs * S * 2 * np.pi * FB * mu_r * alpha * Delta
 
-# --- Série ---
-#CMRRp_exp = 20*np.log10(k_s_exp / k_hs_exp)
-CMRRs_th = 20 * np.log10(ks / khs)
-tauxs_th = ks / khs
-#tauxp_exp = k_s_exp / k_hs_exp
-
-# --- Ecarts --- 
-eps_cmrrp = abs((CMRRp_th - CMRRp_exp) / (CMRRp_th)) * 100
-#eps_cmrrs = abs((CMRRs_th - CMRRs_exp)/(CMRRs_th)) *100
-
-# --- Droite sensibilité ---
-mod.save_plot(PATH_out + "Droite_de_sensibilite.png",
-        (List_Bpar*1e6, List_amp_s_th*1e3, kw_S_th),
-        (List_Bpar*1e6, List_amp_s_exp*1e3, kw_S_exp),
-        (List_Bpar*1e6, List_amp_hs_th*1e3, kw_Hs_th),
-        (List_Bpar*1e6, List_amp_hp_th*1e3, kw_Hp_th),
-        (List_Bpar*1e6, List_amp_hp_exp*1e3, kw_Hp_exp),
-        title="Sensibilité des micros à un champ magnétique exterieur ($50$ Hz)",
-        xlabel="Amplitude du champ parasite [$µT$]", ylabel="Amplitude de la tension induite [$mV$]")
-
-print(f"k_s = {ks*10**-3} mV/microTesla")
-print(f"k_hp = {khp*10**-3} mV/microTesla")
-print(f"k_hs = {khs*10**-3} mV/microTesla")
-
-print(f"Taux theorique P = {tauxp_th}")
-print(f"CMRR theorique P = {CMRRp_th} dB")
-print(f"Taux theorique S = {tauxs_th}")
-print(f"CMRR theorique S = {CMRRs_th} dB")
+# --- 3. Tracé des graphiques ---
+B_max = max([np.max(B_sc_exp) if len(B_sc_exp)>0 else 0, 
+             np.max(B_hp_exp) if len(B_hp_exp)>0 else 0, 
+             np.max(B_hs_exp) if len(B_hs_exp)>0 else 0])
+B_th = np.linspace(0, B_max * 1.05, 100)
 
 
-print("\nCalcul des sensibilites et CMRR experimental")
-print(f"k_s_exp = {k_s_exp*10**-3} mV/microTesla")
-print(f"k_h_exp = {k_h_exp*10**-3} mV/microTesla")
-print(f"Taux exp = {tauxp_exp}")
-print(f"CMRR_exp = {20*np.log10( k_s_exp / k_h_exp )} dB")
-print("\nCalcul des erreurs relatives...")
+plt.figure(figsize=(6, 5))
 
-print(f"Erreur relative cmrrp : {eps_cmrrp} %")
-#print(f"Erreur relative cmrrs : {eps_cmrrs} %")
+plt.plot(B_th*1e3, (k_sc_th * B_th), color='#FF0000', linewidth=3, label='SingleCoil (Théorie)')
+plt.plot(B_th*1e3, (k_hs_th * B_th), color='#009900', linewidth=3, label='Humbucker -- (Théorie)')
+plt.plot(B_th*1e3, (k_hp_th * B_th), color='#0000FF', linewidth=3, label='Humbucker // (Théorie)')
+
+# Modification des points en croix (+) avec barres d'erreur
+if len(B_sc_exp) > 0:
+    plt.errorbar(B_sc_exp*1e3, e_sc_exp, xerr=uB_sc*1e3, yerr=ue_sc, 
+                 fmt='none', color='#FF6666', label='SingleCoil (Expérience)', capsize=5)
+if len(B_hs_exp) > 0:
+    plt.errorbar(B_hs_exp*1e3, e_hs_exp, xerr=uB_hs*1e3, yerr=ue_hs, 
+                 fmt='none', color='#66CC66', label='Humbucker -- (Expérience)', capsize=5)
+if len(B_hp_exp) > 0:
+    plt.errorbar(B_hp_exp*1e3, e_hp_exp, xerr=uB_hp*1e3, yerr=ue_hp, 
+                 fmt='none', color='#6666FF', label='Humbucker // (Expérience)', capsize=5)
+
+plt.title("Sensibilité des micros à un champ parasite (50 Hz)", fontsize=12, fontweight='bold')
+plt.xlabel("Amplitude du champ parasite [mT]", fontsize=12)
+plt.ylabel("Amplitude de la tension induite [V]", fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(loc='upper left')
+plt.tight_layout()
+
+os.makedirs("Python/Exports/03-Reponse_magnetique/", exist_ok=True)
+plt.savefig("Python/Exports/03-Reponse_magnetique/Droite_de_sensibilite.png", dpi=300)
+
+# --- 4. Affichage des grandeurs (Conversion de V/T en V/mT) ---
+print(k_sc_th*1e-3)
+print(k_hp_th*1e-3)
+print(k_hs_th*1e-3)
+
+print(f"k_s (Exp)  : {k_sc_exp * 1e-3:.4f} V/mT")
+print(f"k_hp (Exp) : {k_hp_exp * 1e-3:.4f} V/mT")
+print(f"k_hs (Exp) : {k_hs_exp * 1e-3:.4f} V/mT")
+if k_hp_exp != 0:
+    print(f"CMRR // :\tExp: {20 * np.log10(k_sc_exp / k_hp_exp):.1f} dB\tTH: {20 * np.log10(k_sc_th / k_hp_th)} dB")
+if k_hs_exp != 0:
+    print(f"CMRR -- :\tExp: {20 * np.log10(k_sc_exp / k_hs_exp):.1f} dB\tTH: {20 * np.log10(k_sc_th / k_hs_th)} dB")

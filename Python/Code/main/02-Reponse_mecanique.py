@@ -220,38 +220,8 @@ print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 kw_peigne = {'color': "#000000", 'label': 'Peigne spatial', 'linewidth': 3}
 kw_att = {'color': "#888888", 'label': 'Gain relatif', 'linewidth': 1}
 
-
-freqs = np.linspace(80, 800, 800)
-Amplitude_standard_th = envelope
-signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
-signal_hp, peigne_hp, signal_sc = mod.attenuation_theorique_db(freqs, x_hp1, x_hp2)
-
-Attenuation_s_th = 20*np.log10(np.abs(signal_sc + 1e-6))
-Attenuation_hs_th = 20*np.log10(np.abs(signal_hs + 1e-6))
-Attenuation_hp_th = 20*np.log10(np.abs(signal_hp + 1e-6))
-
 L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=0.04, distance=5)
 L_freqs, L_pic_hs_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
-L_freqs, L_pic_hp_exp = mod.extraire_pics_separes(freqs_hp_exp, fft_hp_exp, prominence=0.03, distance=5)
-n_harmonics_exp = np.round(L_freqs / F).astype(int)
-Amplitude_standard_exp = 1 / n_harmonics_exp
-
-Attenuation_s_exp = 20*np.log10(L_pic_s_exp / Amplitude_standard_exp + 1e-6)
-Attenuation_hs_exp = 20*np.log10(L_pic_hs_exp / Amplitude_standard_exp + 1e-6)
-Attenuation_hp_exp = 20*np.log10(L_pic_hp_exp / Amplitude_standard_exp + 1e-6)
-
-mod.save_plot(PATH_exp + "Filtrage_spatial.png",
-        (freqs, Attenuation_s_th, kw_S_th),
-        (L_freqs, Attenuation_s_exp, kw_S_exp),
-        (freqs, Attenuation_hs_th, kw_Hs_th),
-        (L_freqs, Attenuation_hs_exp, kw_Hs_exp),
-        #(freqs, Attenuation_hp_th, kw_Hp_th),
-        #(L_freqs, Attenuation_hp_exp, kw_Hp_exp),
-        #(freqs, peigne_hs, kw_peigne),
-        title=f"Mise en évidence du filtrage spatial", 
-        xlabel="Frequence [$Hz$]", ylabel="Écart par rapport à $1/n$ [dB]", xlim=(80, 800), 
-        #log=True
-        )
 
 freqs = np.linspace(30, 20000, 1000)
 signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)

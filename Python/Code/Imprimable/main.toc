@@ -1,0 +1,18 @@
+\babel@toc {french}{}\relax 
+\contentsline {section}{\numberline {1}Bibliothèque de la modélisation}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Visualisation des données}{2}{subsection.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.1}Enregistrer un graphique}{2}{subsubsection.1.1.1}%
+\contentsline {subsubsection}{\numberline {1.1.2}Calculer une FFT}{3}{subsubsection.1.1.2}%
+\contentsline {subsection}{\numberline {1.2}Modélisation électrique \& Optimisation numérique}{3}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Impédance théorique d'un micro}{3}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Calcul de la matrice Jacobienne}{4}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Calcul des écarts}{4}{subsubsection.1.2.3}%
+\contentsline {subsubsection}{\numberline {1.2.4}Algorithme des moindres carrés}{5}{subsubsection.1.2.4}%
+\contentsline {subsubsection}{\numberline {1.2.5}Calcul du diagramme de Bode d'un micro chargé}{7}{subsubsection.1.2.5}%
+\contentsline {subsection}{\numberline {1.3}Mise en évidence du filtrage spatial}{8}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Traitement des données expérimentales}{9}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Filtrage des données (Passe-bas numérique)}{9}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Amplitude d'un signal périodique}{9}{subsection.2.2}%
+\contentsline {section}{\numberline {3}Données et valeurs numériques}{10}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Caractéristiques électriques et mécaniques}{10}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Caractéristiques magnétiques}{11}{subsection.3.2}%

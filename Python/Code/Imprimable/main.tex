@@ -18,25 +18,32 @@
 \usepackage{hyperref}  % Pour les liens internes et la table des matières cliquable
 \usepackage{tabularx}
 
-% --- CONFIGURATION DE LISTINGS (POUR PYTHON) ---
-\definecolor{darkgray}{rgb}{0.3, 0.3, 0.3}
-\definecolor{navyblue}{rgb}{0.0, 0.2, 0.6}
-\definecolor{darkgreen}{rgb}{0.1, 0.4, 0.1}
+% --- CONFIGURATION DU THÈME ATOM ONE LIGHT ---
+\definecolor{atombg}{rgb}{0.98, 0.98, 0.98}       % Fond blanc-gris très épuré
+\definecolor{atomcomment}{rgb}{0.63, 0.63, 0.65}  % Gris texturé pour les commentaires
+\definecolor{atomkeyword}{rgb}{0.65, 0.15, 0.64}  % Violet pour les mots-clés (def, return, import...)
+\definecolor{atomstring}{rgb}{0.31, 0.63, 0.31}   % Vert doux pour les chaînes de caractères
+\definecolor{atomblue}{rgb}{0.25, 0.47, 0.95}     % Bleu pour les fonctions et types
+\definecolor{atomborder}{rgb}{0.90, 0.90, 0.92}   % Gris très clair pour le cadre
 
 \lstset{
-    backgroundcolor=,                      % Supprime complètement le fond
-    frame=single,                          % Cadre simple autour du code
-    commentstyle=\color{darkgray}\itshape, % Commentaires gris discrets
-    keywordstyle=\color{navyblue}\bfseries,% Mots-clés bleu sobre
-    stringstyle=\color{darkgreen},         % Chaînes de caractères vertes calmes
-    basicstyle=\ttfamily\scriptsize,       % Taille adaptée pour le code
+    backgroundcolor=,   
+    frame=single,                          
+    rulecolor=\color{atomborder},         % Couleur du cadre assortie au thème
+    commentstyle=\color{atomcomment}\itshape, 
+    keywordstyle=\color{atomkeyword}\bfseries,
+    stringstyle=\color{atomstring},         
+    basicstyle=\ttfamily\scriptsize,       
     breaklines=true,                 
-    numbers=left,                          % Garde les numéros à gauche
-    numberstyle=\tiny\color{lightgray},    % Numéros très clairs
-    tabsize=2,                             % Indentation compacte
+    numbers=left,                          
+    numberstyle=\tiny\color{atomcomment}, % Numéros de ligne discrets
+    tabsize=2,                             
     showstringspaces=false,
     inputencoding=utf8,
     extendedchars=true,
+    % Coloration additionnelle pour les types et bibliothèques (style IDE)
+    emph={self, True, False, None, np, plt, float, int, str, tuple, ndarray, list},
+    emphstyle=\color{atomblue}\bfseries,
     literate=
         {é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ù}{{\`u}}1 {ç}{{\c{c}}}1
         {ê}{{\^e}}1 {â}{{\^a}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
@@ -46,7 +53,7 @@
 
 % --- INFORMATIONS DU DOCUMENT ---
 \title{\textbf{Guitare électrique : Étude de l'influence du type de bobinage dans le micro}}
-\author{Christophe Morel \\ Lycée Ferdinand Buisson -- CPGE PT}
+\author{TIPE n°39662 \\ CPGE PT}
 \date{Session 2026 \\[0.5em] \large Annexe : Code python}
 
 % --- DEBUT DU DOCUMENT ---
@@ -56,8 +63,8 @@
     \vspace*{\fill}
     \begin{center}
         {\LARGE \textbf{Guitare électrique : Étude de l'influence du type de bobinage dans le micro}} \\[2cm]
-        {\large Christophe Morel} \\[0.5cm]
-        Lycée Ferdinand Buisson -- CPGE PT \\[2cm]
+        {\large TIPE n° 39662} \\[0.5cm]
+        CPGE PT \\[2cm]
         Session 2026 \\[0.5em] 
         {\large Annexe : Code python}
     \end{center}
@@ -146,19 +153,24 @@ def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
 \subsection{Modélisation électrique \& Optimisation numérique}
 
 \subsubsection{Impédance théorique d'un micro}
-\begin{minipage}{\textwidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
+def Z_micro(X: np.ndarray, rs: float, w: np.ndarray) -> np.ndarray:
     """Calcul l'impedance d'un micro de guitare en une pulsation w"""
     L, C_n, Rp_k = X
-    C, Rp = C_n * 1e-9, Rp_k * 1e3
-    # Parties reelle et imaginaire de l'admittance Y
-    den_L = rs**2 + (L * w)**2
-    Y_re = (1 / Rp) + (rs / den_L)
-    Y_im = (C * w) - (L * w / den_L)
-    return 1 / np.sqrt(Y_re**2 + Y_im**2)
+    C, Rp = C_n * 1e-9, Rp_k * 1e3  # Conversion en F et en Ohm
+    
+    # Impédance du bloc parallèle (Rp // C)
+    den_para = 1 + (Rp * C * w)**2
+    Z_para_re = Rp / den_para
+    Z_para_im = - (Rp**2 * C * w) / den_para
+    
+    # Impédance totale = Z_serie + Z_parallele
+    Z_re = rs + Z_para_re
+    Z_im = (L * w) + Z_para_im
+    
+    return np.sqrt(Z_re**2 + Z_im**2)
 \end{lstlisting}
 
 \begin{figure}[H]
@@ -167,11 +179,11 @@ def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
     \caption{Schéma électrique équivalent des micros}
     \label{fig:schema-mic}
 \end{figure}
-\end{minipage}
 
 \newpage
 
 \subsubsection{Calcul de la matrice Jacobienne}
+La matrice jacobienne rassemble les dérivées partielles de chaque composante du vecteur des résidus par rapport aux trois paramètres à optimiser ($L$, $C$, $R_p$). Elle fournit une approximation linéaire locale de la sensibilité du modèle, ce qui permet à l'algorithme de Levenberg-Marquardt de déterminer la direction et l'amplitude de la correction optimale à chaque itération.
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -197,7 +209,7 @@ def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
     Z = 1 / np.sqrt(Y_re**2 + Y_im**2)
     Z3 = Z**3
 
-    % Derivees partielles de Y
+    # Derivees partielles de Y
     dYre_dL = - (rs * 2 * L * w**2) / (den_L**2)
     dYim_dL = - (w * (rs**2 - (L * w)**2)) / (den_L**2)
     dZ_dL = - Z3 * (Y_re * dYre_dL + Y_im * dYim_dL)
@@ -212,6 +224,7 @@ def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
 \end{lstlisting}
 
 \subsubsection{Calcul des écarts}
+Le vecteur des résidus quantifie l'écart entre le module de l'impédance expérimentale et celui calculé par le modèle théorique pour chaque point de fréquence mesuré. Il constitue l'erreur brute globale que l'algorithme des moindres carrés cherche à minimiser en ajustant les paramètres électriques du micro.
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -295,7 +308,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
     return X, eps_new
 \end{lstlisting}
 
-\subsubsection{Calcul du diagramme de Bode}
+\subsubsection{Calcul du diagramme de Bode d'un micro chargé}
 \begin{minipage}{\textwidth}
 \begin{lstlisting}[language=Python]
 import numpy as np
@@ -466,9 +479,9 @@ def get_amplitude(PATH):
 $\mu_{0}$ & $4\pi \cdot 10^{-7}$ & H$\cdot$m$^{-1}$ & Perméabilité magnétique du vide \\
 $\mu_{r}$ & 2 & -- & Perméabilité relative de l'Alnico 5 \\
 $e(t)$ & -- & V & Force électromotrice (f.e.m.) induite dans le micro \\
-$u(t)$ & -- & V & Tension en sortie du micro chargé \\
-$u_{\text{GBF}}(t)$ & -- & V & Tension délivrée par le générateur de fonction \\
-$H(p)$ & -- & -- & Fonction de transfert du circuit de filtrage \\
+$v(t)$ & -- & V & Tension aux bornes d'un micro chargé \\
+$u(t)$ & -- & V & Tension délivrée par le générateur de fonction \\
+$H(p)$ & -- & -- & Fonction de transfert du micro \\
 \midrule
 $R_{s_S}$ & $5,26 \cdot 10^3$ & $\Omega$ & Résistance interne du micro SingleCoil \\
 $L_{S}$ & 2,43 & H & Inductance du micro SingleCoil \\
@@ -487,6 +500,11 @@ $L_{\text{Hs}}$ & 4,71 & H & Inductance du micro Humbucker série \\
 $C_{\text{Hs}}$ & $110 \cdot 10^{-12}$ & F & Capacité interne du micro Humbucker série \\
 $R_{p_{\text{Hs}}}$ & $1,07 \cdot 10^6$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
 $Z_{\text{Hs}}(\omega)$ & -- & $\Omega$ & Impédance complexe du micro Humbucker série \\
+\midrule
+$x_{S}$ & 0,105 & m & Position du micro SingleCoil \\
+$x_{\text{Hp1}}, x_{\text{Hp2}}$ & 0,147 - 0,165 & m & Position des bobinages du Humbucker parallèle \\
+$x_{\text{Hs1}}, x_{\text{Hs2}}$ & 0,202 - 0,220 & m & Position des bobinages du Humbucker série \\
+$\Delta$ & 0,018 & m & Entraxe entre les deux bobines du Humbucker \\
 \midrule
 $z(x,t)$ & -- & m & Déplacement vertical de la corde \\
 $z_{0}$ & 0,004 & m & Distance corde micro au repos \\
@@ -515,27 +533,47 @@ $V$ & $1 \cdot 10^{-8}$ (ODG) & m$^{3}$ & Volume de la portion de la corde activ
 $B_{m}(z)$ & -- & T & Champ magnétique statique des micros \\
 $B_{c}(z)$ & -- & T & Champ magnétique induit par le moment dipolaire \\
 \midrule
-$x_{S}$ & 0,105 & m & Position du micro SingleCoil \\
-$x_{\text{Hp1}}, x_{\text{Hp2}}$ & 0,147 - 0,165 & m & Position des bobinages du Humbucker parallèle \\
-$x_{\text{Hs1}}, x_{\text{Hs2}}$ & 0,202 - 0,220 & m & Position des bobinages du Humbucker série \\
-$\Delta$ & 0,018 & m & Entraxe entre les deux bobines du Humbucker \\
-\midrule
 $F_{B}$ & 50 & Hz & Fréquence du champ magnétique parasite \\
-$B_{0}$ & -- & T & Amplitude du champ magnétique parasite \\
+$B_{max}$ & -- & T & Amplitude du champ magnétique parasite \\
 $\alpha$ & 2 (ODG) & m$^{-1}$ & Gradient du champ magnétique parasite \\
 \midrule
-$k_{s}$ & 1,46 & $\mu$T$^{-1}$ & Sensibilité théorique du SingleCoil \\
-$k_{\text{Hp}}$ & 0,02 & $\mu$T$^{-1}$ & Sensibilité théorique du Humbucker parallèle \\
-$k_{\text{Hs}}$ & -- & $\mu$T$^{-1}$ & Sensibilité théorique du Humbucker série \\
-$k_{\text{Sexp}}$ & 1,48 & $\mu$T$^{-1}$ & Sensibilité expérimentale du SingleCoil \\
-$k_{\text{Hpexp}}$ & 0,62 & $\mu$T$^{-1}$ & Sensibilité expérimentale du Humbucker parallèle \\
-$k_{\text{Hsexp}}$ & -- & $\mu$T$^{-1}$ & Sensibilité expérimentale du Humbucker série \\
+$k_{s}$ & 2,90 & $V.mT^{-1}$ & Sensibilité théorique du SingleCoil \\
+$k_{\text{Hp}}$ & 0,02 & $V.mT^{-1}$ & Sensibilité théorique du Humbucker parallèle \\
+$k_{\text{Hs}}$ & 0,06 & $V.mT^{-1}$ & Sensibilité théorique du Humbucker série \\
+$k_{\text{Sexp}}$ & 2,90 & $V.mT^{-1}$ & Sensibilité expérimentale du SingleCoil \\
+$k_{\text{Hpexp}}$ & 1,93 & $V.mT^{-1}$ & Sensibilité expérimentale du Humbucker parallèle \\
+$k_{\text{Hsexp}}$ & 0,11 & $V.mT^{-1}$ & Sensibilité expérimentale du Humbucker série \\
 \midrule
-$\text{CMRR}$ & 37 & dB & CMRR théorique du Humbucker \\
-$\text{CMRR}_{\text{Hpexp}}$ & 7,6 & dB & CMRR expérimentale du Humbucker parallèle \\
-$\text{CMRR}_{\text{Hsexp}}$ & -- & dB & CMRR expérimentale du Humbucker série \\
+$\text{CMRR}_{Hp}$ & 42,3 & dB & CMRR théorique du Humbucker parallèle \\
+$\text{CMRR}_{Hs}$ & 32,0 & dB & CMRR théorique du Humbucker série \\
+$\text{CMRR}_{\text{Hpexp}}$ & 3,5 & dB & CMRR expérimentale du Humbucker parallèle \\
+$\text{CMRR}_{\text{Hsexp}}$ & 28,3 & dB & CMRR expérimentale du Humbucker série \\
 \bottomrule
 \end{tabularx}
 \end{center}
+
+\newpage
+
+\begin{thebibliography}{9}
+
+\bibitem{marché}
+WiseGuy Research Consultants, \textit{Global Electric Guitar Pickup Market Research Report 2024}, Pune, India, 2024.
+
+\bibitem{histoire}
+Matthew W. Hill, \textit{The hidden history of the electric guitar", in Quand la guitare [s']électrise !}, Sorbonne Université Presses, pp. 33-61, 2022.
+
+\bibitem{magnetisme}
+N. G. Horton & T. R. Moore, \textit{Modeling the magnetic pickup of an electric guitar }, American Journal of Physics, vol. 77, no. 2, pp. 144–150, 2009, doi: 10.1119/1.2990663.
+
+\bibitem{Seth-Lover}
+S. W. Duncan, \textit{Interview With Seth Lover}, [En ligne] Disponible sur: www.seymourduncan.com/blog/latest-updates/seymour-w-duncans-interview-with-seth-lover
+
+\bibitem{elec}
+Dan Carson, \textit{Investigation of the Electromagnetic Properties of Electric Guitar Pickups}, University of Illinois at Urbana-Champaign, Physics Senior Thesis, 2009.
+
+\bibitem{meca}
+B. d’Andréa-Novel, B. Fabre, et P. Jouvelot, \textit{Acoustique Informatique MusiquE : Outils scientifiques pour la musique}, Paris, France : Presses des Mines, 2010, ch. 4
+
+\end{thebibliography}
 
 \end{document}

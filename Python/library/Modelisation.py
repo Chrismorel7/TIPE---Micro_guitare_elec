@@ -109,7 +109,7 @@ def save_plot(fig_path: str, *plot_calls, title:str="", xlabel:str="", ylabel:st
             line, = plt.plot(x, y, **kwargs)
             handles_curves.append(line)
 
-    if title: plt.title(title)
+    if title: plt.title(title, fontsize=12, fontweight='bold')
     if log: plt.xscale('log')
     if xlabel: plt.xlabel(xlabel)
     if ylabel: plt.ylabel(ylabel)

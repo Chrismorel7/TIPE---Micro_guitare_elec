@@ -8,7 +8,7 @@ Première mise en place de la maquette
 
 Premier tests micro sans champ parasite :
 
-- Humbucker : OK
+- Humbucker : OK  
   - Environ 100 mV --> AMPLI ?
   - Frequence OK
 
