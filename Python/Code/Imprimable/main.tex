@@ -246,7 +246,7 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{../../../Attachment/Schema/moindre-carre.png}
+    \includegraphics[width=1.1\textwidth]{../../../Attachment/Schema/moindre-carre.png}
     \caption{Schéma de principe de l'algorithme}
     \label{fig:schema-moindre-carre}
 \end{figure}
@@ -280,27 +280,41 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
     for _ in range(N):
         r = residus(X, rs, f, Z_exp)
         eps = np.sum(r**2)
+        
+        # 1. Calcul de la Jacobienne classique
         J = Matrice_Jacobienne(X, rs, f)
 
-        H = J.T @ J
-        g = J.T @ r
+        # 2. NORMALISATION (Adimensionnement)
+        # On multiplie chaque colonne de J par la valeur actuelle du paramètre X correspondant.
+        # Cela permet de calculer des dérivées relatives (sensibilité à une variation en %)
+        J_norm = J * X 
+
+        # 3. Calcul de la matrice Hessienne et du gradient normalisés
+        H = J_norm.T @ J_norm
+        g = J_norm.T @ r
         
         # Amortissement de Marquardt
         H_lm = H + alpha * np.diag(np.diag(H) + 1e-8)
         
         try:
-            delta = np.linalg.solve(H_lm, g)
+            # delta_rel contient maintenant les variations relatives (ex: 0.05 = +5%)
+            delta_rel = np.linalg.solve(H_lm, g)
         except np.linalg.LinAlgError:
             break
 
-        X_new = X + delta
+        # 4. Mise à jour des paramètres (X_new = X + X * delta_rel)
+        X_new = X * (1 + delta_rel)
+        
         # Contrainte physique : paramètres toujours positifs
         X_new = np.maximum(X_new, [1e-2, 1e-2, 1e-2]) 
+        
         eps_new = np.sum(residus(X_new, rs, f, Z_exp)**2)
+        
         if eps_new < eps:
             alpha /= v
             X = X_new
-            if np.linalg.norm(delta) / np.linalg.norm(X) < 1e-12:
+            # Condition d'arrêt sur la norme des variations relatives
+            if np.linalg.norm(delta_rel) < 1e-7:
                 break
         else:
             alpha *= v
@@ -478,47 +492,35 @@ def get_amplitude(PATH):
 \midrule
 $\mu_{0}$ & $4\pi \cdot 10^{-7}$ & H$\cdot$m$^{-1}$ & Perméabilité magnétique du vide \\
 $\mu_{r}$ & 2 & -- & Perméabilité relative de l'Alnico 5 \\
-$e(t)$ & -- & V & Force électromotrice (f.e.m.) induite dans le micro \\
-$v(t)$ & -- & V & Tension aux bornes d'un micro chargé \\
-$u(t)$ & -- & V & Tension délivrée par le générateur de fonction \\
-$H(p)$ & -- & -- & Fonction de transfert du micro \\
 \midrule
 $R_{s_S}$ & $5,26 \cdot 10^3$ & $\Omega$ & Résistance interne du micro SingleCoil \\
-$L_{S}$ & 2,43 & H & Inductance du micro SingleCoil \\
-$C_{S}$ & $360 \cdot 10^{-12}$ & F & Capacité interne du micro SingleCoil \\
-$R_{p_S}$ & $500 \cdot 10^3$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
-$Z_{S}(\omega)$ & -- & $\Omega$ & Impédance complexe du micro SingleCoil \\
+$L_{S}$ & 2,37 & H & Inductance du micro SingleCoil \\
+$C_{S}$ & $0,37 \cdot 10^{-9}$ & F & Capacité interne du micro SingleCoil \\
+$R_{p_S}$ & $492,3 \cdot 10^3$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
 \midrule
 $R_{s_{\text{Hp}}}$ & $4,52 \cdot 10^3$ & $\Omega$ & Résistance interne du micro Humbucker parallèle \\
-$L_{\text{Hp}}$ & 1,77 & H & Inductance du micro Humbucker parallèle \\
-$C_{\text{Hp}}$ & $50 \cdot 10^{-12}$ & F & Capacité interne du micro Humbucker parallèle \\
-$R_{p_{\text{Hp}}}$ & $351 \cdot 10^3$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
-$Z_{\text{Hp}}(\omega)$ & -- & $\Omega$ & Impédance complexe du micro Humbucker parallèle \\
+$L_{\text{Hp}}$ & 1,72 & H & Inductance du micro Humbucker parallèle \\
+$C_{\text{Hp}}$ & $0,05 \cdot 10^{-9}$ & F & Capacité interne du micro Humbucker parallèle \\
+$R_{p_{\text{Hp}}}$ & $343,0 \cdot 10^3$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
 \midrule
 $R_{s_{\text{Hs}}}$ & $15,10 \cdot 10^3$ & $\Omega$ & Résistance interne du micro Humbucker série \\
-$L_{\text{Hs}}$ & 4,71 & H & Inductance du micro Humbucker série \\
-$C_{\text{Hs}}$ & $110 \cdot 10^{-12}$ & F & Capacité interne du micro Humbucker série \\
-$R_{p_{\text{Hs}}}$ & $1,07 \cdot 10^6$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
-$Z_{\text{Hs}}(\omega)$ & -- & $\Omega$ & Impédance complexe du micro Humbucker série \\
+$L_{\text{Hs}}$ & $4,60$ & H & Inductance du micro Humbucker série \\
+$C_{\text{Hs}}$ & $0,11 \cdot 10^{-9}$ & F & Capacité interne du micro Humbucker série \\
+$R_{p_{\text{Hs}}}$ & $1,05 \cdot 10^6$ & $\Omega$ & Résistance des pertes par courant de Foucault \\
 \midrule
 $x_{S}$ & 0,105 & m & Position du micro SingleCoil \\
 $x_{\text{Hp1}}, x_{\text{Hp2}}$ & 0,147 - 0,165 & m & Position des bobinages du Humbucker parallèle \\
 $x_{\text{Hs1}}, x_{\text{Hs2}}$ & 0,202 - 0,220 & m & Position des bobinages du Humbucker série \\
 $\Delta$ & 0,018 & m & Entraxe entre les deux bobines du Humbucker \\
 \midrule
-$z(x,t)$ & -- & m & Déplacement vertical de la corde \\
 $z_{0}$ & 0,004 & m & Distance corde micro au repos \\
 $L$ & 0,85 & m & Longueur de la corde vibrante \\
-$x_{0}$ & 0,300 & m & Position de l'origine de la perturbation \\
-$A_{0}$ & 0,001 & m & Amplitude initiale de la perturbation \\
-$B_{n}$ & -- & m & Amplitude de l'harmonique de rang n \\
+$x_{0}$ & 0,20 & m & Position de l'origine de la perturbation \\
+$A_{0}$ & 0,005 (ODG) & m & Amplitude initiale de la perturbation \\
 $F$ & 80 & Hz & Fréquence fondamentale de vibration de la corde \\
-$m$ & -- & A$\cdot$m$^{2}$ & Moment dipolaire de la corde \\
 \bottomrule
 \end{tabularx}
 \end{center}
-
-\newpage
 
 \subsection{Caractéristiques magnétiques}
 \begin{center}
@@ -527,27 +529,23 @@ $m$ & -- & A$\cdot$m$^{2}$ & Moment dipolaire de la corde \\
 \toprule
 \textbf{Notation} & \textbf{Valeur} & \textbf{Unité} & \textbf{Description} \\
 \midrule
-$\Phi(z,t)$ & -- & Wb & Flux magnétique traversant la bobine \\
 $\chi$ & 100 (ODG) & -- & Susceptibilité magnétique de la corde \\
 $V$ & $1 \cdot 10^{-8}$ (ODG) & m$^{3}$ & Volume de la portion de la corde active \\
-$B_{m}(z)$ & -- & T & Champ magnétique statique des micros \\
-$B_{c}(z)$ & -- & T & Champ magnétique induit par le moment dipolaire \\
 \midrule
 $F_{B}$ & 50 & Hz & Fréquence du champ magnétique parasite \\
-$B_{max}$ & -- & T & Amplitude du champ magnétique parasite \\
-$\alpha$ & 2 (ODG) & m$^{-1}$ & Gradient du champ magnétique parasite \\
+$\alpha$ & 1 (ODG) & m$^{-1}$ & Gradient du champ magnétique parasite \\
 \midrule
-$k_{s}$ & 2,90 & $V.mT^{-1}$ & Sensibilité théorique du SingleCoil \\
+$k_{s}$ & 2,02 & $V.mT^{-1}$ & Sensibilité théorique du SingleCoil \\
 $k_{\text{Hp}}$ & 0,02 & $V.mT^{-1}$ & Sensibilité théorique du Humbucker parallèle \\
-$k_{\text{Hs}}$ & 0,06 & $V.mT^{-1}$ & Sensibilité théorique du Humbucker série \\
-$k_{\text{Sexp}}$ & 2,90 & $V.mT^{-1}$ & Sensibilité expérimentale du SingleCoil \\
-$k_{\text{Hpexp}}$ & 1,93 & $V.mT^{-1}$ & Sensibilité expérimentale du Humbucker parallèle \\
-$k_{\text{Hsexp}}$ & 0,11 & $V.mT^{-1}$ & Sensibilité expérimentale du Humbucker série \\
+$k_{\text{Hs}}$ & 0,04 & $V.mT^{-1}$ & Sensibilité théorique du Humbucker série \\
+$k_{\text{Sexp}}$ & 2,05 & $V.mT^{-1}$ & Sensibilité expérimentale du SingleCoil \\
+$k_{\text{Hpexp}}$ & 1,37 & $V.mT^{-1}$ & Sensibilité expérimentale du Humbucker parallèle \\
+$k_{\text{Hsexp}}$ & 0,08 & $V.mT^{-1}$ & Sensibilité expérimentale du Humbucker série \\
 \midrule
-$\text{CMRR}_{Hp}$ & 42,3 & dB & CMRR théorique du Humbucker parallèle \\
-$\text{CMRR}_{Hs}$ & 32,0 & dB & CMRR théorique du Humbucker série \\
+$\text{CMRR}_{Hp}$ & 39,3 & dB & CMRR théorique du Humbucker parallèle \\
+$\text{CMRR}_{Hs}$ & 35,0 & dB & CMRR théorique du Humbucker série \\
 $\text{CMRR}_{\text{Hpexp}}$ & 3,5 & dB & CMRR expérimentale du Humbucker parallèle \\
-$\text{CMRR}_{\text{Hsexp}}$ & 28,3 & dB & CMRR expérimentale du Humbucker série \\
+$\text{CMRR}_{\text{Hsexp}}$ & 28,7 & dB & CMRR expérimentale du Humbucker série \\
 \bottomrule
 \end{tabularx}
 \end{center}

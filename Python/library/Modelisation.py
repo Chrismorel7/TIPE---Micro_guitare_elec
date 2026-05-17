@@ -271,27 +271,41 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
     for _ in range(N):
         r = residus(X, rs, f, Z_exp)
         eps = np.sum(r**2)
+        
+        # 1. Calcul de la Jacobienne classique
         J = Matrice_Jacobienne(X, rs, f)
 
-        H = J.T @ J
-        g = J.T @ r
+        # 2. NORMALISATION (Adimensionnement)
+        # On multiplie chaque colonne de J par la valeur actuelle du paramètre X correspondant.
+        # Cela permet de calculer des dérivées relatives (sensibilité à une variation en %)
+        J_norm = J * X 
+
+        # 3. Calcul de la matrice Hessienne et du gradient normalisés
+        H = J_norm.T @ J_norm
+        g = J_norm.T @ r
         
         # Amortissement de Marquardt
         H_lm = H + alpha * np.diag(np.diag(H) + 1e-8)
         
         try:
-            delta = np.linalg.solve(H_lm, g)
+            # delta_rel contient maintenant les variations relatives (ex: 0.05 = +5%)
+            delta_rel = np.linalg.solve(H_lm, g)
         except np.linalg.LinAlgError:
             break
 
-        X_new = X + delta
+        # 4. Mise à jour des paramètres (X_new = X + X * delta_rel)
+        X_new = X * (1 + delta_rel)
+        
         # Contrainte physique : paramètres toujours positifs
         X_new = np.maximum(X_new, [1e-2, 1e-2, 1e-2]) 
+        
         eps_new = np.sum(residus(X_new, rs, f, Z_exp)**2)
+        
         if eps_new < eps:
             alpha /= v
             X = X_new
-            if np.linalg.norm(delta) / np.linalg.norm(X) < 1e-12:
+            # Condition d'arrêt sur la norme des variations relatives
+            if np.linalg.norm(delta_rel) < 1e-7:
                 break
         else:
             alpha *= v

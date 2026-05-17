@@ -35,6 +35,7 @@ Ramp = 1e6              # Resistance de l'ampli [Ohms]
 R = 97.6e3              # Resistance experimentale du PDT [Ohms]
 X0 = np.array([2.5, 0.5, 450])    # Initalisation [L, C, R_p]
 LR = 0.001              # Taux d'apprentissage
+
 u_Ugbf = 0.01  # Incertitude sur tension GBF [V] (±1% lecture + résolution ADC)
 u_res = 0.01   # Incertitude sur tension mesurée [V]
 u_R = 97.6e3 * 0.01  # Incertitude sur R : ±1% (spec résistance de précision)
@@ -123,8 +124,8 @@ print("="*60 + "\n")
 
 
 # --- Appel de l'algorithme de Levenberg-Marquardt ---
-L_S = np.zeros((3,30))
-for i in range(1,31):
+L_S = np.zeros((3,50))
+for i in range(1,51):
     X_s, S_s = mod.Levenberg_Marquardt(X0, Rs_s, f, Z_s, i, LR)
     X_hp, S_hp = mod.Levenberg_Marquardt(X0, Rs_hp, f, Z_hp, i, LR)
     X_hs, S_hs = mod.Levenberg_Marquardt(X0, Rs_hs, f, Z_hs, i, LR)
@@ -137,7 +138,7 @@ L_S[2] = mod.normalize_signal(L_S[2])
 
 print(f"SingleCoil: L={X_s[0]:.2f}H, C={X_s[1]:.2f}nF, Rp={X_s[2]:.1f}kOhm")
 print(f"Humbucker parallele: L={X_hp[0]:.2f}H, C={X_hp[1]:.2f}nF, Rp={X_hp[2]:.1f}kOhm")
-print(f"Humbucker parallele: L={X_hs[0]:.2f}H, C={X_hs[1]:.2f}nF, Rp={X_hs[2]:.1f}kOhm")
+print(f"Humbucker série: L={X_hs[0]:.2f}H, C={X_hs[1]:.2f}nF, Rp={X_hs[2]:.1f}kOhm")
 
 # --- Modèle numérique ---
 freq = np.linspace(10, 30_000, 1000)
@@ -147,9 +148,9 @@ gain_hs, phase_hs = mod.calcul_bode(X_hs, Rs_hs, freq, Ramp)
 
 # -- Courbe Convergence Algo ---
 mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence.png",
-            (range(1,31), L_S[0]*100, kw_S_th),
-            (range(1,31), L_S[2]*100, kw_Hs_th),
-            (range(1,31), L_S[1]*100, kw_Hp_th),
+            (range(1,51), L_S[0]*100, kw_S_th),
+            (range(1,51), L_S[2]*100, kw_Hs_th),
+            (range(1,51), L_S[1]*100, kw_Hp_th),
             title="Convergence de l'algorithme de Levenberg-Marquardt",
             xlabel="Nombre d'iteration [.]",
             ylabel="Image de l'erreur [%]")

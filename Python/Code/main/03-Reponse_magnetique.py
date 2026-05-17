@@ -21,42 +21,52 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 mu_0 = 4e-7 * np.pi
 mu_r = 2
 K = 0.7
-S = 8e-4
+S = 5e-4
 FB = 50 
-alpha = 2 
+alpha = 1 
 Delta = 0.018
+h_bobine = 1.5e-2
 
 n_helmholtz = 95
 r_helmholtz = 0.065
 
 L_s = 2.43
-N_s = np.sqrt((L_s * 1.5e-2) / (mu_0 * mu_r * S * K))
+N_s = np.sqrt((L_s * h_bobine) / (mu_0 * mu_r * S * K))
 
 L_hp = 1.77
-N_hp = np.sqrt(L_hp * 1.5e-2 / (mu_0 * mu_r * S * K)) / 2
+N_hp = np.sqrt((2 * L_hp * h_bobine) / (mu_0 * mu_r * S * K))
 
 L_hs = 4.71
-N_hs = np.sqrt(L_hs * 1.5e-2 / (mu_0 * mu_r * S * K)) / 2
+N_hs = np.sqrt((L_hs * h_bobine) / (2 * mu_0 * mu_r * S * K))
 
 # --- Fonctions utilitaires ---
 def load_and_compute_B(filepath):
-    """Charge les données expérimentales et gère la première ligne comme incertitudes."""
+    """Charge les données expérimentales et calcule les amplitudes (crêtes) du champ B et de la f.e.m."""
     try:
         data = np.loadtxt(filepath, delimiter=',', skiprows=1)
         
-        # Extraction des incertitudes (1ère ligne de données)
-        ui = data[0, 0]
+        # Extraction et conversion des incertitudes de type RMS en amplitudes
+        ui = data[0, 0] * np.sqrt(2)
         usig = data[0, 2]
+        
+        # Incertitude sur le rayon des bobines de Helmholtz (en mètres)
+        u_r = 0.005 
         
         # Extraction des mesures (lignes suivantes)
         mesures = data[1:, :]
-        I_exp = mesures[:, 0]
+        
+        # Conversion des valeurs efficaces du fichier en amplitudes (crêtes)
+        I_exp = mesures[:, 0] * np.sqrt(2)
         e_exp = mesures[:, 2]
         
-        # Conversion Courant -> Champ B
+        # Conversion Courant -> Champ B (B_exp sera naturellement une amplitude)
         facteur_B = (4/5)**1.5 * (mu_0 * n_helmholtz) / r_helmholtz
         B_exp = facteur_B * I_exp
-        u_B = facteur_B * ui  # Propagation de l'incertitude sur B
+        
+        # Propagation des incertitudes sur l'amplitude de B
+        u_B_I = facteur_B * ui  
+        u_B_r = B_exp * (u_r / r_helmholtz)  
+        u_B = np.sqrt(u_B_I**2 + u_B_r**2)
         
         return B_exp, e_exp, u_B, usig
     except Exception as err:
@@ -87,7 +97,7 @@ k_hs_th = N_hs * S * 2 * np.pi * FB * mu_r * alpha * Delta
 B_max = max([np.max(B_sc_exp) if len(B_sc_exp)>0 else 0, 
              np.max(B_hp_exp) if len(B_hp_exp)>0 else 0, 
              np.max(B_hs_exp) if len(B_hs_exp)>0 else 0])
-B_th = np.linspace(0, B_max * 1.05, 100)
+B_th = np.linspace(0, B_max * 1.1, 100)
 
 
 plt.figure(figsize=(6, 5))
@@ -118,9 +128,9 @@ os.makedirs("Python/Exports/03-Reponse_magnetique/", exist_ok=True)
 plt.savefig("Python/Exports/03-Reponse_magnetique/Droite_de_sensibilite.png", dpi=300)
 
 # --- 4. Affichage des grandeurs (Conversion de V/T en V/mT) ---
-print(k_sc_th*1e-3)
-print(k_hp_th*1e-3)
-print(k_hs_th*1e-3)
+print(f"k_s_th : {k_sc_th*1e-3} V/mT")
+print(f"k_hp_th : {k_hp_th*1e-3} V/mT")
+print(f"k_hs_th : {k_hs_th*1e-3} V/mT")
 
 print(f"k_s (Exp)  : {k_sc_exp * 1e-3:.4f} V/mT")
 print(f"k_hp (Exp) : {k_hp_exp * 1e-3:.4f} V/mT")
