@@ -189,13 +189,19 @@ kw_att = {'color': "#888888", 'label': 'Gain relatif', 'linewidth': 1}
 
 freqs = np.linspace(30, 20000, 1000)
 signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
+Attenuation_th = 20 * np.log10(np.abs(signal_hs / (signal_sc + 1e-6)) + 1e-6)
+
 
 # Sécurité mathématique pour la division membre à membre des tableaux expérimentaux
 min_len = min(len(L_pic_hs_exp), len(L_pic_s_exp))
-L_freqs_clipped = L_freqs_hs[:min_len]
 
-Attenuation_th = 20 * np.log10(np.abs(signal_hs / (signal_sc + 1e-6)) + 1e-6)
-Attenuation_exp = 20 * np.log10(np.abs(L_pic_hs_exp[:min_len] / (L_pic_s_exp[:min_len] + 1e-6)) + 1e-6)
+nouvelles_freqs = np.array([990, 1320, 1650, 1980, 2310, 2640, 2970, 3300])
+nouvelles_att = np.array([-5.2, -4, -10.5, -16.8, -15.5, -14.2, -20.4, -28.7])
+
+att_existante = 20 * np.log10(np.abs(L_pic_hs_exp[:min_len] / (L_pic_s_exp[:min_len] + 1e-6)) + 1e-6)
+
+L_freqs_clipped = np.concatenate((L_freqs_hs[:min_len], nouvelles_freqs))
+Attenuation_exp = np.concatenate((att_existante, nouvelles_att))
 
 mod.save_plot(PATH_exp + "Filtrage_spatial.png",
         (freqs, Attenuation_th, kw_att),

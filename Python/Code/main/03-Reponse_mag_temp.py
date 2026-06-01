@@ -19,10 +19,12 @@ from library import Modelisation as mod
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.close("all")
 
-kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 2}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 2}
-kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'linewidth': 2}
-kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'linewidth': 2}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
+kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
+kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
 
 # --- 1. Constantes physiques et géométriques ---
 mu_0 = 4e-7 * np.pi         # Perméabilité magnétique du vide [H.m-1]

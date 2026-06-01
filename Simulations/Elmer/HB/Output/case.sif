@@ -1,0 +1,161 @@
+Header
+  CHECK KEYWORDS "Warn"
+  Mesh DB "." "."
+End
+
+Simulation
+  Max Output Level = 5
+  Coordinate System = Cartesian
+  Coordinate Mapping(3) = 1 2 3
+  Simulation Type = Transient
+  Timestepping Method = BDF
+  BDF Order = 2
+  Timestep Intervals = 375
+  Timestep Sizes = 0.0002
+  Output Intervals = 1
+  Post File = case.vtu
+End
+
+Constants
+  Permeability of Vacuum = 1.2566e-6
+End
+
+Equation 1
+  Name = "Couplage_Magneto_Mecanique"
+  Active Solvers(4) = 1 2 3 4
+End
+
+Solver 1
+  Equation = "MgDyn"
+  Procedure = "MagnetoDynamics" "WhitneyAVSolver"
+  Variable = "AV"
+  Linear System Solver = Direct
+  Linear System Direct Method = UMFPACK
+  Steady State Convergence Tolerance = 1.0e-6
+  Fix Input Current Density = Logical True
+End
+
+Solver 2
+  Equation = "MGDynamicsCalc"
+  Procedure = "MagnetoDynamics" "MagnetoDynamicsCalcFields"
+  Linear System Solver = Direct
+  Linear System Direct Method = UMFPACK
+  Calculate Magnetic Flux Density = Logical True
+End
+
+Solver 3
+  Equation = "Mesh Update"
+  Procedure = "MeshSolve" "MeshSolver"
+  Linear System Solver = Direct
+  Linear System Direct Method = UMFPACK
+  Steady State Convergence Tolerance = 1.0e-6
+End
+
+Solver 4
+  Equation = "SaveScalars"
+  Procedure = "SaveData" "SaveScalars"
+  Filename = "scalars.txt"
+  Variable 1 = Time
+  
+  Variable 2 = Magnetic Flux Density 3
+  Operator 2 = volume integral
+  Mask Name 2 = String "Masque_Nord"
+  
+  Variable 3 = Magnetic Flux Density 3
+  Operator 3 = volume integral
+  Mask Name 3 = String "Masque_Sud"
+End
+
+Material 1
+  Name = "Alnico_5"
+  Relative Permeability = 3.5
+End
+
+Material 2
+  Name = "Air_Global"
+  Relative Permeability = 1.0
+End
+
+Material 3
+  Name = "Acier_Corde"
+  Relative Permeability = 101.0
+End
+
+Material 4
+  Name = "Air_Bobine_Nord"
+  Relative Permeability = 1.0
+  Masque_Nord = Logical True
+End
+
+Material 5
+  Name = "Air_Bobine_Sud"
+  Relative Permeability = 1.0
+  Masque_Sud = Logical True
+End
+
+Body Force 1
+  Name = "Polarite_Sud"
+  Magnetization 3 = 955000.0
+End
+
+Body Force 2
+  Name = "Polarite_Nord"
+  Magnetization 3 = -955000.0
+End
+
+Body Force 3
+  Name = "Vibration_Corde_Fourier_B20"
+  Mesh Update 1 = Real 0.0
+  Mesh Update 2 = Real 0.0
+  Mesh Update 3 = Variable Time, Coordinate 1
+    Real MATC "0.00051659*sin(3.717861*tx(1))*cos(502.65*tx(0)) + 0.00011361*sin(7.435722*tx(1))*cos(1005.31*tx(0)) - 0.00001298*sin(11.15358*tx(1))*cos(1507.96*tx(0)) - 0.00003483*sin(14.87144*tx(1))*cos(2010.62*tx(0)) - 0.00001494*sin(18.58931*tx(1))*cos(2513.27*tx(0)) + 0.00000635*sin(22.30717*tx(1))*cos(3015.93*tx(0)) + 0.00001173*sin(26.02503*tx(1))*cos(3518.58*tx(0)) + 0.00000432*sin(29.74289*tx(1))*cos(4021.24*tx(0)) - 0.00000409*sin(33.46075*tx(1))*cos(4523.89*tx(0)) - 0.00000568*sin(37.17861*tx(1))*cos(5026.55*tx(0)) - 0.00000139*sin(40.89647*tx(1))*cos(5529.20*tx(0)) + 0.00000292*sin(44.61433*tx(1))*cos(6031.86*tx(0)) + 0.00000318*sin(48.33219*tx(1))*cos(6534.51*tx(0)) + 0.00000027*sin(52.05006*tx(1))*cos(7037.17*tx(0)) - 0.00000218*sin(55.76792*tx(1))*cos(7539.82*tx(0)) - 0.00000190*sin(59.48578*tx(1))*cos(8042.48*tx(0)) + 0.00000022*sin(63.20364*tx(1))*cos(8545.13*tx(0)) + 0.00000167*sin(66.92150*tx(1))*cos(9047.79*tx(0)) + 0.00000114*sin(70.63936*tx(1))*cos(9550.44*tx(0)) - 0.00000045*sin(74.35722*tx(1))*cos(10053.10*tx(0))"
+End
+
+Body 1
+  Target Bodies(1) = 1
+  Equation = 1
+  Material = 1
+  Body Force = 1
+End
+
+Body 2
+  Target Bodies(1) = 2
+  Equation = 1
+  Material = 1
+  Body Force = 2
+End
+
+Body 3
+  Target Bodies(1) = 3
+  Equation = 1
+  Material = 4
+End
+
+Body 4
+  Target Bodies(1) = 4
+  Equation = 1
+  Material = 5
+End
+
+Body 5
+  Target Bodies(1) = 5
+  Equation = 1
+  Material = 3
+  Body Force = 3
+End
+
+Body 6
+  Target Bodies(1) = 6
+  Equation = 1
+  Material = 2
+End
+
+Boundary Condition 1
+  Target Boundaries(1) = 7
+  AV {e} 1 = Real 0.0
+  AV {e} 2 = Real 0.0
+  AV {e} 3 = Real 0.0
+  Mesh Update 1 = Real 0.0
+  Mesh Update 2 = Real 0.0
+  Mesh Update 3 = Real 0.0
+End

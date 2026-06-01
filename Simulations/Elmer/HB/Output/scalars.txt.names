@@ -1,0 +1,11 @@
+Metadata for SaveScalars file: ./scalars.txt
+Elmer version: 26.1
+Elmer revision: Release
+Elmer compilation date: 2026-01-23
+Solver input file: case.sif
+File started at: 2026/05/21 14:21:42
+ 
+Variables in columns of matrix: 
+   1: value: time scalar variable
+   2: res: eddy current power
+   3: res: electromagnetic field energy

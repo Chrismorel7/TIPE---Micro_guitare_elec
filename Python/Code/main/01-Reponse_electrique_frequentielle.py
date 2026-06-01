@@ -41,9 +41,9 @@ u_res = 0.01   # Incertitude sur tension mesurée [V]
 u_R = 97.6e3 * 0.01  # Incertitude sur R : ±1% (spec résistance de précision)
 
 # --- Graphique ---
-kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
-kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
+kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
 kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
 kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
 kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
@@ -70,7 +70,7 @@ def lire_fichier(PATH):
     return np.array(Vin), np.array(f), np.array(Vs), np.array(Vhp), np.array(Vhs)
 
 # --- Fonction calculer les incertidude absolue ---
-def calcul_incertitude_Z(R, u_R, U_gbf, u_Ugbf, u_res, u_ures):
+def calcul_incertitude_Z(Ra, u_Ra, U, u_U, V, u_V):
     """
     Calcule l'incertitude ABSOLUE sur Z [Ohm].
     Formule : Z = R * (U_gbf / U_res - 1)
@@ -78,11 +78,11 @@ def calcul_incertitude_Z(R, u_R, U_gbf, u_Ugbf, u_res, u_ures):
         u(Z)/Z = sqrt[(u_R/R)² + (u_Ugbf/U_gbf)² + (u_ures/U_res)²]
     """    
     # Incertitude relative
-    u_Z_rel = np.sqrt((u_R / R)**2 + 
-                    (u_Ugbf / U_gbf)**2 + 
-                    (u_ures / u_res)**2)
+    u_Z_rel = np.sqrt((u_Ra / Ra)**2 + 
+                    (u_U / U)**2 + 
+                    (u_V / V)**2)
     # Impédance pour chaque point
-    Z_calc = R * (U_gbf / u_res - 1)
+    Z_calc = Ra * (U / V - 1)
     # Incertitude absolue [Ohm]
     u_Z_abs = Z_calc * u_Z_rel
     return u_Z_abs

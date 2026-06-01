@@ -1,0 +1,91 @@
+Header
+  CHECK KEYWORDS "Warn"
+  Mesh DB "." "."
+End
+
+Simulation
+  Max Output Level = 5
+  Coordinate System = Cartesian
+  Simulation Type = Steady state
+  Steady State Max Iterations = 1
+  Post File = case.vtu
+End
+
+Constants
+  Permeability of Vacuum = 1.2566e-6
+End
+
+Equation 1
+  Name = "MagnetoDynamics"
+  Active Solvers(2) = 1 2
+End
+
+Solver 1
+  Equation = "MgDyn"
+  Procedure = "MagnetoDynamics" "WhitneyAVSolver"
+  Variable = "AV"
+  Linear System Solver = Direct
+  Linear System Direct Method = UMFPACK
+  Steady State Convergence Tolerance = 1.0e-6
+  Fix Input Current Density = Logical True
+End
+
+Solver 2
+  Equation = "MGDynamicsCalc"
+  Procedure = "MagnetoDynamics" "MagnetoDynamicsCalcFields"
+  Linear System Solver = Direct
+  Linear System Direct Method = UMFPACK
+  Calculate Magnetic Flux Density = Logical True
+End
+
+Material 1
+  Name = "Alnico_5"
+  Relative Permeability = 3.5
+End
+
+Material 2
+  Name = "Air_Cuivre"
+  Relative Permeability = 1.0
+End
+
+Material 3
+  Name = "Acier_Corde"
+  Relative Permeability = 101.0
+End
+
+Body Force 1
+  Name = "Polarite_Nord_Unique"
+  Magnetization 3 = 955000.0  ! Tous les plots sont Nord
+End
+
+Body 1
+  Target Bodies(1) = 1  ! Aimants
+  Equation = 1
+  Material = 1
+  Body Force = 1
+End
+
+Body 2
+  Target Bodies(1) = 2  ! Bobine
+  Equation = 1
+  Material = 2
+End
+
+Body 3
+  Target Bodies(1) = 3  ! Corde
+  Equation = 1
+  Material = 3
+End
+
+Body 4
+  Target Bodies(1) = 4  ! Air
+  Equation = 1
+  Material = 2
+End
+
+Boundary Condition 1
+  Target Boundaries(1) = 5
+  AV {e} 1 = Real 0.0
+  AV {e} 2 = Real 0.0
+  AV {e} 3 = Real 0.0
+End

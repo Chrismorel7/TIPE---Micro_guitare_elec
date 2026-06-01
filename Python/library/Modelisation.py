@@ -426,6 +426,10 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
         for i in range(1, n + 1):
             Bn = (A0 * L**2.5 * np.sqrt(2)) / (i**2 * np.pi**2 * x0 * (L - x0)) * np.sin(i * np.pi * x0 / L)
             
+            print(f"B{i} = {Bn}")
+            print(f"kn {i} = {i*np.pi / L}")
+            
+            
             omega_i = i * omega1
             spatial_node = np.sin(i * np.pi * x_pos / L)
             
