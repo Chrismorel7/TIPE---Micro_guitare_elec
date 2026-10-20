@@ -183,12 +183,12 @@ def Z_micro(X: np.ndarray, rs: float, w: np.ndarray) -> np.ndarray:
 \newpage
 
 \subsubsection{Calcul de la matrice Jacobienne}
-La matrice jacobienne rassemble les dérivées partielles de chaque composante du vecteur des résidus par rapport aux trois paramètres à optimiser ($L$, $C$, $R_p$). Elle fournit une approximation linéaire locale de la sensibilité du modèle, ce qui permet à l'algorithme de Levenberg-Marquardt de déterminer la direction et l'amplitude de la correction optimale à chaque itération.
+La matrice jacobienne rassemble les dérivées partielles de chaque composante du vecteur des résidus par rapport aux trois paramètres à optimiser ($L$, $C$, $R_p$). Elle fournit une approximation linéaire locale de la sensibilité du modèle, ce qui permet à l'algorithme des moindres-carres de déterminer la direction et l'amplitude de la correction optimale à chaque itération.
 \begin{lstlisting}[language=Python]
 import numpy as np
 
 def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
-    """Basee sur l'algorythme de Levenberg_Marquardt, cette fonction retourne la matrice Jacobienne J
+    """Basee sur l'algorythme de moindre_carre, cette fonction retourne la matrice Jacobienne J
     Args:
         X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
@@ -256,8 +256,8 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
-    """Algorythme de Levenberg-Marquardt pour l'optimisation non-lineaire des parametres electriques du micro
+def moindre_carre(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
+    """Algorythme de moindre-carre pour l'optimisation non-lineaire des parametres electriques du micro
 
     Args:
         X_init (np.ndarray): Vecteur initial des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
