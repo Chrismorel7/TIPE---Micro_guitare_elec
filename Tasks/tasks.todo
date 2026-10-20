@@ -119,7 +119,7 @@ Si tu fais ça, tu passes d'un TIPE "valide" à un TIPE "remarquable".
 
 
 
-C'est une excellente idee. [cite_start]Obtenir le Bode experimental est la "pièce manquante" qui validerait definitivement votre modèle LTSpice (Slide 9 et 10) [cite: 6133-6140].
+C'est une excellente idee. [cite_start]Obtenir le Bode experimental est la "pièce manquante" qui validerait definitivement votre modèle LTSpice (Slide 9 et 10) [6133-6140].
 
 Vous avez de la chance : **vous avez dejà tout le materiel necessaire** (les bobines de Helmholtz et l'oscilloscope).
 
@@ -172,7 +172,7 @@ Utilisez la **Methode 2 (Injection electrique)**.
 * Elle donne une courbe très propre.
 * Elle permet de mesurer precisement $f_0$ et $Q$ (largeur du pic).
 
-[cite_start]Une fois que vous avez cette courbe experimentale, vous la superposez à votre courbe LTSpice (Slide 9) [cite: 6139-6140].
+[cite_start]Une fois que vous avez cette courbe experimentale, vous la superposez à votre courbe LTSpice (Slide 9) [6139-6140].
 * Si les pics se superposent $\rightarrow$ **Victoire totale**.
 * S'il y a un decalage $\rightarrow$ Vous ajustez les valeurs $L$ et $C$ dans LTSpice pour "fitter" la realite (Identification de modèle).
 

@@ -19,11 +19,11 @@ from library import Modelisation as mod
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.close("all")
 
-kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker parallèle (Théorie)', 'linewidth': 3}
 kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
-kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
-kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker serie (Théorie)', 'linewidth': 3}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker parallèle (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker serie (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
 kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker': "o", 'markersize': 2, 'linestyle': 'none'}
 
 # --- 1. Constantes physiques et géométriques ---
@@ -82,10 +82,10 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
 
 # Graphique 1 : SingleCoil
 mod.save_plot("Python/Exports/03-Reponse_magnetique/Singlecoil.png", (t_sc, v_sc_th, kw_S_th), (t_sc, v_sc_exp, kw_S_exp),
-            title="Réponse temporelle des micros pour un champ de 2.6mT", xlabel="temps [s]", ylabel="Tension induite [V]",
+            title="Réponse temporelle des micros pour un champ de 4.8mT", xlabel="temps [s]", ylabel="Tension induite [V]",
             ylim=(-14, 14))
 
 # Graphique 2 : Humbucker Série
 mod.save_plot("Python/Exports/03-Reponse_magnetique/Humbucker.png", (t_hs, v_hs_th, kw_Hs_th), (t_hs, v_hs_exp, kw_Hs_exp),
-            title="Réponse temporelle des micros pour un champ de 2.6mT", xlabel="temps [s]", ylabel="Tension induite [V]",
+            title="Réponse temporelle des micros pour un champ de 4.8mT", xlabel="temps [s]", ylabel="Tension induite [V]",
             ylim=(-14, 14))

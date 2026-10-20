@@ -112,7 +112,7 @@ $$|Z| = \frac{V R_{amp}}{U-V}$$
 \end{figure}
 
 \subsubsection{Traitement des données et optimisation}
-La résistance série $R_s$ est mesurée préalablement en courant continu à l'aide d'un multimètre. Les autres paramètres $L$, $C$, $R_p$ sont obtenus par un ajustement numérique du modèle théorique sur les points expérimentaux (Fig. 3). Nous utilisons pour cela l'algorithme de Levenberg-Marquardt, qui minimise l'écart quadratique entre la prédiction et la mesure (Fig. 4).
+La résistance série $R_s$ est mesurée préalablement en courant continu à l'aide d'un multimètre. Les autres paramètres $L$, $C$, $R_p$ sont obtenus par un ajustement numérique du modèle théorique sur les points expérimentaux (Fig. 3). Nous utilisons pour cela l'algorithme de moindre-carre, qui minimise l'écart quadratique entre la prédiction et la mesure (Fig. 4).
 
 \subsubsection{Résultats}
 Les résultats obtenus pour les deux types de micros étudiés sont regroupés dans le tableau ci-dessous :
@@ -129,7 +129,7 @@ Humbucker série & 15,1 k$\Omega$ & 4,60 H & 0,11 nF & 1,05 M$\Omega$ \\
 \end{tabular}
 \end{center}
 
-L'examen des courbes d'impédance (Fig. 3) confirme la nature résonante des trois dispositifs étudiés : le SingleCoil, le Humbucker en configuration parallèle et le Humbucker en configuration série. Les résultats expérimentaux révèlent que la fréquence de résonance du Humbucker série est significativement plus élevée que celle du SingleCoil, en accord avec la faible valeur de sa capacité parasite (0,11 nF), identifiée par l'algorithme de Levenberg-Marquardt. En revanche, le Humbucker parallèle, caractérisé par une capacité parasite de 0,05 nF et une inductance de 1,72 H, présente une résonance à une fréquence intermédiaire, distincte des deux autres configurations.
+L'examen des courbes d'impédance (Fig. 3) confirme la nature résonante des trois dispositifs étudiés : le SingleCoil, le Humbucker en configuration parallèle et le Humbucker en configuration série. Les résultats expérimentaux révèlent que la fréquence de résonance du Humbucker série est significativement plus élevée que celle du SingleCoil, en accord avec la faible valeur de sa capacité parasite (0,11 nF), identifiée par l'algorithme de moindre-carre. En revanche, le Humbucker parallèle, caractérisé par une capacité parasite de 0,05 nF et une inductance de 1,72 H, présente une résonance à une fréquence intermédiaire, distincte des deux autres configurations.
 
 L'analyse détaillée des relevés expérimentaux met en évidence une asymétrie marquée dans la réponse fréquentielle du Humbucker parallèle, contrastant avec la symétrie du pic de résonance du SingleCoil et du Humbucker série.
 
@@ -141,7 +141,7 @@ L'analyse détaillée des relevés expérimentaux met en évidence une asymétri
     \end{minipage}\hfill
     \begin{minipage}{0.48\textwidth}
         \includegraphics[width=\linewidth]{../../../Python/Exports/01-Reponse_electrique_frequetielle/Convergence.png}
-        \caption{Convergence de l'algorithme de Levenberg-Marquardt}
+        \caption{Convergence de l'algorithme de moindre-carre}
     \end{minipage}
 \end{figure}
 
@@ -326,7 +326,7 @@ Cette étude confirme que le choix entre SingleCoil et Humbucker ne relève pas 
 \section{Conclusion}
 Cette étude comparative apporte une réponse quantitative et qualitative à la problématique de l'influence du type de bobinage sur les performances des micros de guitare électrique. L'objectif était d'évaluer dans quelle mesure l'ajout d'une seconde bobine dans le Humbucker permet de concilier l'élimination des parasites électromagnétiques et la préservation de la richesse spectrale du signal induit.
 
-Les résultats démontrent que le micro se comporte comme un filtre passe-bas du second ordre, dont la réponse fréquentielle dépend de ses paramètres intrinsèques. L'identification par l'algorithme de Levenberg-Marquardt révèle que le SingleCoil présente un pic de résonance marqué, favorisant les hautes fréquences et conférant au son sa brillance caractéristique. Le Humbucker en configuration parallèle, lui, offre une réponse plus linéaire, mais dépourvue du renforcement harmonique dans le spectre audible, expliquant son timbre plus << sombre >>. Puis, le Humbucker en configuration série représente un compromis entre les deux, avec une résonance atténuée mais une meilleure préservation des médiums.
+Les résultats démontrent que le micro se comporte comme un filtre passe-bas du second ordre, dont la réponse fréquentielle dépend de ses paramètres intrinsèques. L'identification par l'algorithme de moindre-carre révèle que le SingleCoil présente un pic de résonance marqué, favorisant les hautes fréquences et conférant au son sa brillance caractéristique. Le Humbucker en configuration parallèle, lui, offre une réponse plus linéaire, mais dépourvue du renforcement harmonique dans le spectre audible, expliquant son timbre plus << sombre >>. Puis, le Humbucker en configuration série représente un compromis entre les deux, avec une résonance atténuée mais une meilleure préservation des médiums.
 
 L'analyse de l'induction et du filtrage spatial met en lumière l'influence de la géométrie double du Humbucker. L'espacement $\Delta$ entre les bobines engendre un filtrage en peigne, atténuant sélectivement certaines harmoniques de la corde vibrante. Contrairement au SingleCoil, qui capture fidèlement la vibration mécanique, le Humbucker modifie activement le contenu spectral du signal. Ce phénomène confirme que la perte de brillance observée n'est pas uniquement d'origine électrique, mais résulte d'une interférence destructive inhérente à sa conception spatiale.
 

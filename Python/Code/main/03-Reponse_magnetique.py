@@ -102,20 +102,22 @@ B_th = np.linspace(0, B_max * 1.1, 100)
 
 plt.figure(figsize=(6, 5))
 
-plt.plot(B_th*1e3, (k_sc_th * B_th), color='#FF0000', linewidth=3, label='SingleCoil (Théorie)')
-plt.plot(B_th*1e3, (k_hs_th * B_th), color='#009900', linewidth=3, label='Humbucker -- (Théorie)')
-plt.plot(B_th*1e3, (k_hp_th * B_th), color='#0000FF', linewidth=3, label='Humbucker // (Théorie)')
+plt.plot(B_th*1e3, (k_sc_th * B_th), color='#FF0000', linewidth=3, label='SingleCoil')
+plt.plot(B_th*1e3, (k_hp_th * B_th), color='#0000FF', linewidth=3, label='Humbucker parallèle')
+plt.plot(B_th*1e3, (k_hs_th * B_th), color='#009900', linewidth=3, label='Humbucker série')
+
 
 # Modification des points en croix (+) avec barres d'erreur
 if len(B_sc_exp) > 0:
     plt.errorbar(B_sc_exp*1e3, e_sc_exp, xerr=uB_sc*1e3, yerr=ue_sc, 
-                 fmt='none', color='#FF6666', label='SingleCoil (Expérience)', capsize=5)
-if len(B_hs_exp) > 0:
-    plt.errorbar(B_hs_exp*1e3, e_hs_exp, xerr=uB_hs*1e3, yerr=ue_hs, 
-                 fmt='none', color='#66CC66', label='Humbucker -- (Expérience)', capsize=5)
+                 fmt='none', color='#FF6666', capsize=5)
 if len(B_hp_exp) > 0:
     plt.errorbar(B_hp_exp*1e3, e_hp_exp, xerr=uB_hp*1e3, yerr=ue_hp, 
-                 fmt='none', color='#6666FF', label='Humbucker // (Expérience)', capsize=5)
+                 fmt='none', color='#6666FF', capsize=5)
+if len(B_hs_exp) > 0:
+    plt.errorbar(B_hs_exp*1e3, e_hs_exp, xerr=uB_hs*1e3, yerr=ue_hs, 
+                 fmt='none', color='#66CC66', capsize=5)
+
 
 plt.title("Sensibilité des micros à un champ parasite (50 Hz)", fontsize=12, fontweight='bold')
 plt.xlabel("Amplitude du champ parasite [mT]", fontsize=12)

@@ -1,0 +1,24 @@
+\babel@toc {french}{}\relax 
+\contentsline {figure}{\numberline {1}{\ignorespaces Ordres de grandeur du marché mondial de la guitare~\cite {wiseguy}.}}{1}{figure.caption.1}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Répartition des parts de marché par type de micro~\cite {wiseguy} : les architectures à double bobinage (Humbucker) représentent 60~\% du marché.}}{2}{figure.caption.2}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Chaîne de transduction électro-acoustique d'une guitare électrique~: la vibration mécanique de la corde $\varepsilon _{\text {méca}}$ est convertie par le micro en un signal électrique $\varepsilon _{\text {élec}}$, puis restituée en son par l'amplificateur.}}{3}{figure.caption.3}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Principe de fonctionnement du micro SingleCoil~: la corde, l'aimant permanent et la bobine.}}{4}{figure.caption.4}%
+\contentsline {figure}{\numberline {5}{\ignorespaces Origine du bourdonnement~: un champ magnétique parasite émis par l'environnement électronique de la scène induit un bruit dans le micro.}}{5}{figure.caption.5}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Principe de fonctionnement du micro Humbucker~: deux bobines en opposition de phase, deux aimants de polarité inversée.}}{6}{figure.caption.6}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Schéma électrique équivalent d'un micro non chargé, et fonction de transfert associée une fois le micro connecté à un amplificateur d'impédance d'entrée $R_a$~\cite {carson}.}}{9}{figure.caption.9}%
+\contentsline {figure}{\numberline {8}{\ignorespaces Protocole et dispositif expérimental de mesure d'impédance par pont diviseur de tension.}}{11}{figure.caption.10}%
+\contentsline {figure}{\numberline {9}{\ignorespaces Relevés expérimentaux et ajustements de l'impédance $|Z|$ des trois micros en fonction de la fréquence, et paramètres identifiés par la méthode des moindres carrés.}}{12}{figure.caption.12}%
+\contentsline {figure}{\numberline {10}{\ignorespaces Diagramme de Bode (gain) des trois micros une fois chargés par l'amplificateur. Les zones grisée et hachurée délimitent respectivement la plage des fréquences fondamentales et harmoniques audibles de la guitare.}}{13}{figure.caption.13}%
+\contentsline {figure}{\numberline {11}{\ignorespaces Dispositif expérimental~: maquette de guitare instrumentée et protocole d'excitation de la corde.}}{16}{figure.caption.14}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Spectres de la tension induite dans les trois micros pour une excitation de la corde à $x_0 = 20$~cm, $F = 80$~Hz. L'enveloppe théorique en $1/n$ est superposée aux mesures.}}{17}{figure.caption.15}%
+\contentsline {figure}{\numberline {13}{\ignorespaces Filtrage spatial du micro Humbucker série~: gain relatif mesuré et peigne spatial théorique $20\log _{10}\left |\cos (k_n\Delta /2)\right |$. Un creux prononcé apparaît à 320~Hz, cohérent avec le mode 4 identifié en figure~\ref {fig:spectres}.}}{18}{figure.caption.16}%
+\contentsline {figure}{\numberline {14}{\ignorespaces Dispositif expérimental~: génération d'un champ magnétique parasite calibré à l'aide d'une paire de bobines de Helmholtz.}}{21}{figure.caption.19}%
+\contentsline {figure}{\numberline {15}{\ignorespaces Réponse temporelle des micros SingleCoil et Humbucker série soumis à un champ parasite de 4,8~mT à 50~Hz.}}{22}{figure.caption.20}%
+\contentsline {figure}{\numberline {16}{\ignorespaces Sensibilité des micros à un champ magnétique parasite (50~Hz) en fonction de son amplitude, et calcul associé du taux de réjection de mode commun (CMRR).}}{23}{figure.caption.21}%
+\contentsline {figure}{\numberline {17}{\ignorespaces Lignes de champ magnétique simulées autour d'un micro SingleCoil et d'un micro Humbucker.}}{29}{figure.caption.24}%
+\contentsline {figure}{\numberline {18}{\ignorespaces Organigramme de l'algorithme des moindres carrés (Levenberg--Marquardt).}}{30}{figure.caption.25}%
+\contentsline {figure}{\numberline {19}{\ignorespaces Convergence de l'algorithme pour les trois micros étudiés~: l'erreur quadratique normalisée décroît en moins de 25~itérations.}}{31}{figure.caption.26}%
+\contentsline {figure}{\numberline {20}{\ignorespaces Comparaison des méthodes de filtrage numérique appliquées à un signal expérimental bruité.}}{32}{figure.caption.27}%
+\contentsline {figure}{\numberline {21}{\ignorespaces Principe des bobines de Helmholtz et carte du champ magnétique généré (source~: Wikipedia, domaine public).}}{33}{figure.caption.28}%
+\contentsline {figure}{\numberline {22}{\ignorespaces Défaillance d'une connexion soudée sur un des micros testés.}}{34}{figure.caption.29}%
+\contentsline {figure}{\numberline {23}{\ignorespaces Dispositif de test complémentaire et artefacts observés sur les relevés d'oscilloscope.}}{35}{figure.caption.30}%

@@ -187,8 +187,8 @@ La matrice jacobienne rassemble les dérivées partielles de chaque composante d
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
-    """Basee sur l'algorythme de moindre_carre, cette fonction retourne la matrice Jacobienne J
+def matrice_jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
+    """Basee sur l'algorithme de moindres_carres, cette fonction retourne la matrice Jacobienne J
     Args:
         X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
@@ -256,8 +256,8 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
 \begin{lstlisting}[language=Python]
 import numpy as np
 
-def moindre_carre(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
-    """Algorythme de moindre-carre pour l'optimisation non-lineaire des parametres electriques du micro
+def moindres_carres(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
+    """algorithme de moindre-carre pour l'optimisation non-lineaire des parametres electriques du micro
 
     Args:
         X_init (np.ndarray): Vecteur initial des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
@@ -282,7 +282,7 @@ def moindre_carre(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N
         eps = np.sum(r**2)
         
         # 1. Calcul de la Jacobienne classique
-        J = Matrice_Jacobienne(X, rs, f)
+        J = matrice_jacobienne(X, rs, f)
 
         # 2. NORMALISATION (Adimensionnement)
         # On multiplie chaque colonne de J par la valeur actuelle du paramètre X correspondant.
@@ -370,7 +370,17 @@ def calcul_bode(X:np.ndarray, rs:float, f:np.ndarray, Ramp:float=1e6)-> tuple[np
 import numpy as np
 from scipy.signal import find_peaks
 
-def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
+def attenuation_theorique(frequences: np.ndarray, x1: float, x2: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    v = 2 * L * F
+    k = 2 * np.pi * frequences / v
+    Delta = abs(x2-x1)
+    x_humbucker = (x2+x1)/2
+    signal_sc = np.sin(k * x_s)
+    Peigne_hb = np.cos(k * Delta / 2)
+    signal_hb = Peigne_hb*np.sin(k * x_humbucker)
+    return signal_hb, Peigne_hb,signal_sc
+
+def extraire_pics(frequences, amplitudes, prominence=0.05, distance=10):
     """Extrait les pics significatifs d'un spectre de Fourier en utilisant la proeminence."""
     indices, _ = find_peaks(amplitudes, prominence=prominence, distance=distance)
     liste_frequences = frequences[indices].tolist()
@@ -380,15 +390,16 @@ def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
 kw_peigne = {'color': "#000000", 'label': 'Peigne spatial', 'linewidth': 3}
 kw_att = {'color': "#888888", 'label': 'Gain relatif', 'linewidth': 1}
 
-L_freqs, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=0.04, distance=5)
-L_freqs, L_pic_hs_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
+L_freqs, L_pic_s_exp = mod.extraire_pics(freqs_s_exp, fft_s_exp, prominence=0.04, distance=5)
+L_freqs, L_pic_hs_exp = mod.extraire_pics(freqs_hs_exp, fft_hs_exp, prominence=0.03, distance=5)
 
 freqs = np.linspace(30, 20000, 1000)
-signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
-signal_hp, peigne_hp, signal_sc = mod.attenuation_theorique_db(freqs, x_hp1, x_hp2)
+signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique(freqs, x_hs1, x_hs2)
+signal_hp, peigne_hp, signal_sc = mod.attenuation_theorique(freqs, x_hp1, x_hp2)
 
 Attenuation_th = 20*np.log10(np.abs(signal_hs / (signal_sc + 1e-6)) + 1e-6)
 Attenuation_exp = 20*np.log10(np.abs(L_pic_hs_exp / (L_pic_s_exp + 1e-6)) + 1e-6)
+
 mod.save_plot(PATH_exp + "Filtrage_spatial.png",
         (freqs, Attenuation_th, kw_att),
         (L_freqs, Attenuation_exp, kw_Hs_exp),
@@ -401,7 +412,7 @@ mod.save_plot(PATH_exp + "Filtrage_spatial.png",
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{../../Exports/02-Reponse_mecanique/Filtrage_spatial.png}
+    \includegraphics[width=0.6\textwidth]{../../Exports/02-Reponse_mecanique/Filtrage_spatial.png}
     \caption{Filtrage spatial du Humbucker série}
     \label{fig:filtre-spatial}
 \end{figure}
@@ -419,8 +430,8 @@ import numpy as np
 def lire_fichier(PATH):
     List_temps = []
     List_sig = []
-    file_s2 = open(PATH)
-    L_lignes = file_s2.readlines()
+    file = open(PATH)
+    L_lignes = file.readlines()
 
     for ligne in L_lignes[2:]:
         ligne = ligne.strip().split(',')
@@ -429,6 +440,7 @@ def lire_fichier(PATH):
         List_temps.append(float(ligne[0]))
         List_sig.append(float(ligne[1]))
     
+    file.close()
     return List_temps, List_sig
 
 def write_file(PATH, List_temps, List_sig):

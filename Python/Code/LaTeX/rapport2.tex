@@ -1,0 +1,272 @@
+\documentclass[11pt, a4paper]{article}
+
+% ==========================================
+% PACKAGES ET CONFIGURATION
+% ==========================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm, headheight=15pt]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, mathrsfs}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{float}
+
+% Configuration En-tête / Pied de page
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small LYCÉE F. BUISSON, 2026, TIPE N°39662: CHRISTOPHE MOREL}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+% ------------------------------------------
+% PAGE DE GARDE
+% ------------------------------------------
+\begin{titlepage}
+    \vspace*{\fill}
+    \begin{center}
+        {\Huge \textbf{Guitare électrique : Étude de l'influence du type de bobinage dans le micro}} \\[2cm]
+        {\Large \textbf{Christophe Morel}} \\[0.5cm]
+        {\large Lycée Ferdinand Buisson, dit 'la Nat', CPGE PT} \\[3cm]
+    \end{center}
+    
+    \textbf{Note de l'auteur} \\
+    Je remercie Art Music Store (Grenoble) et la Menuiserie Paradis (Brézins) pour leur soutien technique et la mise à disposition de matériel nécessaire à cette étude[5].
+    \vspace*{\fill}
+\end{titlepage}
+
+\newpage
+
+% ------------------------------------------
+% ABSTRACT ET INTRODUCTION
+% ------------------------------------------
+\section*{Introduction et contexte du projet}
+
+Contrairement à une guitare acoustique qui utilise une caisse de résonance en bois pour amplifier naturellement le son, la guitare électrique est un instrument silencieux à l'état brut[5]. Elle repose entièrement sur un capteur électromagnétique, appelé \textbf{micro} (ou \textit{pickup} en anglais), placé sous les cordes[5]. 
+
+Le principe physique de ce micro est simple : il s'agit d'un aimant permanent entouré d'une bobine de fil de cuivre[5]. L'aimant magnétise la corde en métal située juste au-dessus de lui. Lorsque le musicien gratte la corde, celle-ci se met à vibrer[5]. Le mouvement de cette corde magnétisée crée une variation du champ magnétique à travers la bobine, ce qui engendre un courant électrique par le principe d'\textbf{induction électromagnétique} (Loi de Faraday)[5]. Ce faible signal électrique est ensuite envoyé à un amplificateur pour être transformé en son[5].
+
+\paragraph{Le problème du bourdonnement (Hum) :}
+Les premiers micros inventés, appelés \textbf{SingleCoil} (car composés d'une seule bobine), captent parfaitement les vibrations de la corde. Cependant, ils agissent aussi comme de véritables antennes[5]. Ils captent toutes les ondes électromagnétiques ambiantes, notamment le rayonnement à 50 Hz émis par les installations électriques, les lumières de scène ou les amplificateurs[5]. Cela se traduit par un bruit de fond constant et très désagréable appelé "bourdonnement" (ou \textit{Hum})[5].
+
+\paragraph{L'invention du Humbucker :}
+Pour résoudre ce problème, l'ingénieur Seth Lover invente en 1955 le micro \textbf{Humbucker} (littéralement "qui annule le bourdonnement")[5]. Son idée de génie repose sur l'utilisation de \textbf{deux bobines} au lieu d'une seule[5] :
+\begin{itemize}
+    \item \textbf{Câblage inversé (opposition de phase) :} Les deux bobines sont enroulées dans des sens opposés. Ainsi, un parasite externe touchant les deux bobines créera un signal positif dans l'une, et un signal négatif dans l'autre. En s'additionnant, les deux signaux parasites s'annulent (principe de la réjection de mode commun)[5].
+    \item \textbf{Aimants inversés :} Pour éviter que le son de la guitare ne s'annule lui aussi, les aimants sous la deuxième bobine sont inversés. Le signal utile de la guitare subit donc une "double inversion" (aimant à l'envers + bobine à l'envers), ce qui le remet à l'endroit. Le son de la corde s'additionne, tandis que le parasite s'annule[5].
+\end{itemize}
+
+\paragraph{Le compromis acoustique :}
+Si l'invention est brillante d'un point de vue électrique, les musiciens ont rapidement remarqué qu'elle modifiait le timbre de l'instrument. Le Humbucker produit un son décrit comme plus "mat" ou "rond", perdant la clarté et la brillance des aigus caractéristiques du SingleCoil[5]. Le constructeur et le musicien font donc face à un compromis : privilégier la pureté du son avec du bruit, ou supprimer le bruit au détriment de la clarté[5].
+
+\vspace{0.5cm}
+\noindent\textbf{PROBLÉMATIQUE RETENUE}\\
+Comment modéliser et quantifier l'impact de l'ajout d'une seconde bobine sur la suppression des parasites d'une part, et sur l'appauvrissement du spectre harmonique de la guitare d'autre part ?[5, 7]
+
+\newpage
+\tableofcontents
+\newpage
+
+% ------------------------------------------
+% SECTION 1
+% ------------------------------------------
+\section{Étude de la modification du timbre : Filtrage électrique}
+
+Pour comprendre pourquoi le Humbucker modifie le son, il faut d'abord étudier le micro non pas comme un aimant, mais comme un composant électronique. 
+
+\subsection{Modélisation théorique du circuit}
+Un micro de guitare est constitué de milliers de tours de fil de cuivre très fin. Électriquement, cela se modélise par un circuit RLC comprenant quatre éléments physiques concrets[5] :
+\begin{itemize}
+    \item \textbf{La source de tension $e(t)$ :} L'énergie créée par le mouvement de la corde.
+    \item \textbf{Une résistance série $R_s$ :} La résistance électrique naturelle des milliers de mètres de fil de cuivre.
+    \item \textbf{Une inductance $L$ :} Due à la géométrie enroulée (bobine) du fil de cuivre, qui s'oppose aux variations de courant.
+    \item \textbf{Une capacité parasite $C$ :} Les fils de cuivre étant très proches les uns des autres dans la bobine, ils se comportent comme de minuscules condensateurs accumulant des charges électriques.
+    \item \textbf{Une résistance parallèle $R_p$ :} Qui modélise les pertes d'énergie (courants de Foucault) dans les aimants métalliques.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{inserer.png}
+    \caption{Schéma électrique équivalent d'un micro connecté à un amplificateur ($R_{amp}$)[5].}
+\end{figure}
+
+Une fois branché à un amplificateur (modélisé par une résistance $R_{amp}$), les lois de l'électronique nous permettent de calculer la fonction de transfert $H(p)$ du système. L'équation révèle que ce circuit agit comme un \textbf{filtre passe-bas du second ordre}[5]. Autrement dit, il laisse passer les fréquences graves (les notes basses) mais bloque les fréquences aiguës au-delà d'un certain seuil (la fréquence de coupure)[5].
+
+\subsection{Expérimentation : Détermination des valeurs du micro}
+Afin de comparer les micros, nous avons mis en place un dispositif pour déterminer leurs valeurs exactes ($L, C, R_s, R_p$). Le protocole consiste à injecter un signal électrique de fréquence variable dans les micros et d'observer leur comportement (mesure de l'impédance)[5]. 
+
+Grâce à un algorithme mathématique d'optimisation (méthode des moindres carrés), nous avons pu ajuster le modèle théorique aux mesures expérimentales et extraire les valeurs suivantes[5, 8] :
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Type de micro} & \textbf{Résistance ($R_s$)} & \textbf{Inductance ($L$)} & \textbf{Capacité ($C$)} & \textbf{Pertes ($R_p$)} \\
+\midrule
+SingleCoil (1 bobine) & 5,26 k$\Omega$ & 2,37 H & 0,37 nF & 492,3 k$\Omega$ \\
+Humbucker Série (2 bobines) & 15,1 k$\Omega$ & 4,60 H & 0,11 nF & 1,05 M$\Omega$ \\
+\bottomrule
+\end{tabular}
+\caption{Caractéristiques électriques intrinsèques des micros[5].}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{inserer.png}
+        \caption{Ajustement des modèles sur les mesures réelles[5].}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{inserer.png}
+        \caption{Diagramme de Bode (Comportement en fréquence)[5].}
+    \end{minipage}
+\end{figure}
+
+\subsection{Interprétation musicale des résultats électriques}
+Le diagramme de Bode (Figure 3) est essentiel pour comprendre la modification du timbre :
+\begin{itemize}
+    \item \textbf{Le SingleCoil} possède un "pic de résonance" très prononcé vers les hautes fréquences. Cela signifie qu'il va amplifier artificiellement les harmoniques aiguës de la corde, conférant au son sa clarté et sa brillance si recherchées[5].
+    \item \textbf{Le Humbucker}, du fait qu'il possède deux bobines en série, voit son inductance ($L$) presque doubler (4,60 H contre 2,37 H)[5]. Électriquement, une plus forte inductance augmente l'effet de filtrage passe-bas. On observe que son pic de résonance est plus aplati et décalé vers la gauche (vers les graves). Les fréquences aiguës sont donc naturellement freinées par l'architecture électrique du micro, expliquant le son plus "sourd" et "mat"[5].
+\end{itemize}
+
+% ------------------------------------------
+% SECTION 2
+% ------------------------------------------
+\section{Étude de la modification du timbre : Filtrage spatial}
+
+L'explication électrique ne suffit pas. Le fait d'avoir deux bobines modifie également la façon dont le capteur "voit" physiquement la corde vibrer.
+
+\subsection{La vibration de la corde et l'effet de "peigne"}
+Lorsqu'une corde de guitare est pincée, elle ne vibre pas seulement de haut en bas dans son entièreté (la fondamentale). Elle ondule également en formant de multiples petits ventres et nœuds (les harmoniques)[5, 7]. 
+
+Le problème du Humbucker réside dans sa dimension physique. Un SingleCoil est étroit et mesure la vibration de la corde en \textbf{un seul point} précis[5]. Un Humbucker, avec ses deux bobines écartées d'une distance $\Delta$ (environ 1,8 cm), capte la corde en \textbf{deux points} distincts en même temps[5]. 
+
+Or, pour certaines harmoniques très aiguës, les ondulations de la corde sont très rapprochées. Il se produit alors un phénomène optico-mécanique : pendant qu'un ventre de la corde monte au-dessus de la première bobine, il descend au-dessus de la seconde. Les deux bobines envoient donc des informations contraires à l'amplificateur, qui s'annulent mutuellement. C'est ce qu'on appelle un \textbf{filtre en peigne spatial}[5, 7].
+
+Mathématiquement, l'amplitude $A_n$ d'une note captée par le Humbucker dépend d'un terme en cosinus qui illustre cette annulation périodique[5, 7] :
+\begin{equation}
+A_{n_H} \propto \cos\left(\frac{k_n\Delta}{2}\right)
+\end{equation}
+
+\subsection{Mise en évidence expérimentale}
+Pour vérifier cette théorie, nous avons fait vibrer artificiellement une corde à une fréquence fondamentale fixe de 80 Hz, et avons analysé informatiquement le spectre sonore capté par les deux micros.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{inserer.png}
+    \caption{Comparaison des harmoniques : Le filtrage spatial en action[5].}
+\end{figure}
+
+\textbf{Analyse :} Sur la Figure 4, la courbe grise montre l'enveloppe théorique du "peigne spatial" calculé à cause de l'écart $\Delta$. Les points verts (mesures expérimentales du Humbucker) suivent parfaitement ces creux. Par exemple, autour de 320 Hz, le Humbucker enregistre une chute de volume massive que le SingleCoil n'a pas, car cette fréquence correspond exactement au moment où la corde ondule en sens inverse au-dessus des deux bobines simultanément[5].
+
+\textbf{Conclusion sur le timbre :} La perte de brillance du Humbucker n'est donc pas qu'électrique. Elle est aussi mécanique et spatiale. En s'élargissant pour accueillir une seconde bobine, le micro devient "myope" face aux petites ondulations aiguës de la corde[5].
+
+% ------------------------------------------
+% SECTION 3
+% ------------------------------------------
+\section{L'efficacité de la solution : Mesure du taux de réjection du bruit}
+
+Après avoir constaté le prix acoustique à payer (la perte des aigus), il est temps de vérifier si l'ajout de cette seconde bobine remplit bien son rôle initial : annuler le bourdonnement ambiant.
+
+\subsection{Modélisation de l'environnement parasite}
+Les appareils électriques sur scène génèrent un champ magnétique $B$ alternatif à 50 Hz dans tout l'espace ambiant[5]. Ce champ peut être considéré comme uniforme (le même partout autour de la guitare)[5]. 
+
+\begin{itemize}
+    \item \textbf{Pour un SingleCoil :} La bobine unique baigne dans ce champ. Selon la loi de Faraday, le champ induit une tension $e(t)$ qui sera directement amplifiée : c'est le bruit[5].
+    \item \textbf{Pour un Humbucker :} Les deux bobines baignent dans le même champ uniforme. Mais comme elles sont enroulées en sens inverse (opposition de phase), le champ crée une tension $+e(t)$ dans la première, et $-e(t)$ dans la deuxième. La somme des deux est mathématiquement égale à 0[5]. L'amplificateur ne reçoit donc aucun bruit. 
+\end{itemize}
+
+Seul le très léger gradient spatial (la minuscule différence d'intensité du champ entre les deux bobines espacées de 1,8 cm) empêche l'annulation d'être parfaitement absolue dans la théorie[5].
+
+\subsection{Expérimentation en milieu bruité}
+Afin de quantifier la capacité réelle du Humbucker à supprimer ce bruit, nous avons placé les micros au centre de \textbf{bobines de Helmholtz} (un dispositif générant un champ magnétique parasite artificiel de 50 Hz parfaitement contrôlé et uniforme)[5]. Nous avons mesuré l'amplitude du "bourdonnement" généré par les micros en l'absence de toute vibration de corde[5].
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{inserer.png}
+        \caption{Dispositif de test : Bobines de Helmholtz[5].}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \includegraphics[width=\linewidth]{inserer.png}
+        \caption{Sensibilité au bruit des différents micros[5].}
+    \end{minipage}
+\end{figure}
+
+Les mesures (Figure 6) donnent le "coefficient de sensibilité" au bruit ($k$) pour chaque micro :
+\begin{itemize}
+    \item \textbf{SingleCoil :} $k = 2,05 \text{ V}\cdot\text{mT}^{-1}$. La courbe rouge grimpe en flèche : le micro capte énormément le parasite environnant[5].
+    \item \textbf{Humbucker :} $k = 0,08 \text{ V}\cdot\text{mT}^{-1}$. La courbe verte reste quasiment plate : le parasite est presque totalement ignoré[5].
+\end{itemize}
+
+\subsection{Bilan d'efficacité : Le CMRR}
+En électronique, on qualifie cette efficacité par le taux de réjection de mode commun (CMRR)[5]. Plus le CMRR est grand (en décibels), plus le micro filtre bien le bruit tout en gardant le son de la corde[5].
+Notre expérimentation révèle un CMRR expérimental de \textbf{28,7 dB} pour le Humbucker série[5]. 
+
+L'annulation du bruit est donc massive, même si elle n'atteint pas la perfection mathématique (qui prévoyait 35,0 dB) à cause des inévitables asymétries de fabrication (une bobine a toujours quelques tours de cuivre de plus que l'autre dans le monde réel)[5].
+
+% ------------------------------------------
+% CONCLUSION
+% ------------------------------------------
+\section{Conclusion Générale}
+
+Cette étude permet d'affirmer que le micro Humbucker est une brillante réussite d'ingénierie, mais qu'il constitue un \textbf{compromis inévitable} :
+
+\begin{enumerate}
+    \item \textbf{L'objectif d'isolation est atteint :} Le principe d'opposition de phase des deux bobines fonctionne de manière redoutable, offrant une réjection du bruit de $28,7\text{ dB}$. Cela rend le Humbucker indispensable pour les environnements scéniques pollués ou pour les genres musicaux nécessitant une énorme amplification (Hard Rock, Métal) où le moindre parasite serait assourdissant[5, 7].
+    \item \textbf{Le prix à payer (Modification du timbre) :} L'ajout de cette seconde bobine altère définitivement le son original de l'instrument par deux phénomènes conjugués[5]. D'une part, l'augmentation de l'inductance électrique freine la résonance des aigus. D'autre part, l'espacement spatial des bobines crée un "filtre en peigne" qui détruit mécaniquement la captation des ondes sonores de hautes fréquences[5].
+\end{enumerate}
+
+Le choix du guitariste et du luthier ne s'arrête donc pas à un "meilleur" micro, mais à l'outil le plus adapté à son usage. Le SingleCoil restera privilégié pour la pureté cristalline et la richesse de ses harmoniques (Funk, Jazz clair), tandis que le Humbucker assurera la robustesse et la rondeur du son face aux fortes saturations.
+
+\newpage
+% ------------------------------------------
+% ANNEXES & BIBLIOGRAPHIE
+% ------------------------------------------
+\section{Notations et valeurs de l'étude}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{llcX}
+\toprule
+\textbf{Notation} & \textbf{Valeur} & \textbf{Unité} & \textbf{Description} \\
+\midrule
+\multicolumn{4}{l}{\textbf{Paramètres d'Ingénierie des Micros}} \\
+\midrule
+$R_{s_S}$, $L_S$, $C_S$ & 5,26k / 2,37 / 0,37n & $\Omega$ / H / F & Paramètres RLC micro SingleCoil \\
+$R_{s_{Hs}}$, $L_{Hs}$, $C_{Hs}$ & 15,10k / 4,60 / 0,11n & $\Omega$ / H / F & Paramètres RLC micro Humbucker Série \\
+$\Delta$ & 0,018 & m & Entraxe entre les deux bobines du Humbucker \\
+$z_{0}$ & 0,004 & m & Distance entre la corde et le micro au repos \\
+\midrule
+\multicolumn{4}{l}{\textbf{Paramètres Mécaniques de la Corde}} \\
+\midrule
+$L$ & 0,85 & m & Longueur vibrante de la corde de guitare \\
+$F$ & 80 & Hz & Fréquence fondamentale choisie pour les tests \\
+$x_{0}$ & 0,20 & m & Position du pincement de la corde (excitation) \\
+\midrule
+\multicolumn{4}{l}{\textbf{Paramètres Magnétiques et Interférences}} \\
+\midrule
+$F_{B}$ & 50 & Hz & Fréquence typique du rayonnement parasite externe \\
+$k_{\text{Sexp}}$ & 2,05 & $V\cdot mT^{-1}$ & Sensibilité au bruit du SingleCoil mesurée \\
+$k_{\text{Hsexp}}$ & 0,08 & $V\cdot mT^{-1}$ & Sensibilité au bruit du Humbucker mesurée \\
+$\text{CMRR}_{\text{Hsexp}}$ & 28,7 & dB & Taux de réjection du bruit réel mesuré (Humbucker) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% --- REFERENCES ---
+\begin{thebibliography}{9}
+\bibitem{wiseguy} WiseGuy Research Consultants, \textit{"Global Electric Guitar Pickup Market Research Report 2024,"} Pune, India, 2024.
+\bibitem{hill} Matthew W. Hill, \textit{"The hidden history of the electric guitar"}, in \textit{Quand la guitare [s']électrise!}, Benoît Navarret et al. (dir.), Sorbonne Université Presses, pp. 33-61, 2022.
+\bibitem{horton} N. G. Horton \& T. R. Moore: \textit{Modeling the magnetic pickup of an electric guitar}, American Journal of Physics, vol. 77, no. 2, 2009.
+\bibitem{duncan} S. W. Duncan, \textit{"Interview With Seth Lover"}, Seymour Duncan. [En ligne].
+\bibitem{carson} Dan Carson, \textit{"Investigation of the Electromagnetic Properties of Electric Guitar Pickups"}, UIUC, Physics Senior Thesis, 2009.
+\bibitem{andrea} B. d'Andréa-Novel, B. Fabre, P. Jouvelot, \textit{Acoustique Informatique MusiquE : Outils scientifiques pour la musique}, Presses des Mines, 2010.
+\end{thebibliography}
+
+\end{document}

@@ -7,7 +7,7 @@ corde jusqu'au signal électrique filtré.
 
 Fonctionnalités principales :
     - Identification paramétrique (L, C, R_p) par l'algorithme de 
-        Levenberg-Marquardt.
+        moindre-carre.
     - Calcul des fonctions de transfert H(p) et tracé des diagrammes de 
         Bode.
     - Modélisation de la f.e.m. induite e(t) via la loi de Faraday et 
@@ -154,7 +154,7 @@ def compute_and_normalize_fft(signal: np.ndarray, Ne_fft: int):
     amp = np.abs(fft) / Ne_fft
     return amp
 
-def extraire_pics_separes(frequences, amplitudes, prominence=0.05, distance=10):
+def extraire_pics(frequences, amplitudes, prominence=0.05, distance=10):
     """
     Extrait les pics significatifs d'un spectre de Fourier en utilisant la proeminence.
     Args:
@@ -199,8 +199,8 @@ def Z_micro(X:np.ndarray, rs:float, w:np.ndarray)-> np.ndarray:
     Y_im = (C * w) - (L * w / den_L)
     return 1 / np.sqrt(Y_re**2 + Y_im**2)
 
-def Matrice_Jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
-    """Basee sur l'algorythme de Levenberg_Marquardt, cette fonction retourne la matrice Jacobienne J
+def matrice_jacobienne(X:np.ndarray, rs:float, f:np.ndarray)->np.ndarray:
+    """Basee sur l'algorithme de moindres_carres, cette fonction retourne la matrice Jacobienne J
     Args:
         X (np.ndarray): Vecteur des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
             Rp la resistance parallèle [kOhm] modelisant les courants de foucauts
@@ -247,8 +247,8 @@ def residus(X:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray)-> np.ndarray
     """
     return Z_exp - Z_micro(X, rs, 2 * np.pi * f)
 
-def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
-    """Algorythme de Levenberg-Marquardt pour l'optimisation non-lineaire des parametres electriques du micro
+def moindres_carres(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndarray, N:int, learning_rate:float):
+    """algorithme de moindre-carre pour l'optimisation non-lineaire des parametres electriques du micro
 
     Args:
         X_init (np.ndarray): Vecteur initial des caracteristique electrique interne du micro [L, C, Rp] avec L l'inductance [H], C la capacite parallèle [nF]et
@@ -273,7 +273,7 @@ def Levenberg_Marquardt(X_init:np.ndarray, rs:float, f:np.ndarray, Z_exp:np.ndar
         eps = np.sum(r**2)
         
         # 1. Calcul de la Jacobienne classique
-        J = Matrice_Jacobienne(X, rs, f)
+        J = matrice_jacobienne(X, rs, f)
 
         # 2. NORMALISATION (Adimensionnement)
         # On multiplie chaque colonne de J par la valeur actuelle du paramètre X correspondant.
@@ -433,7 +433,7 @@ def fem_humbucker(n: int, N: int, x1: float, x2: float, t: np.ndarray, A0: float
             omega_i = i * omega1
             spatial_node = np.sin(i * np.pi * x_pos / L)
             
-            # Superposition des modes [cite: 2814, 2830]
+            # Superposition des modes [2814, 2830]
             zs_t += Bn * spatial_node * np.cos(omega_i * t)
             vs_t -= Bn * omega_i * spatial_node * np.sin(omega_i * t)
 

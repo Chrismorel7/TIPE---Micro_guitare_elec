@@ -1,0 +1,17 @@
+\babel@toc {french}{}\relax 
+\contentsline {paragraph}{Le problème du bourdonnement (Hum) :}{1}{section*.2}%
+\contentsline {paragraph}{L'invention du Humbucker :}{1}{section*.3}%
+\contentsline {paragraph}{Le compromis acoustique :}{1}{section*.4}%
+\contentsline {section}{\numberline {1}Étude de la modification du timbre : Filtrage électrique}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Modélisation théorique du circuit}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Expérimentation : Détermination des valeurs du micro}{4}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Interprétation musicale des résultats électriques}{4}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Étude de la modification du timbre : Filtrage spatial}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}La vibration de la corde et l'effet de "peigne"}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Mise en évidence expérimentale}{5}{subsection.2.2}%
+\contentsline {section}{\numberline {3}L'efficacité de la solution : Mesure du taux de réjection du bruit}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Modélisation de l'environnement parasite}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Expérimentation en milieu bruité}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Bilan d'efficacité : Le CMRR}{7}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Conclusion Générale}{7}{section.4}%
+\contentsline {section}{\numberline {5}Notations et valeurs de l'étude}{9}{section.5}%

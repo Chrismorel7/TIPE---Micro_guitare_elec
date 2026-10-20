@@ -53,11 +53,11 @@ L_hs = 4.71                  # Association série : L_bobine = L_hs / 2
 N_hs = np.sqrt((L_hs * h_bobine) / (2 * mu_0 * mu_r * S * K))
 
 # --- Couleurs graphiques ---
-kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Théorie)', 'linewidth': 3}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker parallèle (Théorie)', 'linewidth': 3}
 kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Théorie)', 'linewidth': 3}
-kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
-kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker serie (Théorie)', 'linewidth': 3}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker parallèle (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker serie (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
 kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
 
 Title = "Spectre de la tension induite dans le micro"
@@ -181,8 +181,8 @@ mod.save_plot(PATH_exp + "FFT/Humbucker_serie.png",
 print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
 
 # --- Mise en evidence du filtrage spatial ---
-L_freqs_s, L_pic_s_exp = mod.extraire_pics_separes(freqs_s_exp, fft_s_exp, prominence=prominence_val, distance=5)
-L_freqs_hs, L_pic_hs_exp = mod.extraire_pics_separes(freqs_hs_exp, fft_hs_exp, prominence=prominence_val, distance=5)
+L_freqs_s, L_pic_s_exp = mod.extraire_pics(freqs_s_exp, fft_s_exp, prominence=prominence_val, distance=5)
+L_freqs_hs, L_pic_hs_exp = mod.extraire_pics(freqs_hs_exp, fft_hs_exp, prominence=prominence_val, distance=5)
 
 kw_peigne = {'color': "#000000", 'label': 'Peigne spatial', 'linewidth': 3}
 kw_att = {'color': "#888888", 'label': 'Gain relatif', 'linewidth': 1}

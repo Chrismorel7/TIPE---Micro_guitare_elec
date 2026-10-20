@@ -41,11 +41,11 @@ u_res = 0.01   # Incertitude sur tension mesurée [V]
 u_R = 97.6e3 * 0.01  # Incertitude sur R : ±1% (spec résistance de précision)
 
 # --- Graphique ---
-kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker // (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
+kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker parallèle (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
 kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker -- (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
-kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker // (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
-kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker -- (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+kw_Hs_th = {'color': '#009900', 'label': 'Humbucker serie (Ajustement)', 'linewidth': 3, 'linestyle':(0, (1,1))}
+kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker parallèle (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
+kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker serie (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
 kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker':"o", 'markersize':6, 'linestyle':'None'}
 
 
@@ -123,12 +123,12 @@ print(f"  - Incertitude relative: {np.mean(u_Z_hs / (Z_hs*1e-3))*100:.2f}%")
 print("="*60 + "\n")
 
 
-# --- Appel de l'algorithme de Levenberg-Marquardt ---
+# --- Appel de l'algorithme de moindre-carre ---
 L_S = np.zeros((3,50))
 for i in range(1,51):
-    X_s, S_s = mod.Levenberg_Marquardt(X0, Rs_s, f, Z_s, i, LR)
-    X_hp, S_hp = mod.Levenberg_Marquardt(X0, Rs_hp, f, Z_hp, i, LR)
-    X_hs, S_hs = mod.Levenberg_Marquardt(X0, Rs_hs, f, Z_hs, i, LR)
+    X_s, S_s = mod.moindres_carres(X0, Rs_s, f, Z_s, i, LR)
+    X_hp, S_hp = mod.moindres_carres(X0, Rs_hp, f, Z_hp, i, LR)
+    X_hs, S_hs = mod.moindres_carres(X0, Rs_hs, f, Z_hs, i, LR)
     L_S[0, i-1] = S_s
     L_S[1, i-1] = S_hp
     L_S[2, i-1] = S_hs
@@ -151,7 +151,7 @@ mod.save_plot("Python/Exports/01-Reponse_electrique_frequetielle/Convergence.png
             (range(1,51), L_S[0]*100, kw_S_th),
             (range(1,51), L_S[2]*100, kw_Hs_th),
             (range(1,51), L_S[1]*100, kw_Hp_th),
-            title="Convergence de l'algorithme de Levenberg-Marquardt",
+            title="Convergence de l'algorithme de moindre-carre",
             xlabel="Nombre d'iteration [.]",
             ylabel="Image de l'erreur [%]")
 
