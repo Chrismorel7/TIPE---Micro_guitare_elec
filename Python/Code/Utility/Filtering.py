@@ -1,142 +1,137 @@
-import numpy as np
+"""Filter experimental oscilloscope signals and save comparison plots."""
+
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import numpy as np
 
-def lire_fichier(PATH):
-    List_temps = []
-    List_sig = []
-    file_s2 = open(PATH)
-    L_lignes = file_s2.readlines()
-
-    for ligne in L_lignes[2:]:
-        ligne = ligne.strip().split(',')
-        ligne = [x.replace('\n', '') for x in ligne]
-        ligne = [x.replace('E', 'e') for x in ligne]
-        List_temps.append(float(ligne[0]))
-        List_sig.append(float(ligne[1]))
-    
-    return List_temps, List_sig
-
-def write_file(PATH, List_temps, List_sig):
-    with open(PATH, 'w') as file:
-        file.write('Time;Signal\n')
-        for t, s in zip(List_temps, List_sig):
-            file.write(f"{t}\t{s}\n")
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+INPUT_DIRECTORY = PROJECT_ROOT / "Python" / "data" / "raw" / "02-Reponse_meca"
+OUTPUT_DIRECTORY = PROJECT_ROOT / "Python" / "data" / "filter" / "02-Reponse_meca"
+INPUT_FILES = (
+    "Hp1.csv",
+    "Hp2.csv",
+    "Hp3.csv",
+    "Hs1.csv",
+    "Hs2.csv",
+    "Hs3.csv",
+    "S1.csv",
+    "S2.csv",
+)
 
 
-def moyenne_mobile(List_temps, List_sig, window_size=100):
-    """Filtre par moyenne mobile (moving average).
+def read_signal(filepath: Path) -> tuple[np.ndarray, np.ndarray]:
+    """Read the time and voltage columns from an oscilloscope CSV file."""
+    try:
+        data = np.loadtxt(filepath, delimiter=",", skiprows=2, ndmin=2)
+    except (OSError, ValueError) as error:
+        raise ValueError(
+            f"Unable to read numeric signal data from {filepath}"
+        ) from error
 
-    Params
-    - List_temps: liste des temps
-    - List_sig: liste des signaux
-    - window_size: taille de la fenêtre (entier).
-    """
-    sig_array = np.array(List_sig)
+    if data.shape[1] < 2 or data.shape[0] == 0:
+        raise ValueError(f"Expected at least one time/voltage sample in {filepath}")
 
-    # Protection contre window_size trop grand ou invalide
+    times, signal = data[:, 0], data[:, 1]
+    if not np.all(np.isfinite(times)) or not np.all(np.isfinite(signal)):
+        raise ValueError(f"Signal data contains non-finite values in {filepath}")
+    return times, signal
+
+
+def write_signal(filepath: Path, times: np.ndarray, signal: np.ndarray) -> None:
+    """Write aligned time and voltage samples as a tab-delimited text file."""
+    if times.size != signal.size:
+        raise ValueError("Time and signal arrays must have the same length")
+
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    with filepath.open("w", encoding="utf-8", newline="") as output_file:
+        output_file.write("Time\tSignal\n")
+        np.savetxt(output_file, np.column_stack((times, signal)), delimiter="\t")
+
+
+def moving_average(signal: np.ndarray, window_size: int = 100) -> np.ndarray:
+    """Apply a centered moving average while preserving the input length."""
     if window_size < 1:
-        window_size = 1
-    window_size = int(window_size)
+        raise ValueError("window_size must be a positive integer")
+    window_size = min(int(window_size), signal.size)
+    if signal.size == 0:
+        raise ValueError("signal must contain at least one sample")
 
-    # Utiliser une moyenne mobile via convolution (mode 'same' conserve la
-    # longueur du signal). On utilise une fenêtre uniforme.
-    kernel = np.ones(window_size) / window_size
-    filtered_sig = np.convolve(sig_array, kernel, mode='same')
-
-    return filtered_sig
+    kernel = np.ones(window_size, dtype=float) / window_size
+    return np.convolve(signal, kernel, mode="same")
 
 
-def filtre_passe_bas_1er_ordre(List_temps, List_sig, tau=0.001):
-    """Filtre passe-bas du 1er ordre (IIR - Infinite Impulse Response).
-
-    Params
-    - List_temps: liste des temps
-    - List_sig: liste des signaux
-    - tau: constante de temps du filtre (en secondes).
-    """
-    sig_array = np.array(List_sig)
-
-    # Protection contre tau invalide
-    if tau < 0:
-        tau = 0.001
-
-    # Calculer l'intervalle de temps moyen (en secondes)
-    if len(List_temps) > 1:
-        dt = (List_temps[-1] - List_temps[0]) / (len(List_temps) - 1)
+def first_order_low_pass(
+    times: np.ndarray, signal: np.ndarray, time_constant: float = 0.001
+) -> np.ndarray:
+    """Apply a causal first-order low-pass filter to a uniformly sampled signal."""
+    if times.size != signal.size or signal.size == 0:
+        raise ValueError(
+            "Time and signal arrays must be non-empty and have equal lengths"
+        )
+    if time_constant <= 0:
+        raise ValueError("time_constant must be positive")
+    if times.size > 1:
+        intervals = np.diff(times)
+        if np.any(intervals <= 0):
+            raise ValueError("Sample times must be strictly increasing")
+        dt = float(np.mean(intervals))
     else:
         dt = 1.0
 
-    # Calculer le coefficient du filtre 1er ordre
-    # alpha = dt / (tau + dt) pour un filtre passe-bas discretise
-    alpha = dt / (tau + dt)
-
-    # Appliquer le filtre de manière causale : y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
-    filtered_sig = np.zeros_like(sig_array)
-    filtered_sig[0] = sig_array[0]
-    for i in range(1, len(sig_array)):
-        filtered_sig[i] = alpha * sig_array[i] + (1 - alpha) * filtered_sig[i - 1]
-
-    return filtered_sig
+    alpha = dt / (time_constant + dt)
+    filtered_signal = np.empty_like(signal, dtype=float)
+    filtered_signal[0] = signal[0]
+    for index in range(1, signal.size):
+        filtered_signal[index] = (
+            alpha * signal[index] + (1 - alpha) * filtered_signal[index - 1]
+        )
+    return filtered_signal
 
 
-def comparer_filtres(PATH_in, PATH_out, window_size=100, tau=0.001):
-    """Compare les deux methodes de filtrage sur un seul graphique.
+def compare_filters(
+    input_path: Path,
+    output_path: Path,
+    window_size: int = 100,
+    time_constant: float = 0.001,
+) -> None:
+    """Plot raw and filtered signals, then save the low-pass result."""
+    times, signal = read_signal(input_path)
+    averaged_signal = moving_average(signal, window_size)
+    low_pass_signal = first_order_low_pass(times, signal, time_constant)
 
-    Params
-    - PATH_in: chemin du fichier d'entree (lu par `lire_fichier`)
-    - PATH_out: chemin du fichier à ecrire (format tabule) - sauvegarde le filtre passe-bas
-    - window_size: taille de la fenêtre pour la moyenne mobile
-    - tau: constante de temps pour le filtre passe-bas
-    """
-    List_temps, List_sig = lire_fichier(PATH_in)
-    
-    # Appliquer les deux filtres
-    filtered_moy = moyenne_mobile(List_temps, List_sig, window_size)
-    filtered_pb = filtre_passe_bas_1er_ordre(List_temps, List_sig, tau)
+    figure, axis = plt.subplots(figsize=(6, 5))
+    axis.plot(times, signal, label="Raw signal", color="#636363", linewidth=1)
+    axis.plot(
+        times, averaged_signal, label="Moving average", color="#EE2222", linewidth=2
+    )
+    axis.plot(
+        times,
+        low_pass_signal,
+        label="First-order low-pass",
+        color="#0066CC",
+        linewidth=2,
+    )
+    axis.set_xlabel("Time [s]")
+    axis.set_ylabel("Induced voltage [V]")
+    axis.set_title("Filter comparison")
+    axis.grid(True)
+    axis.legend()
+    figure.tight_layout()
 
-    # Creer le graphique comparatif
-    plt.figure(figsize=(6, 5))
-    plt.plot(List_temps, List_sig, label='Signal brut', color="#636363", linewidth=1)
-    plt.plot(List_temps, filtered_moy, label='Moyenne mobile', linewidth=2, color="#EE2222")
-    plt.plot(List_temps, filtered_pb, label='Passe-bas 1er ordre', linewidth=2, color="#0066CC")
-    plt.xlabel('Temps [$s$]')
-    plt.ylabel('Tension induite dans le micro [$V$]')
-    plt.title('Comparaison des methodes de filtrage')
-    plt.legend()
-    plt.grid()
-    plt.tight_layout()
-    plt.savefig(PATH_out.replace('.csv', '_filter_plot.png'))
-    plt.close()
-    
-    # Sauvegarder le filtre passe-bas (ou les deux si souhaite)
-    write_file(PATH_out, List_temps, filtered_pb)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_path.with_name(f"{output_path.stem}_filter_plot.png"))
+    plt.close(figure)
+    write_signal(output_path, times, low_pass_signal)
 
 
-L_path_in = ['Python/data/raw/02-Reponse_meca/Hp1.csv',
-            'Python/data/raw/02-Reponse_meca/Hp2.csv',
-            'Python/data/raw/02-Reponse_meca/Hp3.csv',
-            'Python/data/raw/02-Reponse_meca/Hs1.csv',
-            'Python/data/raw/02-Reponse_meca/Hs2.csv',
-            'Python/data/raw/02-Reponse_meca/Hs3.csv',
-            'Python/data/raw/02-Reponse_meca/S1.csv',
-            'Python/data/raw/02-Reponse_meca/S2.csv']
+def main() -> None:
+    """Filter each configured mechanical-response measurement."""
+    for filename in INPUT_FILES:
+        input_path = INPUT_DIRECTORY / filename
+        output_path = OUTPUT_DIRECTORY / filename
+        compare_filters(input_path, output_path)
 
-L_path_out = ['Python/data/filter/02-Reponse_meca/Hp1.csv',
-            'Python/data/filter/02-Reponse_meca/Hp2.csv',
-            'Python/data/filter/02-Reponse_meca/Hp3.csv',
-            'Python/data/filter/02-Reponse_meca/Hs1.csv',
-            'Python/data/filter/02-Reponse_meca/Hs2.csv',
-            'Python/data/filter/02-Reponse_meca/Hs3.csv',
-            'Python/data/filter/02-Reponse_meca/S1.csv',
-            'Python/data/filter/02-Reponse_meca/S2.csv']
 
-for i in range(len(L_path_in)):
-    print(f"Fichier : {L_path_in[i]} : ...")
-    comparer_filtres(L_path_in[i], L_path_out[i])
-    print(f"Fichier : {L_path_in[i]} : done")
-    
-for i in range(len(L_path_in)):
-    print(f"Fichier : {L_path_in[i]} : ...")
-    L_temps, sig_brut = lire_fichier(L_path_in[i])
-    write_file(L_path_out[i], L_temps, filtre_passe_bas_1er_ordre(sig_brut, L_temps))
-    print(f"Fichier : {L_path_in[i]} : done")
+if __name__ == "__main__":
+    main()

@@ -1,211 +1,309 @@
-"""Module de simulation acoustique des micros de guitare électrique.
+"""Compare measured and modeled mechanical pickup responses."""
 
-Ce module implémente les modèles de transduction électromagnétique pour 
-comparer les performances des micros SingleCoil et Humbucker. 
-Il repose sur la modélisation de l'induction par une corde vibrante.
-
-Auteur: Christophe Morel.
-Établissement: Lycée Ferdinand Buisson, CPGE PT.
-Projet: TIPE N°39662 - Session 2026.
-"""
-
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from library import Modelisation as mod
-import numpy as np
-import matplotlib.pyplot as plt
 import logging
+import sys
+from pathlib import Path
 
-plt.close("all")
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+import numpy as np
 
-# --- Configuration globale ---
-tracer_fft = True
-PATH_exp = "Python/Exports/02-Reponse_mecanique/"
-Na = 20          # Nombre de modes considérés
-Te = 1           # Temps d'échantillonnage [s]
-Ne = 10000       # Nombre de points d'échantillonnage
-fs = Ne / Te     # Fréquence d'échantillonnage [Hz]
-yerr_temp = (1e-5 / 2)  # Incertitude de mesure oscillo [V]
-prominence_val = 0.03   # Seuil de proéminence uniforme et symétrique pour la détection des pics
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(PROJECT_ROOT / "Python"))
+from library import model
 
-# --- Constantes physiques et géométriques ---
-mu_0 = 4e-7 * np.pi          # Perméabilité magnétique du vide [H.m-1]
-mu_r = 3.5                   # Perméabilité relative de l'Alnico 5 [.]
-K = 0.7                      # Coefficient de forme [.]
-S = 1.5e-4                   # Surface d'une bobine [m2]
-h_bobine = 1.5e-2            # Hauteur de la bobine [m]
-x_hp1, x_hp2 = 0.147, 0.165  # Position du humbucker parallèle [m]
-x_hs1, x_hs2 = 0.202, 0.220  # Position du humbucker série [m]
-A0 = 1e-3                    # Amplitude initiale de vibration [m]
-x0 = 0.300                   # Origine de la perturbation [m]
-F = 80                       # Fréquence fondamentale [Hz]
+LOGGER = logging.getLogger(__name__)
 
-# --- Calcul rigoureux du nombre de spires par bobine ---
-L_s = 2.43                   
-N_s = np.sqrt((L_s * h_bobine) / (mu_0 * mu_r * S * K))
+DATA_DIRECTORY = PROJECT_ROOT / "Python" / "data" / "raw" / "02-Reponse_meca"
+OUTPUT_DIRECTORY = PROJECT_ROOT / "Python" / "Exports" / "02-Reponse_mecanique"
+MODE_COUNT = 20
+DURATION_S = 1.0
+SAMPLE_COUNT = 10_000
+MEASUREMENT_UNCERTAINTY_V = 1e-5 / 2
+PEAK_PROMINENCE = 0.03
 
-L_hp = 1.77                  # Association parallèle : L_bobine = 2 * L_hp
-N_hp = np.sqrt((2 * L_hp * h_bobine) / (mu_0 * mu_r * S * K))
+MU_0 = 4e-7 * np.pi
+RELATIVE_PERMEABILITY = 3.5
+SHAPE_FACTOR = 0.7
+COIL_AREA_M2 = 1.5e-4
+COIL_HEIGHT_M = 1.5e-2
+PARALLEL_POSITIONS_M = (0.147, 0.165)
+SERIES_POSITIONS_M = (0.202, 0.220)
+INITIAL_DISPLACEMENT_M = 1e-3
+DISTURBANCE_POSITION_M = 0.300
+FUNDAMENTAL_FREQUENCY_HZ = 80
+FILTER_FREQUENCY_RANGE_HZ = (40, 800)
 
-L_hs = 4.71                  # Association série : L_bobine = L_hs / 2
-N_hs = np.sqrt((L_hs * h_bobine) / (2 * mu_0 * mu_r * S * K))
+INDUCTANCE_SINGLE_H = 2.43
+INDUCTANCE_PARALLEL_H = 1.77
+INDUCTANCE_SERIES_H = 4.71
+TURNS_PARALLEL = np.sqrt(
+    2
+    * INDUCTANCE_PARALLEL_H
+    * COIL_HEIGHT_M
+    / (MU_0 * RELATIVE_PERMEABILITY * COIL_AREA_M2 * SHAPE_FACTOR)
+)
+TURNS_SERIES = np.sqrt(
+    INDUCTANCE_SERIES_H
+    * COIL_HEIGHT_M
+    / (2 * MU_0 * RELATIVE_PERMEABILITY * COIL_AREA_M2 * SHAPE_FACTOR)
+)
 
-# --- Couleurs graphiques ---
-kw_Hp_th = {'color': '#0000FF', 'label': 'Humbucker parallèle (Théorie)', 'linewidth': 3}
-kw_S_th = {'color': '#FF0000', 'label': 'SingleCoil (Théorie)', 'linewidth': 3}
-kw_Hs_th = {'color': '#009900', 'label': 'Humbucker serie (Théorie)', 'linewidth': 3}
-kw_Hp_exp = {'color': '#6666FF', 'label': 'Humbucker parallèle (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
-kw_Hs_exp = {'color': '#66CC66', 'label': 'Humbucker serie (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
-kw_S_exp = {'color': '#FF6666', 'label': 'SingleCoil (Expérience)', 'marker': "o", 'markersize': 8, 'linestyle': ':'}
-
-Title = "Spectre de la tension induite dans le micro"
-
-# --- Lecture des données expérimentales ---
-def lire_fichier(PATH):
-    List_temps = []
-    List_sig = []
-    with open(PATH) as file:
-        L_lignes = file.readlines()
-    for ligne in L_lignes[2:]:
-        ligne = ligne.strip().split(',')
-        ligne = [x.replace('\n', '') for x in ligne]
-        ligne = [x.replace('E', 'e') for x in ligne]
-        List_temps.append(float(ligne[0]))
-        List_sig.append(float(ligne[1]))
-    return np.array(List_temps), np.array(List_sig)
-
-temps_s, V_s_exp = lire_fichier("Python/data/raw/02-Reponse_meca/S2.csv")
-temps_hp, V_hp_exp = lire_fichier("Python/data/raw/02-Reponse_meca/Hp2.csv")
-temps_hs, V_hs_exp = lire_fichier("Python/data/raw/02-Reponse_meca/Hs3.csv")
-
-# --- Calcul des FFT théoriques (suppression du /2 arbitraire inutile avec la normalisation) ---
-temps = np.linspace(-Te/2, Te/2, Ne)
-V_s_th = mod.fem_singlecoil(Na, temps, A0, x0)
-V_hp_th = mod.fem_humbucker(Na, N_hp, x_hp1, x_hp2, temps, A0, x0)
-V_hs_th = mod.fem_humbucker(Na, N_hs, x_hs1, x_hs2, temps, A0, x0)
-
-fft_s_th = mod.compute_and_normalize_fft(V_s_th, Ne)
-fft_hp_th = mod.compute_and_normalize_fft(V_hp_th, Ne)
-fft_hs_th = mod.compute_and_normalize_fft(V_hs_th, Ne)
-
-Ne_s, Ne_hp, Ne_hs = len(V_s_exp), len(V_hp_exp), len(V_hs_exp)
-
-fft_s_exp_abs = mod.compute_and_normalize_fft(V_s_exp, Ne_s)
-fft_hp_exp_abs = mod.compute_and_normalize_fft(V_hp_exp, Ne_hp)
-fft_hs_exp_abs = mod.compute_and_normalize_fft(V_hs_exp, Ne_hs)
-
-yerr_s_fft_abs = yerr_temp / np.sqrt(Ne_s)
-yerr_hp_fft_abs = yerr_temp / np.sqrt(Ne_hp)
-yerr_hs_fft_abs = yerr_temp / np.sqrt(Ne_hs)
-
-freqs_th = np.fft.fftfreq(Ne, 1 / (len(V_s_th) / (temps[-1] - temps[0])))
-freqs_s_exp = np.fft.fftfreq(Ne_s, 1 / (len(V_s_exp) / (temps_s[-1] - temps_s[0])))
-freqs_hp_exp = np.fft.fftfreq(Ne_hp, 1 / (len(V_hp_exp) / (temps_hp[-1] - temps_hp[0])))
-freqs_hs_exp = np.fft.fftfreq(Ne_hs, 1 / (len(V_hs_exp) / (temps_hs[-1] - temps_hs[0])))
-
-mask_th = (40 < freqs_th) & (freqs_th <= 800)
-mask_s = (40 < freqs_s_exp) & (freqs_s_exp <= 800)
-mask_hp = (40 < freqs_hp_exp) & (freqs_hp_exp <= 800)
-mask_hs = (40 < freqs_hs_exp) & (freqs_hs_exp <= 800)
-
-freqs_th = freqs_th[mask_th]
-fft_s_th = mod.normalize_signal(fft_s_th[mask_th])
-fft_hp_th = mod.normalize_signal(fft_hp_th[mask_th])
-fft_hs_th = mod.normalize_signal(fft_hs_th[mask_th])
-
-freqs_env = np.linspace(80, 800, 800)
-envelope = (F / freqs_env) ** 1
-kw_env = {'color': 'k', 'linestyle': '--', 'label': 'Enveloppe $1/n$'}
-
-# Double normalisation acceptée (focus exclusif sur l'enveloppe spectrale)
-max_fft_s, max_fft_hp, max_fft_hs = np.max(fft_s_exp_abs), np.max(fft_hp_exp_abs), np.max(fft_hs_exp_abs)
-
-freqs_s_exp = freqs_s_exp[mask_s]
-fft_s_exp = fft_s_exp_abs[mask_s] / max_fft_s 
-yerr_s_exp = np.full_like(freqs_s_exp, yerr_s_fft_abs) / max_fft_s
-
-freqs_hp_exp = freqs_hp_exp[mask_hp]
-fft_hp_exp = fft_hp_exp_abs[mask_hp] / max_fft_hp
-yerr_hp_exp = np.full_like(freqs_hp_exp, yerr_hp_fft_abs) / max_fft_hp
-
-freqs_hs_exp = freqs_hs_exp[mask_hs]
-fft_hs_exp = fft_hs_exp_abs[mask_hs] / max_fft_hs
-yerr_hs_exp = np.full_like(freqs_hs_exp, yerr_hs_fft_abs) / max_fft_hs
-
-mod.save_plot(PATH_exp + "FFT/Singlecoil_th.png",
-        (freqs_th, fft_s_th, kw_S_th),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-mod.save_plot(PATH_exp + "FFT/Singlecoil_exp.png",
-        (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-mod.save_plot(PATH_exp + "FFT/Singlecoil.png",
-        (freqs_th, fft_s_th, kw_S_th),
-        (freqs_s_exp, fft_s_exp, {**kw_S_exp, 'yerr': yerr_s_exp}),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-print(f"FFT sauvegardees sous {PATH_exp + "FFT/Singlecoil.png"}")
+THEORY_STYLES = (
+    {"color": "#0000FF", "label": "Humbucker parallel (model)", "linewidth": 3},
+    {"color": "#FF0000", "label": "Single coil (model)", "linewidth": 3},
+    {"color": "#009900", "label": "Humbucker series (model)", "linewidth": 3},
+)
+EXPERIMENT_STYLES = (
+    {
+        "color": "#6666FF",
+        "label": "Humbucker parallel (measurement)",
+        "marker": "o",
+        "markersize": 8,
+        "linestyle": ":",
+    },
+    {
+        "color": "#FF6666",
+        "label": "Single coil (measurement)",
+        "marker": "o",
+        "markersize": 8,
+        "linestyle": ":",
+    },
+    {
+        "color": "#66CC66",
+        "label": "Humbucker series (measurement)",
+        "marker": "o",
+        "markersize": 8,
+        "linestyle": ":",
+    },
+)
+SPECTRUM_TITLE = "Induced pickup voltage spectrum"
+ENVELOPE_STYLE = {"color": "k", "linestyle": "--", "label": "1/n envelope"}
 
 
-mod.save_plot(PATH_exp + "FFT/Humbucker_parra_th.png",
-        (freqs_th, fft_hp_th, kw_Hp_th),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-mod.save_plot(PATH_exp + "FFT/Humbucker_parra_exp.png",
-        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-mod.save_plot(PATH_exp + "FFT/Humbucker_parra.png",
-        (freqs_th, fft_hp_th, kw_Hp_th),
-        (freqs_hp_exp, fft_hp_exp, {**kw_Hp_exp, 'yerr': yerr_hp_exp}),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
+def load_signal(filepath: Path) -> tuple[np.ndarray, np.ndarray]:
+    """Load and validate time and voltage samples from an oscilloscope CSV."""
+    try:
+        data = np.loadtxt(filepath, delimiter=",", skiprows=2, ndmin=2)
+    except (OSError, ValueError) as error:
+        raise ValueError(f"Unable to read oscilloscope data from {filepath}") from error
+    if data.shape[0] < 2 or data.shape[1] < 2:
+        raise ValueError(f"Expected at least two time/voltage samples in {filepath}")
 
-mod.save_plot(PATH_exp + "FFT/Humbucker_serie_th.png",
-        (freqs_th, fft_hs_th, kw_Hs_th),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-mod.save_plot(PATH_exp + "FFT/Humbucker_serie_exp.png",
-        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-mod.save_plot(PATH_exp + "FFT/Humbucker_serie.png",
-        (freqs_th, fft_hs_th, kw_Hs_th),
-        (freqs_hs_exp, fft_hs_exp, {**kw_Hs_exp, 'yerr': yerr_hs_exp}),
-        (freqs_env, envelope, kw_env),
-        title=Title, xlabel="Frequence [$Hz$]", ylabel="Tension normalisee", error_bars=True)
-print(f"FFT sauvegardees sous {PATH_exp + "FFT/Humbucker.png"}")
-
-# --- Mise en evidence du filtrage spatial ---
-L_freqs_s, L_pic_s_exp = mod.extraire_pics(freqs_s_exp, fft_s_exp, prominence=prominence_val, distance=5)
-L_freqs_hs, L_pic_hs_exp = mod.extraire_pics(freqs_hs_exp, fft_hs_exp, prominence=prominence_val, distance=5)
-
-kw_peigne = {'color': "#000000", 'label': 'Peigne spatial', 'linewidth': 3}
-kw_att = {'color': "#888888", 'label': 'Gain relatif', 'linewidth': 1}
-
-freqs = np.linspace(30, 20000, 1000)
-signal_hs, peigne_hs, signal_sc = mod.attenuation_theorique_db(freqs, x_hs1, x_hs2)
-Attenuation_th = 20 * np.log10(np.abs(signal_hs / (signal_sc + 1e-6)) + 1e-6)
+    times, voltage = data[:, 0], data[:, 1]
+    if not np.all(np.isfinite(times)) or not np.all(np.isfinite(voltage)):
+        raise ValueError(f"Oscilloscope data contains non-finite values in {filepath}")
+    if np.any(np.diff(times) <= 0):
+        raise ValueError(f"Sample times must be strictly increasing in {filepath}")
+    return times, voltage
 
 
-# Sécurité mathématique pour la division membre à membre des tableaux expérimentaux
-min_len = min(len(L_pic_hs_exp), len(L_pic_s_exp))
+def get_frequency_axis(sample_times: np.ndarray) -> np.ndarray:
+    """Calculate the FFT frequency bins for evenly sampled time data."""
+    if sample_times.size < 2:
+        raise ValueError("At least two time samples are required for the FFT")
+    intervals = np.diff(sample_times)
+    if not np.allclose(intervals, intervals[0], rtol=1e-3, atol=0):
+        raise ValueError("FFT analysis requires uniformly sampled data")
+    return np.fft.fftfreq(sample_times.size, d=float(np.mean(intervals)))
 
-nouvelles_freqs = np.array([990, 1320, 1650, 1980, 2310, 2640, 2970, 3300])
-nouvelles_att = np.array([-5.2, -4, -10.5, -16.8, -15.5, -14.2, -20.4, -28.7])
 
-att_existante = 20 * np.log10(np.abs(L_pic_hs_exp[:min_len] / (L_pic_s_exp[:min_len] + 1e-6)) + 1e-6)
+def plot_spectrum(
+    output_path: Path,
+    datasets: tuple[tuple[np.ndarray, np.ndarray, dict], ...],
+    envelope: tuple[np.ndarray, np.ndarray] | None = None,
+) -> None:
+    """Save one spectrum plot, optionally including the reference envelope."""
+    plot_calls = list(datasets)
+    if envelope is not None:
+        plot_calls.append((envelope[0], envelope[1], ENVELOPE_STYLE))
+    model.save_plot(
+        str(output_path),
+        *plot_calls,
+        title=SPECTRUM_TITLE,
+        xlabel="Frequency [Hz]",
+        ylabel="Normalized voltage",
+        error_bars=True,
+    )
 
-L_freqs_clipped = np.concatenate((L_freqs_hs[:min_len], nouvelles_freqs))
-Attenuation_exp = np.concatenate((att_existante, nouvelles_att))
 
-mod.save_plot(PATH_exp + "Filtrage_spatial.png",
-        (freqs, Attenuation_th, kw_att),
-        (L_freqs_clipped, Attenuation_exp, kw_Hs_exp),
-        (freqs, 20 * np.log10(np.abs(peigne_hs) + 1e-6), kw_peigne),
-        title="Filtrage spatial du micro Humbucker série", 
-        xlabel="Fréquence [$Hz$]", ylabel="Gain [dB]", xlim=(30, 20000), vspan=True, log=True)
+def analyze_spectrum(
+    times: np.ndarray, voltage: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Return positive-frequency spectral amplitudes and their full-spectrum peak."""
+    spectrum = model.compute_and_normalize_fft(voltage, voltage.size)
+    peak_amplitude = float(np.max(spectrum))
+    if peak_amplitude <= 0:
+        raise ValueError("Cannot normalize an empty or zero-amplitude spectrum")
+    frequencies = get_frequency_axis(times)
+    mask = (frequencies > FILTER_FREQUENCY_RANGE_HZ[0]) & (
+        frequencies <= FILTER_FREQUENCY_RANGE_HZ[1]
+    )
+    return frequencies[mask], spectrum[mask], peak_amplitude
+
+
+def create_spectrum_plots() -> None:
+    """Generate model, measurement, and combined FFT figures."""
+    experimental = {
+        "single": load_signal(DATA_DIRECTORY / "S2.csv"),
+        "parallel": load_signal(DATA_DIRECTORY / "Hp2.csv"),
+        "series": load_signal(DATA_DIRECTORY / "Hs3.csv"),
+    }
+    theoretical_times = np.linspace(-DURATION_S / 2, DURATION_S / 2, SAMPLE_COUNT)
+    theoretical_signals = {
+        "single": model.fem_singlecoil(
+            MODE_COUNT,
+            theoretical_times,
+            INITIAL_DISPLACEMENT_M,
+            DISTURBANCE_POSITION_M,
+        ),
+        "parallel": model.fem_humbucker(
+            MODE_COUNT,
+            TURNS_PARALLEL,
+            *PARALLEL_POSITIONS_M,
+            theoretical_times,
+            INITIAL_DISPLACEMENT_M,
+            DISTURBANCE_POSITION_M,
+        ),
+        "series": model.fem_humbucker(
+            MODE_COUNT,
+            TURNS_SERIES,
+            *SERIES_POSITIONS_M,
+            theoretical_times,
+            INITIAL_DISPLACEMENT_M,
+            DISTURBANCE_POSITION_M,
+        ),
+    }
+
+    theoretical_frequencies = get_frequency_axis(theoretical_times)
+    theoretical_spectra = {
+        name: model.compute_and_normalize_fft(signal, signal.size)
+        for name, signal in theoretical_signals.items()
+    }
+    frequency_mask = (theoretical_frequencies > FILTER_FREQUENCY_RANGE_HZ[0]) & (
+        theoretical_frequencies <= FILTER_FREQUENCY_RANGE_HZ[1]
+    )
+    model_frequencies = theoretical_frequencies[frequency_mask]
+    model_spectra = {
+        name: model.normalize_signal(spectrum[frequency_mask])
+        for name, spectrum in theoretical_spectra.items()
+    }
+
+    experimental_spectra = {}
+    for name, (times, voltage) in experimental.items():
+        frequencies, spectrum, full_spectrum_peak = analyze_spectrum(times, voltage)
+        uncertainty = MEASUREMENT_UNCERTAINTY_V / np.sqrt(voltage.size)
+        experimental_spectra[name] = (
+            frequencies,
+            spectrum / full_spectrum_peak,
+            np.full(frequencies.shape, uncertainty / full_spectrum_peak),
+        )
+
+    envelope_frequencies = np.linspace(80, 800, 800)
+    envelope = (envelope_frequencies, FUNDAMENTAL_FREQUENCY_HZ / envelope_frequencies)
+    plot_specs = (
+        ("single", "Singlecoil"),
+        ("parallel", "Humbucker_parra"),
+        ("series", "Humbucker_serie"),
+    )
+    for key, filename in plot_specs:
+        experimental_frequencies, experimental_spectrum, errors = experimental_spectra[
+            key
+        ]
+        model_curve = (
+            model_frequencies,
+            model_spectra[key],
+            THEORY_STYLES[1 if key == "single" else (0 if key == "parallel" else 2)],
+        )
+        measured = (
+            experimental_frequencies,
+            experimental_spectrum,
+            {
+                **EXPERIMENT_STYLES[
+                    1 if key == "single" else (0 if key == "parallel" else 2)
+                ],
+                "yerr": errors,
+            },
+        )
+        plot_spectrum(
+            OUTPUT_DIRECTORY / "FFT" / f"{filename}_th.png", (model_curve,), envelope
+        )
+        plot_spectrum(
+            OUTPUT_DIRECTORY / "FFT" / f"{filename}_exp.png", (measured,), envelope
+        )
+        plot_spectrum(
+            OUTPUT_DIRECTORY / "FFT" / f"{filename}.png",
+            (model_curve, measured),
+            envelope,
+        )
+
+    plot_spatial_filtering(experimental_spectra)
+
+
+def plot_spatial_filtering(
+    experimental_spectra: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]],
+) -> None:
+    """Compare measured harmonic attenuation with the humbucker comb-filter model."""
+    single_frequencies, single_spectrum, _ = experimental_spectra["single"]
+    series_frequencies, series_spectrum, _ = experimental_spectra["series"]
+    _, single_peaks_a = model.extraire_pics(
+        single_frequencies, single_spectrum, prominence=PEAK_PROMINENCE, distance=5
+    )
+    series_peaks_f, series_peaks_a = model.extraire_pics(
+        series_frequencies, series_spectrum, prominence=PEAK_PROMINENCE, distance=5
+    )
+
+    model_frequencies = np.linspace(30, 20_000, 1_000)
+    model_signal, comb_filter, single_signal = model.attenuation_theorique_db(
+        model_frequencies, *SERIES_POSITIONS_M
+    )
+    model_attenuation = 20 * np.log10(
+        np.abs(model_signal / (single_signal + 1e-6)) + 1e-6
+    )
+    shared_peak_count = min(single_peaks_a.size, series_peaks_a.size)
+    corrected_frequencies = np.array([990, 1320, 1650, 1980, 2310, 2640, 2970, 3300])
+    corrected_attenuation = np.array(
+        [-5.2, -4, -10.5, -16.8, -15.5, -14.2, -20.4, -28.7]
+    )
+    measured_attenuation = 20 * np.log10(
+        np.abs(
+            series_peaks_a[:shared_peak_count]
+            / (single_peaks_a[:shared_peak_count] + 1e-6)
+        )
+        + 1e-6
+    )
+    measured_frequencies = np.concatenate(
+        (series_peaks_f[:shared_peak_count], corrected_frequencies)
+    )
+    measured_attenuation = np.concatenate((measured_attenuation, corrected_attenuation))
+
+    model.save_plot(
+        str(OUTPUT_DIRECTORY / "Filtrage_spatial.png"),
+        (
+            model_frequencies,
+            model_attenuation,
+            {"color": "#888888", "label": "Relative gain"},
+        ),
+        (measured_frequencies, measured_attenuation, EXPERIMENT_STYLES[2]),
+        (
+            model_frequencies,
+            20 * np.log10(np.abs(comb_filter) + 1e-6),
+            {"color": "#000000", "label": "Spatial comb filter", "linewidth": 3},
+        ),
+        title="Humbucker spatial filtering",
+        xlabel="Frequency [Hz]",
+        ylabel="Gain [dB]",
+        xlim=(30, 20_000),
+        vspan=True,
+        log=True,
+    )
+
+
+def main() -> None:
+    """Run mechanical-response analysis and save the spectrum plots."""
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    create_spectrum_plots()
+    LOGGER.info("Mechanical-response figures saved to %s", OUTPUT_DIRECTORY)
+
+
+if __name__ == "__main__":
+    main()

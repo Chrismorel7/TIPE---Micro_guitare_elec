@@ -1,5 +1,32 @@
 # Guitare electrique : Etude de l’influence du type de micro
 
+Ce projet étudie l’influence des micros Single Coil et Humbucker sur le
+timbre d’une guitare électrique et sur le rejet des perturbations
+électromagnétiques. Il rassemble les modèles physiques, les mesures
+expérimentales et les simulations utilisées pour cette étude.
+
+## Analyses Python
+
+Les analyses utilisent Python 3.10 ou une version ultérieure. Depuis la racine
+du dépôt, installez les dépendances avec :
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+Les scripts d’analyse peuvent ensuite être exécutés indépendamment :
+
+```powershell
+python .\Python\Code\main\01-Reponse_electrique_frequentielle.py
+python .\Python\Code\main\02-Reponse_mecanique.py
+python .\Python\Code\main\03-Reponse_magnetique.py
+python .\Python\Code\main\03-Reponse_mag_temp.py
+```
+
+Les figures sont enregistrées dans `Python/Exports`. Les utilitaires de
+traitement se trouvent dans `Python/Code/Utility`; ils lisent les mesures
+depuis `Python/data` et peuvent être exécutés de la même façon.
+
 ## Bibliographie Commentee :
 
 L’apparition de la guitare electrique au XXe siècle a marque l’histoire de la musique. Nee suite à la necessite d’amplifier le son pour rivaliser avec les percussions et les cuivres dans les grands ensembles, elle a transforme le paysage musical.

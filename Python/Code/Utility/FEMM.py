@@ -1,97 +1,123 @@
-import numpy as np
+"""Analyze FEMM magnetic-flux results and estimate induced voltage."""
+
+from pathlib import Path
+
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter
+import numpy as np
 from scipy.interpolate import UnivariateSpline
+from scipy.signal import savgol_filter
 
-# --- CONFIGURATION DU LISSAGE ---
-# Choix : "AUCUN", "SAVGOL" (Recommande), ou "SPLINE"
-METHODE_LISSAGE = "SAVGOL" 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+INPUT_PATH = PROJECT_ROOT / "Docs" / "FEMM" / "resultats_flux.txt"
+OUTPUT_PATH = (
+    PROJECT_ROOT / "Python" / "Exports" / "03-Reponse_magnetique" / "femm_flux.png"
+)
+FREQUENCY_HZ = 78
+COIL_TURNS = 1
+SMOOTHING_METHOD = "SAVGOL"
+COIL_HEIGHT_M = 0.015
 
-# --- 1. Paramètres Physiques ---
-freq = 78  # Frequence de la corde en Hz
-omega = 2 * np.pi * freq
-N_spires = 1 # Nombre de spires (Mettez votre valeur reelle, ex: 6000)
 
-# --- 2. Chargement des donnees ---
-try:
-    data = np.loadtxt("Docs/FEMM/resultats_flux.txt", delimiter=",", skiprows=2)
-except OSError:
-    # Generation de donnees factices pour l'exemple si le fichier est absent
-    print("Fichier introuvable, generation de donnees de test...")
-    t_exp = np.linspace(0, 1/freq, 200)
-    angles = t_exp * omega
-    deplacement = np.sin(angles)
-    # Flux avec bruit numerique simule
-    flux = 3e-6 * (1 - 0.1*np.sin(angles)) + 1e-8 * np.random.normal(0, 1, 200)
-else:
-    angles = data[:, 0]      
-    deplacement = data[:, 1] 
-    flux = data[:, 2]        
+def load_flux_data(filepath: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Load angular position, displacement, and magnetic flux from FEMM output."""
+    try:
+        data = np.loadtxt(filepath, delimiter=",", skiprows=2, ndmin=2)
+    except (OSError, ValueError) as error:
+        raise ValueError(f"Unable to load FEMM flux data from {filepath}") from error
 
-# --- 3. Conversion Espace -> Temps ---
-temps = angles / omega
+    if data.shape[0] < 3 or data.shape[1] < 3:
+        raise ValueError(f"Expected at least three rows and columns in {filepath}")
+    if not np.all(np.isfinite(data[:, :3])):
+        raise ValueError(f"FEMM flux data contains non-finite values in {filepath}")
 
-# --- 4. Traitement et Lissage (eTAPE CLe) ---
-flux_lisse = flux.copy()
-dphi_dt = np.zeros_like(flux)
+    angles, displacement, flux = data[:, 0], data[:, 1], data[:, 2]
+    angle_steps = np.diff(angles)
+    if np.all(angle_steps < 0):
+        return angles[::-1], displacement[::-1], flux[::-1]
+    if np.any(angle_steps <= 0):
+        raise ValueError("FEMM angular samples must be strictly monotonic")
+    return angles, displacement, flux
 
-if METHODE_LISSAGE == "SAVGOL":
-    # Filtre de Savitzky-Golay : Lisse en gardant la forme du signal
-    # window_length : doit être impair. Plus il est grand, plus c'est lisse.
-    # polyorder : ordre du polynôme (2 ou 3 est bien).
-    window_length = 51 # A ajuster selon le nombre de points (ex: nb_points / 5)
-    if window_length >= len(flux): window_length = len(flux) // 2 * 2 + 1
-    
-    flux_lisse = savgol_filter(flux, window_length=window_length, polyorder=3)
-    dphi_dt = np.gradient(flux_lisse, temps)
 
-elif METHODE_LISSAGE == "SPLINE":
-    # Interpolation Spline : Cree une fonction mathematique lisse
-    # s = facteur de lissage. Trop grand = perte de signal, Trop petit = garde le bruit.
-    spl = UnivariateSpline(temps, flux, s=1e-15) 
-    flux_lisse = spl(temps)
-    dphi_dt = spl.derivative()(temps) # Derivee analytique très propre
+def smooth_flux(
+    times: np.ndarray, flux: np.ndarray, method: str
+) -> tuple[np.ndarray, np.ndarray]:
+    """Smooth flux samples and return their time derivative."""
+    if method == "SAVGOL":
+        window_length = min(51, flux.size if flux.size % 2 else flux.size - 1)
+        if window_length < 5:
+            raise ValueError(
+                "At least five samples are required for Savitzky-Golay smoothing"
+            )
+        smoothed_flux = savgol_filter(flux, window_length=window_length, polyorder=3)
+        flux_derivative = np.gradient(smoothed_flux, times)
+    elif method == "SPLINE":
+        spline = UnivariateSpline(times, flux, s=1e-15)
+        smoothed_flux = spline(times)
+        flux_derivative = spline.derivative()(times)
+    elif method == "NONE":
+        smoothed_flux = flux.copy()
+        flux_derivative = np.gradient(flux, times)
+    else:
+        raise ValueError(f"Unsupported smoothing method: {method}")
+    return smoothed_flux, flux_derivative
 
-else: # AUCUN
-    flux_lisse = flux
-    dphi_dt = np.gradient(flux, temps)
 
-# --- 5. Calcul de la Tension ---
-# e = - N * dPhi / dt
-tension = -N_spires * dphi_dt
-tension_mV = tension * 1000
+def create_plot(
+    times: np.ndarray,
+    displacement: np.ndarray,
+    flux: np.ndarray,
+    smoothed_flux: np.ndarray,
+    induced_voltage: np.ndarray,
+    output_path: Path,
+) -> None:
+    """Plot displacement, flux, and induced voltage and save the figure."""
+    figure, (position_axis, flux_axis, voltage_axis) = plt.subplots(
+        3, 1, sharex=True, figsize=(10, 10)
+    )
+    time_ms = times * 1_000
 
-# --- 6. Trace des courbes ---
-fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(10, 10))
+    position_axis.plot(time_ms, displacement, "k--", alpha=0.5, label="Displacement")
+    position_axis.set_ylabel("Position [mm]")
+    position_axis.set_title(f"FEMM simulation (f = {FREQUENCY_HZ} Hz)")
+    position_axis.grid(True, linestyle="--", alpha=0.7)
+    position_axis.legend(loc="upper right")
 
-# Graphique 1 : Vibration corde
-ax1.plot(temps * 1000, deplacement, 'k--', alpha=0.5, label='Deplacement')
-ax1.set_ylabel('Position (mm)')
-ax1.grid(True, linestyle='--', alpha=0.7)
-ax1.set_title(f'Simulation FEMM (f = {freq} Hz) - Methode : {METHODE_LISSAGE}')
-ax1.legend(loc='upper right')
+    flux_axis.plot(time_ms, flux * 1e6, "b.", markersize=2, alpha=0.3, label="Raw flux")
+    flux_axis.plot(
+        time_ms, smoothed_flux * 1e6, "g-", linewidth=2, label="Smoothed flux"
+    )
+    flux_axis.set_ylabel("Flux [µWb]")
+    flux_axis.grid(True, linestyle="--", alpha=0.7)
+    flux_axis.legend(loc="upper right")
 
-# Graphique 2 : Flux Magnetique (Comparaison Brut vs Lisse)
-ax2.plot(temps * 1000, flux * 1e6, 'b.', markersize=2, alpha=0.3, label='Flux Brut (Bruit numerique)')
-ax2.plot(temps * 1000, flux_lisse * 1e6, 'g-', linewidth=2, label='Flux Lisse')
-ax2.set_ylabel(r'Flux ($\mu$Wb)')
-ax2.grid(True, linestyle='--', alpha=0.7)
-ax2.legend(loc='upper right')
+    voltage_axis.plot(time_ms, induced_voltage * 1e3, "r-", linewidth=2)
+    voltage_axis.set_ylabel("Voltage [mV]")
+    voltage_axis.set_xlabel("Time [ms]")
+    voltage_axis.grid(True, linestyle="--", alpha=0.7)
 
-# Graphique 3 : Tension Induite
-ax3.plot(temps * 1000, tension_mV, 'r-', linewidth=2, label=r'Tension $e(t)$')
-ax3.set_ylabel('Tension (mV)')
-ax3.set_xlabel('Temps (ms)')
-ax3.grid(True, linestyle='--', alpha=0.7)
-ax3.legend(loc='upper right')
+    figure.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_path, dpi=300)
+    plt.close(figure)
 
-# Calcul V_eff et V_max
-v_max = np.max(np.abs(tension_mV))
-v_rms = np.std(tension_mV)
 
-info_text = f"Tension Max : {v_max:.2f} mV\nTension RMS : {v_rms:.2f} mV"
-ax3.text(0.02, 0.05, info_text, transform=ax3.transAxes, 
-        bbox=dict(facecolor='white', alpha=0.8, edgecolor='red'))
+def main() -> None:
+    """Generate the FEMM displacement, flux, and induced-voltage plot."""
+    angles, displacement, flux = load_flux_data(INPUT_PATH)
+    angular_frequency = 2 * np.pi * FREQUENCY_HZ
+    times = angles / angular_frequency
+    smoothed_flux, flux_derivative = smooth_flux(times, flux, SMOOTHING_METHOD)
+    induced_voltage = -COIL_TURNS * flux_derivative
+    create_plot(
+        times,
+        displacement,
+        flux,
+        smoothed_flux,
+        induced_voltage,
+        OUTPUT_PATH,
+    )
 
-plt.tight_layout()
-plt.show()
+
+if __name__ == "__main__":
+    main()
